@@ -22,7 +22,7 @@
     },
     "typecheck": {
       "dependsOn": [
-        "^typecheck"
+        "^build"
       ]
     },
     "test": {

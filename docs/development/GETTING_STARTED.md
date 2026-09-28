@@ -19,13 +19,12 @@ pnpm install
 cp .env.example .env
 pnpm supabase:start
 pnpm infra:up
-pnpm db:generate
 pnpm db:migrate
 pnpm db:seed
 pnpm dev
 ```
 
-The first `pnpm install` creates `pnpm-lock.yaml`; commit that lockfile before normal team development and change CI installation to `--frozen-lockfile` after it exists.
+The lockfile and initial Drizzle migration are committed with the bootstrap. Use `pnpm install --frozen-lockfile` to reproduce the dependency versions.
 
 ## Local services
 
@@ -59,12 +58,11 @@ Never commit real credentials.
 The source schema lives in `packages/database/src/schema`.
 
 ```bash
-pnpm db:generate
 pnpm db:migrate
 pnpm db:seed
 ```
 
-`db:generate` creates reviewable Drizzle SQL. Schema and migration must be committed together.
+Run `pnpm db:generate` only after changing the Drizzle schema. Review and commit the generated migration with the schema change.
 
 ## Seed data
 
@@ -87,12 +85,15 @@ pnpm build
 Or:
 
 ```bash
-pnpm ci
+pnpm run ci
 ```
+
+Use `pnpm run ci`: pnpm 12 reserves `pnpm ci` for a clean dependency install.
 
 ## Read before coding
 
 1. `/AGENTS.md`
 2. `docs/product/PRODUCT_CONTEXT.md`
 3. `docs/product/OPEN_DECISIONS.md`
-4. relevant module/API/data docs and ADRs.
+4. `docs/development/PROJECT_STRUCTURE.md` for code placement.
+5. relevant module/API/data docs and ADRs.

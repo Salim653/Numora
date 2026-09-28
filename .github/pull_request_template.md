@@ -15,7 +15,7 @@ Describe the change and why it is needed.
 - [ ] API/contract/schema changes are updated where required.
 - [ ] Authorization and failure states were considered.
 - [ ] Tests cover critical behavior.
-- [ ] `pnpm ci` passes locally where practical.
+- [ ] `pnpm run ci` passes locally where practical.
 - [ ] No secret or unnecessary student PII is committed/logged.
 
 ## Screenshots / API examples
