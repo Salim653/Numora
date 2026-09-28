@@ -77,8 +77,9 @@ MAT-01 states 5 levels per subbab but also says Curriculum defines the number of
 - Product/Design and the school coordinate school permission, participant/guardian consent where needed, and demo-content notice.
 - Trial cannot start if login, authorization, answer/result persistence, or the 80% scoring/unlock rule fails.
 - The staging domain and access to Supabase/Google OAuth are not available yet and must be provisioned before online trial verification.
+- UI/UX will prepare designs/wireframes later; a simple mock UI is accepted for the first school trial if the connected flow and basic accessibility work.
 
-The supplied Sprint 2 Goal defines one Student vertical slice and excludes *full* Admin/Teacher UI from sprint blockers; the specified Admin/Teacher actions are additional prototype requirements. Exact participant count, staging hosting/OAuth configuration, and QA evidence still need scoping. Owner: PO + Software + QA. **Status: PARTLY OPEN.**
+The supplied Sprint 2 Goal defines one Student vertical slice and excludes *full* Admin/Teacher UI from sprint blockers; the specified Admin/Teacher actions are additional prototype requirements. The staging host has not been selected. DevOps for the domain and Database for Supabase/Google OAuth are **tentative owners pending team confirmation**. Exact participant count, staging hosting/OAuth configuration, and QA evidence still need scoping. Owner: PO + Software + QA. **Status: PARTLY OPEN.**
 
 ## Decision workflow
 

@@ -44,6 +44,8 @@ Must use separate:
 
 For the prototype trial, staging must be reachable by the school and support Google OAuth callbacks for real Student/Teacher accounts. Demo Level-1 content must be visibly identified as demo and reviewed by Curriculum before use. Teacher data access must stay within owned Classes. As of 28 September 2026, the staging domain and access to the Supabase/Google OAuth projects are not yet available; provisioning is a delivery dependency. Do not assume local Supabase credentials or seed-only identities prove the school-facing flow.
 
+The staging hosting provider is not chosen. Domain setup is tentatively expected from DevOps; Supabase/Google OAuth project setup is tentatively expected from the Database team. Confirm these owners before treating the work as assigned. Early frontend development and the first school trial may use a simple mock UI while UI/UX prepares designs, provided the connected flow and basic accessibility work.
+
 ## Production
 
 Preferred target:

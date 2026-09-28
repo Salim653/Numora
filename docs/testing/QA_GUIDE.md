@@ -23,6 +23,8 @@ For main flows verify:
 - session ended where applicable;
 - access denied/locked.
 
+For the first school trial, a simple mock UI is accepted while UI/UX designs are pending. QA still checks the connected task flow, readable text, form labels, keyboard navigation, and status cues that do not rely only on color.
+
 ## High-risk scenarios
 
 ### School verification

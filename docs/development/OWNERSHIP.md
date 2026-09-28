@@ -28,6 +28,10 @@ This file reflects the final job-list image supplied by the team. GitHub usernam
 - QA should review acceptance/testability early, not only after implementation.
 - Product rule changes require PO/PM approval regardless of code ownership.
 
+## Tentative staging ownership
+
+As of 28 September 2026, the coordinator expects DevOps to handle the staging domain and the Database team to prepare Supabase/Google OAuth, but these assignments have **not been confirmed**. The hosting provider and accountable owner for end-to-end staging readiness are still open. Record confirmed assignments here before relying on them for the 12 October target.
+
 ## CODEOWNERS plan
 
 When GitHub handles are available, map paths such as:
