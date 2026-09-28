@@ -4,29 +4,31 @@
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController_getHealth",
-        "summary": "Check API process health",
-        "tags": [
-          "health"
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "API is healthy"
           }
-        }
+        },
+        "summary": "Check API process health",
+        "tags": [
+          "health"
+        ]
       }
     },
     "/api/v1/health/database": {
       "get": {
         "operationId": "HealthController_getDatabaseHealth",
-        "summary": "Check PostgreSQL connectivity",
-        "tags": [
-          "health"
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Database is reachable"
           }
-        }
+        },
+        "summary": "Check PostgreSQL connectivity",
+        "tags": [
+          "health"
+        ]
       }
     }
   },
@@ -39,6 +41,13 @@
   "tags": [],
   "servers": [],
   "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
     "schemas": {}
   }
 }

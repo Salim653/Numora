@@ -66,11 +66,13 @@ Target workflow:
 NestJS controller/DTO
 → generate OpenAPI
 → commit/update packages/contracts/openapi/openapi.json
-→ CI verifies freshness/validity
+→ CI regenerates OpenAPI and fails if the committed file differs
 → frontend/QA use generated contract
 ```
 
 Breaking changes require coordination and release notes.
+
+`pnpm contracts:validate` currently checks JSON syntax for the question, event, and WebSocket schemas. It does not validate example payloads or the complete OpenAPI specification.
 
 ## Versioning
 
