@@ -34,7 +34,7 @@ As of 28 September 2026, the coordinator expects DevOps to handle the staging do
 
 ## CODEOWNERS plan
 
-When GitHub handles are available, map paths such as:
+When GitHub handles are available, map paths such as the examples below. For the current and planned folder layout, use [PROJECT_STRUCTURE](PROJECT_STRUCTURE.md). These example paths do not imply the feature folders already exist.
 
 ```text
 /apps/web/src/features/core-learning/

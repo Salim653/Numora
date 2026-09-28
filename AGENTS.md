@@ -14,10 +14,11 @@ Before implementing a feature, read:
 2. `docs/product/OPEN_DECISIONS.md`
 3. `docs/product/PRD_MAPPING.md`
 4. `docs/development/SPRINT_2_GOAL.md` for prototype or current-sprint work
-5. For frontend UI work, `docs/design/README.md` and `docs/design/NUMORA_UI_DESIGN_SYSTEM.md`; use `docs/design/NUMORA_UI_SKILL.md` as the team workflow reference
-6. Relevant architecture/API/data document
-7. Relevant ADRs
-8. Existing tests and contracts for the module
+5. `docs/development/PROJECT_STRUCTURE.md` for code placement and folder conventions
+6. For frontend UI work, `docs/design/README.md` and `docs/design/NUMORA_UI_DESIGN_SYSTEM.md`; use `docs/design/NUMORA_UI_SKILL.md` as the team workflow reference
+7. Relevant architecture/API/data document
+8. Relevant ADRs
+9. Existing tests and contracts for the module
 
 ## Source-of-truth precedence
 
