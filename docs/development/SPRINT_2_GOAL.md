@@ -4,7 +4,7 @@
 
 ## Goal
 
-Complete one Student flow through real Frontend → API → PostgreSQL → domain scoring/progress → persisted result → updated UI. Curriculum has not supplied final Level-1 content yet, so Software and Curriculum will prepare 10 demo single-choice questions with simple text/math formulas; Curriculum will review them before the trial, and the UI will label them as demo. A newly authenticated Student should join a Class, complete a seeded Level-1 Drill, see a stored score, and unlock Level 2 at **≥80%**.
+Complete one Student flow through real Frontend → API → PostgreSQL → domain scoring/progress → persisted result → updated UI. Curriculum has not supplied final Level-1 content yet, so Software and Curriculum will prepare 10 demo single-choice questions with four options `A`–`D` and text/simple inline LaTeX; Curriculum will review them before the trial, and the UI will label them as demo. A newly authenticated Student should join a Class, complete a seeded Level-1 Drill, see a stored score, and unlock Level 2 at **≥80%**.
 
 ## Main flow
 

@@ -73,7 +73,7 @@ MAT-01 states 5 levels per subbab but also says Curriculum defines the number of
 - First trial covers only Admin → Teacher → School Student → Drill → Teacher progress. Mandiri, Pretest, Tryout, PvP, leaderboard, and feedback remain in PRD v0.5 but outside this first session.
 - Admin UI lists/creates/edits/changes status of Schools and issues/reissues/revokes Teacher tokens.
 - Teacher uses Google login and School token verification, creates a Class, then opens a Class list and Student detail showing level status and latest/best Drill score. Access stays limited to Classes that Teacher owns.
-- Software and Curriculum prepare the 10 Level-1 PG demo questions with simple text/math formulas; Curriculum reviews them before the school trial. They remain visibly labeled demo while final Curriculum material is unavailable.
+- Software and Curriculum prepare the 10 Level-1 PG demo questions with exactly four options `A`–`D` and simple inline LaTeX in text; Curriculum reviews them before the school trial. They remain visibly labeled demo while final Curriculum material is unavailable. The existing question JSON schemas are for Data/AI import, not the demo fixture format; this prototype choice does not resolve final academic content policy.
 - Product/Design and the school coordinate school permission, participant/guardian consent where needed, and demo-content notice.
 - The first partner school has not been selected yet; Product/Design's coordination with a school remains a trial dependency.
 - Trial cannot start if login, authorization, answer/result persistence, or the 80% scoring/unlock rule fails.

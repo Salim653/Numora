@@ -48,7 +48,7 @@ For the first school trial, a simple mock UI is accepted while UI/UX designs are
 
 ### Drill
 
-- 10 seeded Level-1 PG questions with text/simple math formulas render legibly and are visibly labeled demo for school trial participants;
+- 10 seeded Level-1 PG questions each show four options `A`–`D`; simple inline LaTeX renders legibly, and the questions are visibly labeled demo for school trial participants;
 - locked Level direct API access;
 - duplicate submit;
 - refresh/resume;
