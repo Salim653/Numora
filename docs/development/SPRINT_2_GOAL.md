@@ -37,7 +37,7 @@ The supplied Sprint 2 Goal PDF says **≥70%**, but approved PRD v0.5 says **≥
 
 ## Prototype milestone beyond the supplied Sprint 2 Goal
 
-The coordinator's near-term goal is **online staging ready for trial around 12 October 2026** with real Students and Teachers from a school. The first trial tests only **Admin → Teacher → School Student → Drill → Teacher progress**. It excludes the Mandiri, Pretest, Tryout, PvP, leaderboard, and feedback flows from this first session. The expected first cohort is **more than 20 Students and/or several Teachers/Classes**; the exact count still needs confirmation. This is a readiness target, not a claim that the trial is completed by that date.
+The coordinator's near-term goal is **online staging ready for trial around 12 October 2026** with real Students and Teachers from a school. The partner school has **not been selected yet**. The first trial tests only **Admin → Teacher → School Student → Drill → Teacher progress**. It excludes the Mandiri, Pretest, Tryout, PvP, leaderboard, and feedback flows from this first session. The expected first cohort is **more than 20 Students and/or several Teachers/Classes**; the exact count still needs confirmation. This is a readiness target, not a claim that the trial is completed by that date.
 
 The minimum connected prototype flow is:
 

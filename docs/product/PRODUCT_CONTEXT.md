@@ -7,7 +7,7 @@
 
 Numora menyediakan latihan TKA Matematika bagi siswa kelas IX SMP/MTs melalui web responsif. Hipotesis masalahnya: latihan belum terarah, hasil kurang memberi tindak lanjut, guru sulit memantau progres, dan latihan dapat membosankan. Hipotesis ini perlu diuji dengan pengguna; daftar fitur bukan bukti validasi.
 
-Target terdekat adalah **staging online siap diuji sekitar 12 Oktober 2026** oleh Siswa dan Guru sungguhan dari sekolah. Perkiraan awal peserta adalah **lebih dari 20 Siswa dan/atau beberapa Guru/Kelas**; jumlah tepatnya belum ditetapkan. Uji coba pertama mencakup Siswa yang bergabung ke kelas; alur User Mandiri menyusul.
+Target terdekat adalah **staging online siap diuji sekitar 12 Oktober 2026** oleh Siswa dan Guru sungguhan dari sekolah. **Sekolah mitra belum ditentukan.** Perkiraan awal peserta adalah **lebih dari 20 Siswa dan/atau beberapa Guru/Kelas**; jumlah tepatnya belum ditetapkan. Uji coba pertama mencakup Siswa yang bergabung ke kelas; alur User Mandiri menyusul.
 
 Ruang lingkup minimum prototipe:
 
