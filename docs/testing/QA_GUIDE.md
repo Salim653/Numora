@@ -27,6 +27,8 @@ For main flows verify:
 
 ### School verification
 
+- prototype Admin UI lists/creates/edits Schools, changes School status, and issues/reissues/revokes tokens before Teacher onboarding;
+- Teacher signs in with Google, chooses the School, and enters the token through UI;
 - invalid token;
 - expired token;
 - used token;
@@ -39,10 +41,12 @@ For main flows verify:
 - repeated join;
 - Student already in another Class;
 - Teacher accesses another Teacher's Class;
-- prototype Teacher UI creates a Class and shows progress for its joined Student after Drill submission.
+- prototype Teacher UI creates a Class, opens its Student list, and shows each authorized Student's level status and latest/best Drill score after submission;
+- Teacher with several Classes cannot inspect another Teacher's Students or mix Class progress.
 
 ### Drill
 
+- 10 seeded Level-1 PG questions with text/simple math formulas render legibly and are visibly labeled demo for school trial participants;
 - locked Level direct API access;
 - duplicate submit;
 - refresh/resume;

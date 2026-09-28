@@ -39,7 +39,7 @@ This document maps the team-approved PRD v0.5 (28 September 2026) to implementat
 
 ## Sprint 2 slice and dependency
 
-The supplied Sprint 2 Goal targets `Google login → Student profile → join Class → seeded Level-1 Drill → persisted score/result → progress → Level-2 unlock`. Scope includes FE/API/PostgreSQL integration and idempotent submit. The team confirmed that the approved PRD v0.5 threshold of **80%** supersedes the PDF's 70%. For the two-week prototype trial, Teacher must also use UI to create a Class and view Student progress; this is additional trial scope, while the Sprint 2 PDF excludes *full* Teacher UI from its blockers. See `SPRINT_2_GOAL.md`.
+The supplied Sprint 2 Goal targets `Google login → Student profile → join Class → demo Level-1 Drill → persisted score/result → progress → Level-2 unlock`. Scope includes FE/API/PostgreSQL integration and idempotent submit. The team confirmed that approved PRD v0.5's **80%** threshold supersedes the PDF's 70%. For the two-week prototype trial with real school users on online staging, **Admin UI lists/creates/edits Schools and issues/reissues/revokes tokens → Teacher Google login and token verification UI → Teacher creates Class → School Student joins and completes Drill → Teacher opens Class list and Student detail for level status and latest/best score**. Level-1 questions are clearly labeled demo content until Curriculum supplies validated questions. Mandiri is outside the first trial. These are additional trial requirements, while the Sprint 2 PDF excludes *full* Admin/Teacher UI from its blockers. Trial starts only when login, authorization, persistence, and 80% scoring/unlock work without critical failures. See `SPRINT_2_GOAL.md`.
 
 ## Current dependency order
 

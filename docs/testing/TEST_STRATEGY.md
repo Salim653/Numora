@@ -51,6 +51,8 @@ Critical flows:
 6. School Student starts the current weekly Tryout package once; result remains gated until IRT completion.
 7. PvP room/join/match flow where practical in automated browser tests.
 
+For the **first school prototype trial**, the required staging evidence is steps 1–5 through the real Admin, Teacher, and Student UIs: Admin manages School/token, Teacher verifies and creates a Class, Student completes the 10-question demo Drill, and Teacher sees only owned-Class Student level status and latest/best score. Block the trial on login, authorization, answer/result persistence, or 80% scoring/unlock failure. Pretest, Tryout, PvP, leaderboard, feedback, and Mandiri remain later-scope tests. Curriculum review of the demo content and the Product/Design school permission arrangements are separate readiness checks.
+
 ### Load tests (k6 before real-user release)
 
 - 100 concurrent baseline;

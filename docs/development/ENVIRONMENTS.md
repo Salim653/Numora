@@ -28,6 +28,7 @@ Shared development cloud services may be added, but local reproducibility remain
 Purpose:
 
 - integrated QA;
+- first prototype trial with real school Students and Teachers, once the agreed permission/privacy checks are complete;
 - OAuth callback verification;
 - migration rehearsal;
 - WebSocket integration;
@@ -40,6 +41,8 @@ Must use separate:
 - R2 bucket/prefix;
 - secrets;
 - observability environment.
+
+For the prototype trial, staging must be reachable by the school and support Google OAuth callbacks for real Student/Teacher accounts. Demo Level-1 content must be visibly identified as demo and reviewed by Curriculum before use. Teacher data access must stay within owned Classes. As of 28 September 2026, the staging domain and access to the Supabase/Google OAuth projects are not yet available; provisioning is a delivery dependency. Do not assume local Supabase credentials or seed-only identities prove the school-facing flow.
 
 ## Production
 

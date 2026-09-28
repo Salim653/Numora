@@ -13,9 +13,10 @@ Before implementing a feature, read:
 1. `docs/product/PRODUCT_CONTEXT.md`
 2. `docs/product/OPEN_DECISIONS.md`
 3. `docs/product/PRD_MAPPING.md`
-4. Relevant architecture/API/data document
-5. Relevant ADRs
-6. Existing tests and contracts for the module
+4. `docs/development/SPRINT_2_GOAL.md` for prototype or current-sprint work
+5. Relevant architecture/API/data document
+6. Relevant ADRs
+7. Existing tests and contracts for the module
 
 ## Source-of-truth precedence
 

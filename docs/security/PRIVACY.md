@@ -2,6 +2,8 @@
 
 The platform targets SMP students. Before real-user deployment, Product/Institution must approve the applicable consent/privacy policy. This document defines engineering minimization recommendations, not legal advice.
 
+For the first prototype trial, real school Students and Teachers will access online staging. Product/Design coordinates school permission, participant/guardian consent where needed, and a clear notice that Level-1 questions are demo content. Engineering still needs the approved collection/access/retention arrangements before providing real-user access.
+
 ## Minimum identity data recommended
 
 Store only what the product needs:

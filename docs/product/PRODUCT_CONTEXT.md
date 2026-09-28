@@ -7,7 +7,21 @@
 
 Numora menyediakan latihan TKA Matematika bagi siswa kelas IX SMP/MTs melalui web responsif. Hipotesis masalahnya: latihan belum terarah, hasil kurang memberi tindak lanjut, guru sulit memantau progres, dan latihan dapat membosankan. Hipotesis ini perlu diuji dengan pengguna; daftar fitur bukan bukti validasi.
 
-Target terdekat yang disampaikan koordinator Software Engineering pada 28 September 2026 adalah **prototipe awal yang siap diuji coba oleh siswa dan guru dalam sekitar dua minggu**. Untuk uji coba tersebut, Guru harus dapat **membuat kelas dan melihat progres Siswa melalui UI**. Peserta, lingkungan, dan kriteria siap uji lainnya masih perlu disepakati bersama. Pengembangan untuk penggunaan lebih luas adalah tahap berikutnya. Sasaran Sprint 2 yang lebih sempit ada di `docs/development/SPRINT_2_GOAL.md`.
+Target terdekat adalah **staging online siap diuji sekitar 12 Oktober 2026** oleh Siswa dan Guru sungguhan dari sekolah. Perkiraan awal peserta adalah **lebih dari 20 Siswa dan/atau beberapa Guru/Kelas**; jumlah tepatnya belum ditetapkan. Uji coba pertama mencakup Siswa yang bergabung ke kelas; alur User Mandiri menyusul.
+
+Ruang lingkup minimum prototipe:
+
+- Admin melihat daftar, membuat, mengedit, dan mengubah status sekolah; menerbitkan, membuat ulang, dan mencabut token guru melalui UI.
+- Guru login Google, memilih sekolah, memverifikasi token, membuat kelas, lalu membuka daftar kelas dan detail siswa miliknya. Detail menunjukkan status level serta nilai Drill terakhir dan terbaik.
+- Siswa login Google, bergabung ke kelas, mengerjakan 10 soal PG demo Level 1 berupa teks dan rumus matematika sederhana, lalu melihat hasil/progres tersimpan; skor **≥80%** membuka Level 2.
+- Draf soal demo disiapkan tim Software bersama Curriculum, diberi label jelas, dan **ditinjau Curriculum sebelum uji coba**; hasilnya tidak dipresentasikan sebagai ukuran kemampuan TKA resmi.
+- Uji coba belum dimulai jika login, hak akses, penyimpanan jawaban/hasil, atau aturan unlock 80% gagal. Tim Product/Design bersama sekolah mengurus izin sekolah, persetujuan peserta/wali bila diperlukan, dan pemberitahuan soal demo.
+
+Domain staging serta akses proyek Supabase/Google OAuth **belum tersedia** pada 28 September 2026; penyediaannya adalah dependensi nyata untuk uji coba online. Guru hanya boleh melihat progres siswa dari kelas yang ia kelola.
+
+Uji coba pertama hanya menguji rantai **Admin → Guru → Siswa → Drill → progres Guru**. Pretest, Tryout, PvP, leaderboard, feedback, dan alur Mandiri tetap bagian dari PRD v0.5 tetapi bukan sasaran sesi pertama.
+
+Pengembangan untuk penggunaan lebih luas adalah tahap berikutnya. Sasaran Sprint 2 yang lebih sempit ada di `docs/development/SPRINT_2_GOAL.md`.
 
 ## 2. Skema pengguna, peran, dan akses
 

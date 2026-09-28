@@ -3,6 +3,8 @@
 ## Product / requirement
 
 - [ ] Latest PRD/module spec reviewed.
+- [ ] For the prototype school trial, clearly label demo Level-1 questions and explain that their scores are not official TKA ability measures.
+- [ ] Curriculum has reviewed the demo questions, answer keys, and explanations before school participants use them.
 - [ ] OPEN items affecting released behavior are resolved or feature remains disabled/non-final.
 - [ ] Acceptance criteria mapped to test evidence.
 - [ ] No demo policy is accidentally presented as official product policy.
@@ -17,6 +19,7 @@
 
 ## Security / privacy
 
+- [ ] Product/Design and school confirm permission, participant/guardian consent where needed, and the demo-content notice before real school users enter staging.
 - [ ] Auth and resource authorization tested.
 - [ ] Admin access internally provisioned.
 - [ ] Teacher token flow server-side, single-use, expiry tested.
@@ -35,6 +38,9 @@
 
 ## QA
 
+- [ ] Prototype chain verified on staging: Admin lists/creates/edits School and manages token in UI → Teacher Google login/verifies token/creates Class → Student joins/completes Drill → Teacher opens Class/Student detail and views persisted progress in UI.
+- [ ] A Teacher cannot see Student progress from another Teacher's Class.
+- [ ] Do not begin the school trial if login, cross-role/Class authorization, answer/result persistence, or 80% scoring/unlock fails.
 - [ ] Student core flow smoke test.
 - [ ] Teacher verification/class/monitoring smoke test.
 - [ ] Admin school/content/report smoke test.

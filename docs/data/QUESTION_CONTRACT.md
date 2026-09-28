@@ -22,6 +22,8 @@ Student/PvP usage
 
 AI generation does not imply content approval.
 
+For the first school prototype trial, Software and Curriculum will prepare 10 clearly labeled demo `SINGLE_CHOICE` Level-1 questions with text and simple math formulas. Curriculum reviews the stem, answer key, and explanation before real school participants use them. These demo fixtures are not the final Curriculum-approved question bank.
+
 ## Supported conceptual question types
 
 The data model/schema should be able to represent:
