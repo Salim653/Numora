@@ -1,6 +1,6 @@
 # TKA Mathematics SMP Platform
 
-Monorepo bootstrap for Numora, the independent and school-affiliated TKA Mathematics SMP learning platform. Current product baseline: PRD v0.5 (28 September 2026, draft for review). See `docs/development/SPRINT_2_GOAL.md` for the first Student vertical slice.
+Monorepo bootstrap for Numora, the independent and school-affiliated TKA Mathematics SMP learning platform. Current product source of truth: team-approved PRD v0.5 (28 September 2026). See `docs/development/SPRINT_2_GOAL.md` for the first Student vertical slice and prototype trial scope.
 
 ## Architecture baseline
 

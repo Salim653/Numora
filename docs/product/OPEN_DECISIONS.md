@@ -1,12 +1,13 @@
 # Open Decisions Register
 
-**Product source:** PRD v0.5 §13, 28 September 2026 (consolidated draft for review).
-**Rule:** an `OPEN` item must not be silently resolved. A PRD baseline can guide a demo or schema, but does not make its unresolved details final. Product decisions are made jointly with the responsible owners listed in the PRD; the Software Engineering coordinator coordinates FE/BE execution but does not unilaterally change academic/product policy.
+**Product source:** team-approved PRD v0.5 §13, 28 September 2026. The PDF still bears its prior “draft for review” label; the team approval was confirmed by the Software Engineering coordinator on 28 September 2026.
+**Rule:** an `OPEN` item must not be silently resolved. Approved PRD rules apply, while explicitly unresolved details remain open. Product decisions are made jointly with the responsible owners listed in the PRD; the Software Engineering coordinator coordinates FE/BE execution but does not unilaterally change academic/product policy.
 
 ## Status legend
 
-- **PRD BASELINE** — stated behavior in v0.5 usable for planning while the PRD is reviewed.
+- **PRD RULE** — stated behavior in team-approved v0.5, except details explicitly marked OPEN.
 - **OPEN** — unresolved policy/academic detail.
+- **PARTLY OPEN** — part of the decision is confirmed; remaining details are listed explicitly.
 - **PROPOSED** — engineering recommendation awaiting owner agreement.
 - **BLOCKS FINAL** — cannot publish the affected final behavior before resolution.
 
@@ -42,7 +43,7 @@ These are planning targets, not confirmed product performance or privacy policy:
 - Supabase Auth + Google OAuth for Student/Teacher, NestJS authorization. Do not change providers without a migration plan.
 - Drill explanation access is 90 days. Tryout result/explanation access is gated by IRT; historical retention and other deletion periods require a separate policy. Do not auto-delete attempts, XP, events, audit, PvP history, or IRT inputs.
 
-## Clarifications to discuss together
+## Clarifications and decision records
 
 ### CLARIFICATION-001 — Drill timeout
 
@@ -54,7 +55,7 @@ PRD limits explanation access to 90 days while requiring immutable historic scor
 
 ### CLARIFICATION-003 — Sprint 2 mastery threshold
 
-The supplied Sprint 2 Goal PDF says Level 2 unlocks at **≥70%**, while PRD v0.5 says **≥80%**. The older number must not become an unstated exception. Until joint clarification, docs use 80% as the latest PRD baseline and mark the Sprint 2 acceptance threshold as a conflict. Owner: PO + Software + QA. Status: OPEN clarification.
+**Resolved 28 September 2026:** the Software Engineering coordinator confirmed the team's decision to follow approved PRD v0.5 for Sprint 2. Level 2 unlocks at **≥80%**; the supplied Sprint 2 Goal PDF's ≥70% is superseded. Record Sprint 2 acceptance and tests at 80%. This does not resolve any other OPEN item.
 
 ### CLARIFICATION-004 — Star at score 0
 
@@ -66,8 +67,8 @@ MAT-01 states 5 levels per subbab but also says Curriculum defines the number of
 
 ### CLARIFICATION-006 — Prototype trial scope
 
-The coordinator targets a prototype ready for Student and Teacher trial in about two weeks, whereas the supplied Sprint 2 Goal defines one Student vertical slice and excludes full Teacher UI from sprint blockers. Confirm minimum Teacher-visible functionality, pilot participants, and trial environment before declaring the prototype ready. Owner: PO + Software + QA. Status: OPEN.
+**Partly resolved 28 September 2026:** the coordinator confirmed that, for the prototype trial, Teacher must use a real UI to **create a Class and view Student progress**. The supplied Sprint 2 Goal defines one Student vertical slice and excludes *full* Teacher UI from sprint blockers, but those two Teacher capabilities are required for the two-week prototype target. Teacher verification/onboarding details, pilot participants, trial environment, and privacy/QA readiness still need scoping. Owner: PO + Software + QA. Status: PARTLY OPEN.
 
 ## Decision workflow
 
-When a joint decision is reached, record its owner/date and update the PRD or module specification first; then update this register, `PRD_MAPPING.md`, affected contracts/schema/tests, and an ADR only if architecture changes. The PRD draft status should be recorded as approved only when the owners actually approve it.
+When a joint decision is reached, record its owner/date and update the PRD or module specification first; then update this register, `PRD_MAPPING.md`, affected contracts/schema/tests, and an ADR only if architecture changes. The original PDF metadata should be synchronized with the team's approval record when its owner republishes it.

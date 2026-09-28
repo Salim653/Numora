@@ -38,7 +38,8 @@ For main flows verify:
 - invalid code/link;
 - repeated join;
 - Student already in another Class;
-- Teacher accesses another Teacher's Class.
+- Teacher accesses another Teacher's Class;
+- prototype Teacher UI creates a Class and shows progress for its joined Student after Drill submission.
 
 ### Drill
 

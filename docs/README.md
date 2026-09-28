@@ -2,11 +2,11 @@
 
 This directory contains the shared engineering context for the TKA Mathematics SMP platform.
 
-The team-supplied PRD v0.5 (28 September 2026) is the current reference but labels itself a consolidated draft for review. Its source PDF was supplied outside this repository and is not yet committed here; the summaries below do not replace the complete PRD. The supplied Sprint 2 Goal PDF is also external; its operative scope and threshold conflict are recorded in `development/SPRINT_2_GOAL.md`.
+PRD v0.5 (28 September 2026) is the team-approved product source of truth, as confirmed by the Software Engineering coordinator on 28 September 2026. The PDF still carries its earlier “draft for review” label; the source PDF was supplied outside this repository and is not yet committed here. The summaries below do not replace the complete PRD. The supplied Sprint 2 Goal PDF is also external; its older 70% threshold has been superseded by the approved PRD's 80% rule.
 
 ## Product
 
-- `product/PRODUCT_CONTEXT.md` — product baseline from PRD v0.5 (draft for review).
+- `product/PRODUCT_CONTEXT.md` — product rules from team-approved PRD v0.5.
 - `product/PRD_MAPPING.md` — mapping from PRD sections/requirements to technical modules.
 - `product/OPEN_DECISIONS.md` — unresolved PRD items, engineering recommendations, and blockers.
 - `product/GLOSSARY.md` — canonical project vocabulary.
@@ -35,7 +35,7 @@ The team-supplied PRD v0.5 (28 September 2026) is the current reference but labe
 ## Development
 
 - `development/GETTING_STARTED.md`
-- `development/SPRINT_2_GOAL.md` — first Student vertical slice, sprint scope, and unresolved 70%/80% threshold conflict.
+- `development/SPRINT_2_GOAL.md` — first Student vertical slice and additional Teacher UI needed for the prototype trial.
 - `development/GIT_WORKFLOW.md`
 - `development/CODING_STANDARDS.md`
 - `development/ENVIRONMENTS.md`
@@ -64,7 +64,7 @@ See `adr/README.md` and the individual ADR files.
 
 ## Status terminology
 
-- **PRD RULE** — directly stated in PRD v0.5; the supplied version is a draft for review.
+- **PRD RULE** — directly stated in team-approved PRD v0.5.
 - **ENGINEERING DECISION** — approved during technical alignment.
 - **PROPOSED** — recommendation pending approval.
 - **OPEN** — unresolved product/academic decision.

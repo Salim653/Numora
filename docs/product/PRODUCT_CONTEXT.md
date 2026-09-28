@@ -1,13 +1,13 @@
 # Product Context — Numora
 
-**Product source:** PRD v0.5, 28 September 2026, supplied by the Software Engineering coordinator. The PRD labels itself a consolidated draft for review; this document records its current product baseline, not an additional approval.
+**Product source:** team-approved PRD v0.5, 28 September 2026. The supplied PDF still labels itself a consolidated draft for review; the Software Engineering coordinator confirmed team approval on 28 September 2026. Explicit OPEN items remain unresolved.
 **Document purpose:** shared context for Software, Data/AI, QA, UI/UX, Research & Curriculum, and coding agents.
 
 ## 1. Tujuan dan tahap produk
 
 Numora menyediakan latihan TKA Matematika bagi siswa kelas IX SMP/MTs melalui web responsif. Hipotesis masalahnya: latihan belum terarah, hasil kurang memberi tindak lanjut, guru sulit memantau progres, dan latihan dapat membosankan. Hipotesis ini perlu diuji dengan pengguna; daftar fitur bukan bukti validasi.
 
-Target terdekat yang disampaikan koordinator Software Engineering pada 28 September 2026 adalah **prototipe awal yang siap diuji coba oleh siswa dan guru dalam sekitar dua minggu**. Cakupan uji coba, peserta, lingkungan, dan kriteria siap uji perlu disepakati bersama. Pengembangan untuk penggunaan lebih luas adalah tahap berikutnya. Sasaran Sprint 2 yang lebih sempit ada di `docs/development/SPRINT_2_GOAL.md`.
+Target terdekat yang disampaikan koordinator Software Engineering pada 28 September 2026 adalah **prototipe awal yang siap diuji coba oleh siswa dan guru dalam sekitar dua minggu**. Untuk uji coba tersebut, Guru harus dapat **membuat kelas dan melihat progres Siswa melalui UI**. Peserta, lingkungan, dan kriteria siap uji lainnya masih perlu disepakati bersama. Pengembangan untuk penggunaan lebih luas adalah tahap berikutnya. Sasaran Sprint 2 yang lebih sempit ada di `docs/development/SPRINT_2_GOAL.md`.
 
 ## 2. Skema pengguna, peran, dan akses
 
@@ -77,6 +77,6 @@ Leaderboard menampilkan data identitas minimum, bukan email atau riwayat belajar
 
 Autorisasi, batas akses Mandiri/Sekolah, waktu asesmen/PvP, penilaian, dan idempotensi harus ditegakkan server-side. Simpan waktu durable dalam UTC; aturan jadwal bisnis menggunakan `Asia/Jakarta`. UI memerlukan state loading, kosong, gagal, validasi, sukses, sesi berakhir, dan akses ditolak. Perlindungan privasi siswa dan pengujian pengguna nyata harus disepakati sebelum uji coba.
 
-PRD v0.5 masih berstatus **draf untuk review**. `docs/product/OPEN_DECISIONS.md` membedakan baseline yang dapat dipakai untuk desain dari kebijakan yang belum final. Dokumen Sprint 2 yang diberikan masih mencantumkan 70% untuk unlock Drill; angka itu bertentangan dengan baseline 80% dalam PRD v0.5 dan dicatat sebagai klarifikasi, bukan keputusan terselubung.
+PRD v0.5 **sudah disetujui tim sebagai acuan kerja**, walaupun label pada PDF yang diberikan masih menyebut “draf untuk review”. `docs/product/OPEN_DECISIONS.md` mencatat keputusan yang tetap belum final. Dokumen Sprint 2 yang diberikan masih mencantumkan 70% untuk unlock Drill; tim menegaskan bahwa aturan PRD v0.5, yaitu **80%**, berlaku juga untuk Sprint 2.
 
 Peristiwa analitik tambahan v0.5 antara lain `user_type_changed` dan `star_earned`; kontrak lengkap ada di `docs/data/EVENTS.md`. Kebutuhan keamanan, privasi, observabilitas, dan QA ada di folder `docs/security`, `docs/operations`, serta `docs/testing`.

@@ -19,7 +19,7 @@ Before implementing a feature, read:
 
 ## Source-of-truth precedence
 
-1. Latest PRD with its actual approval status — product behavior and acceptance criteria. PRD v0.5 is a consolidated draft for review; unresolved details remain OPEN.
+1. Latest approved PRD — product behavior and acceptance criteria. The team confirmed PRD v0.5 as the working source of truth on 28 September 2026; its explicitly OPEN items remain unresolved.
 2. Approved ADR — technical decision only.
 3. Approved module specification.
 4. Machine-readable contract.
@@ -32,7 +32,7 @@ Never invent an answer for an OPEN item. Implement extensibility around it or us
 
 When adding or changing documentation, distinguish:
 
-- **PRD RULE** — directly stated in the current PRD v0.5 baseline; record its draft status until approved.
+- **PRD RULE** — directly stated in the team-approved PRD v0.5.
 - **ENGINEERING DECISION** — approved technical decision from team alignment/ADR.
 - **PROPOSED** — recommendation awaiting approval.
 - **OPEN** — unresolved product/academic decision.
@@ -52,7 +52,7 @@ Do not present a proposal as a PRD rule.
 - Business time rules such as weekly Tryout package release and leaderboard reset use `Asia/Jakarta`; durable timestamps are stored in UTC.
 - Sensitive state-changing operations must be idempotent or protected by equivalent database constraints/transactions.
 
-## Product baseline from PRD v0.5 (draft for review)
+## Product rules from approved PRD v0.5
 
 - Students and Teachers authenticate with Google.
 - Teacher features require valid school verification through a single-use token valid for 3×24 hours.
@@ -70,7 +70,7 @@ Do not present a proposal as a PRD rule.
 ## Known PRD ambiguities that must not be guessed
 
 - Drill is described as an unlimited count-up timer, while some wording still refers to timeout/timer completion. Treat product timeout semantics as clarification pending; do not introduce a hidden timeout.
-- The supplied Sprint 2 Goal uses 70% Drill mastery, whereas PRD v0.5 uses 80%; record this as CLARIFICATION-003 until the owners decide. Do not silently use 70% for v0.5.
+- The supplied Sprint 2 Goal PDF uses the old 70% Drill threshold. The team confirmed that Sprint 2 follows PRD v0.5: 80% unlocks the next level.
 - Final XP formula is OPEN-11; PRD v0.5 provides a Drill baseline.
 - PGK scoring is OPEN-04.
 - Pretest question count is 20 per chapter; question distribution and placement remain OPEN-01 through OPEN-03.

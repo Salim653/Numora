@@ -67,4 +67,4 @@ If this only works on one person's laptop, the original bootstrap reproducibilit
 3. Generate and review the first Drizzle migration; commit schema + migration.
 4. Replace `.github/CODEOWNERS.example` with `.github/CODEOWNERS` after collecting GitHub usernames.
 5. Enable protected `main` and required CI in GitHub.
-6. Refine Auth, Class, seeded content, and Assessment Engine work against the current Sprint 2 Student vertical slice; record the 70%/80% conflict before acceptance.
+6. Refine Auth, Class, seeded content, and Assessment Engine work against the Sprint 2 Student vertical slice at the approved 80% mastery threshold; plan the Teacher create-Class/progress UI for the prototype trial.

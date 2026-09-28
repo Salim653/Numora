@@ -1,6 +1,6 @@
 # PRD v0.5 → Engineering Mapping
 
-This document maps the 28 September 2026 PRD v0.5 draft to implementation areas. It is not a replacement for the PRD. The near-term Sprint 2 Student slice is recorded in `docs/development/SPRINT_2_GOAL.md`.
+This document maps the team-approved PRD v0.5 (28 September 2026) to implementation areas. It is not a replacement for the PRD. The Sprint 2 Student slice and additional Teacher prototype UI are recorded in `docs/development/SPRINT_2_GOAL.md`.
 
 | PRD area | Key product behavior | Primary backend modules | Primary frontend areas | Persistence / infrastructure | Test emphasis |
 |---|---|---|---|---|---|
@@ -8,7 +8,7 @@ This document maps the 28 September 2026 PRD v0.5 draft to implementation areas.
 | §2 Scope/roles | Student affiliation (Mandiri/School); Student/Teacher/Admin roles; deferred payment | identity, authorization | role route groups, affiliation states | users/memberships | cross-role and cross-affiliation access |
 | §3 Auth/School/Class | Google login; school token; join changes affiliation; one-class Student | identity, schools, classes | onboarding, teacher verification, admin school | users, schools, token, memberships | token race, ownership, one-class uniqueness, Mandiri access |
 | §4 Material/Pretest | Chapter→Subchapter→Level; 20 questions/chapter; max 3 unlocked levels on perfect pretest | content, assessments, progress | core learning | taxonomy, package, attempt, level progress | OPEN distribution/placement; no duplicate pretest |
-| §5 Drill | 10 questions, count-up, 80% mastery, stars, variants, 90-day explanation, baseline XP | assessments, progress, recommendations, XP | core learning | attempts, answers, variants, progress, XP ledger | 70/80 conflict, unlock, stars, retry, idempotency |
+| §5 Drill | 10 questions, count-up, 80% mastery, stars, variants, 90-day explanation, baseline XP | assessments, progress, recommendations, XP | core learning | attempts, answers, variants, progress, XP ledger | 80% unlock, stars, retry, idempotency |
 | §6 Tryout/Scoring | Weekly shared package Monday 00:00 WIB; one attempt/package; result after IRT; PG MVP | assessments, tryout, scoring, IRT | core learning | package period, attempt, scoring/IRT version | shared package, weekly boundary, gated result |
 | §7 PvP | 1v1 realtime across Mandiri/School; classmate invite only for School; 20s reconnect | pvp gateway/match engine | PvP | Redis transient + PostgreSQL result | cross-type access, synchronization, authoritative score |
 | §8 Leaderboard | class Drill+Tryout XP vs global PvP best XP; hourly; Wed archive | leaderboard, XP | leaderboard pages | XP ledger, periods, projection/cache | no double count, archive, separation, all-Student PvP |
@@ -39,7 +39,7 @@ This document maps the 28 September 2026 PRD v0.5 draft to implementation areas.
 
 ## Sprint 2 slice and dependency
 
-The supplied Sprint 2 Goal targets `Google login → Student profile → join Class → seeded Level-1 Drill → persisted score/result → progress → Level-2 unlock`. Scope includes FE/API/PostgreSQL integration and idempotent submit. It does not claim completion of the whole PRD. The sprint PDF's 70% threshold conflicts with PRD v0.5's 80%; resolve CLARIFICATION-003 before final acceptance.
+The supplied Sprint 2 Goal targets `Google login → Student profile → join Class → seeded Level-1 Drill → persisted score/result → progress → Level-2 unlock`. Scope includes FE/API/PostgreSQL integration and idempotent submit. The team confirmed that the approved PRD v0.5 threshold of **80%** supersedes the PDF's 70%. For the two-week prototype trial, Teacher must also use UI to create a Class and view Student progress; this is additional trial scope, while the Sprint 2 PDF excludes *full* Teacher UI from its blockers. See `SPRINT_2_GOAL.md`.
 
 ## Current dependency order
 

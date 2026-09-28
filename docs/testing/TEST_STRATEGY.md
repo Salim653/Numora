@@ -11,7 +11,7 @@ Testing protects product rules, authorization, historical integrity, realtime sy
 High priority:
 
 - teacher token expiry and consumption rules;
-- Drill 80% mastery/unlock and star independence (the supplied Sprint 2 PDF's 70% is a recorded conflict, not an approved v0.5 rule);
+- Drill 80% mastery/unlock and star independence, including a 7/10 vs 8/10 boundary;
 - level lock checks;
 - Tryout Monday 00:00 WIB shared-package release, one attempt/package, and IRT-gated result;
 - scoring-policy behavior;
