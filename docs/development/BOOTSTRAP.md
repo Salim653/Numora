@@ -17,7 +17,7 @@ The current repository is a **walking skeleton**, not a product-feature implemen
 - machine-readable OpenAPI/question/event/PvP envelopes;
 - TypeScript strict baseline, ESLint, Prettier;
 - GitHub CI and PR template;
-- CODEOWNERS template awaiting actual GitHub usernames.
+- CODEOWNERS mapped to the supplied GitHub accounts; repository write access still needs verification.
 
 ## Explicitly not implemented yet
 
@@ -64,6 +64,6 @@ If this only works on one person's laptop, the original bootstrap reproducibilit
 1. Run the acceptance test on at least two different team members' machines.
 2. Verify `pnpm install --frozen-lockfile` using the committed lockfile.
 3. Review and apply the committed first Drizzle migration.
-4. Replace `.github/CODEOWNERS.example` with `.github/CODEOWNERS` after collecting GitHub usernames.
+4. Confirm each account in `.github/CODEOWNERS` has repository write access.
 5. Enable protected `main` and required CI in GitHub.
 6. Refine Auth, Class, seeded content, and Assessment Engine work against the Sprint 2 Student vertical slice at the approved 80% mastery threshold; plan Admin School/token UI and Teacher verification/create-Class/progress UI for the online school prototype trial.

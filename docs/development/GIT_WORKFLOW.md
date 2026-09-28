@@ -16,6 +16,10 @@ refactor/assessment-policy
 
 Avoid permanent `frontend`, `backend`, `develop`, or sprint branches.
 
+## Contributors outside the job list
+
+`CODEOWNERS` assigns reviewers, not permission to edit. Anyone can make local commits after obtaining the repository code. Pushing a branch to this repository requires write access; a contributor without it can propose a pull request from a fork when repository visibility and settings allow. Do not add someone to `CODEOWNERS` only so they can contribute. Their changes still follow the same PR review and CI rules.
+
 ## Main branch rules
 
 Recommended GitHub protection:
