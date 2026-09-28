@@ -95,4 +95,5 @@ pnpm ci
 1. `/AGENTS.md`
 2. `docs/product/PRODUCT_CONTEXT.md`
 3. `docs/product/OPEN_DECISIONS.md`
-4. relevant module/API/data docs and ADRs.
+4. `docs/development/PROJECT_STRUCTURE.md` for code placement.
+5. relevant module/API/data docs and ADRs.

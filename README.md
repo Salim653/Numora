@@ -14,7 +14,7 @@ Monorepo bootstrap for Numora, the independent and school-affiliated TKA Mathema
 - Redis — cache, queues, rate-limit/PvP ephemeral state.
 - Cloudflare R2 — media assets; not required for the first walking skeleton.
 
-Read `AGENTS.md` before implementing product features. For frontend work before the final UI/UX handoff, see `docs/design/README.md` and the team-supplied design system there.
+Read `AGENTS.md` before implementing product features. Use `docs/development/PROJECT_STRUCTURE.md` as the code-placement guide. For frontend work before the final UI/UX handoff, see `docs/design/README.md` and the team-supplied design system there.
 
 ## Required local tools
 
