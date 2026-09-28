@@ -9,6 +9,8 @@
 
 pnpm and Supabase CLI versions are pinned by the repository.
 
+On Windows, run `node --version` in the terminal you will use for development. It must report v24; an older system installation can take precedence over a user-installed Node 24 in `PATH`.
+
 ## First run
 
 ```bash

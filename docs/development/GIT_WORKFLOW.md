@@ -31,6 +31,8 @@ Recommended GitHub protection:
 - CODEOWNERS review for sensitive paths where configured;
 - branch must be up to date before merge when practical.
 
+**PROPOSED — pending repository admin setup:** In GitHub repository Settings → Branches, protect `main` by requiring a pull request, one approving review, and the `quality` status check. Disable force pushes and deletion. Require code-owner review after every account listed in `.github/CODEOWNERS` has write access; read-only accounts cannot act as code owners. Verify the rule on a test PR before relying on it.
+
 ## Required CI on PR
 
 At minimum:
