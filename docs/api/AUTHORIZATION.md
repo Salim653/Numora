@@ -18,7 +18,7 @@ Evaluate as needed:
 4. Teacher school verification;
 5. Class membership/ownership;
 6. resource relationship;
-7. product-specific eligibility (level unlocked, daily Tryout eligibility, etc.).
+7. product-specific eligibility (level unlocked, active weekly Tryout package, one attempt/package, etc.).
 
 ## Matrix baseline
 
@@ -36,7 +36,10 @@ Evaluate as needed:
 | Manage question bank | No | No | Yes |
 | Send feedback | No | own Student only | not standard user flow |
 | Read feedback | own only | sent/own-class context as needed | operational only |
-| Start assessment/PvP without class | No | n/a | n/a |
+| Start Drill without Class | Yes, Mandiri | n/a | n/a |
+| Start Pretest/Tryout without Class | No | n/a | n/a |
+| Create/share PvP room without Class | Yes, Mandiri | n/a | n/a |
+| Invite classmate to PvP | School Student only | n/a | n/a |
 | View IRT | No | No | Yes |
 
 ## Server enforcement

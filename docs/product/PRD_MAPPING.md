@@ -1,22 +1,22 @@
-# PRD v0.4 → Engineering Mapping
+# PRD v0.5 → Engineering Mapping
 
-This document maps product requirements to implementation areas. It is not a replacement for the PRD.
+This document maps the 28 September 2026 PRD v0.5 draft to implementation areas. It is not a replacement for the PRD. The near-term Sprint 2 Student slice is recorded in `docs/development/SPRINT_2_GOAL.md`.
 
 | PRD area | Key product behavior | Primary backend modules | Primary frontend areas | Persistence / infrastructure | Test emphasis |
 |---|---|---|---|---|---|
-| §1 Product purpose | School-based TKA Math practice; progress, monitoring, quality, PvP | cross-cutting | all | analytics | product journey |
-| §2 Scope/roles | Student/Teacher/Admin boundaries | identity, authorization | role route groups | users/memberships | cross-role access denial |
-| §3 Auth/School/Class | Google login; school token; one-class Student | identity, schools, classes | onboarding, teacher verification, admin school | users, schools, token, memberships | token race, ownership, one-class uniqueness |
-| §4 Material/Pretest | Chapter→Subchapter→Level; optional once/chapter | content, assessments, progress | core learning | taxonomy, package, attempt, level progress | OPEN policies, no duplicate pretest |
-| §5 Drill | 10 questions, count-up, 70%, variants, 90-day explanation | assessments, progress, recommendations, XP | core learning | attempts, answers, variants, XP ledger | unlock, retry variant, duplicate submit |
-| §6 Tryout/Scoring | 1/day WIB; backend package; PG MVP | assessments, tryout, scoring | core learning | attempt/package/scoring version | day-boundary race, package selection |
-| §7 PvP | 1v1 realtime; shared questions; 20s reconnect | pvp gateway/match engine | PvP | Redis transient + PostgreSQL result | synchronization, authoritative score |
-| §8 Leaderboard | class/PvP separated; hourly; Wed archive | leaderboard, XP | leaderboard pages | XP ledger, periods, projection/cache | no double count, archive, separation |
+| §1 Product purpose | TKA Math practice for Mandiri and School Students; progress, monitoring, quality, PvP | cross-cutting | all | analytics | both Student journeys |
+| §2 Scope/roles | Student affiliation (Mandiri/School); Student/Teacher/Admin roles; deferred payment | identity, authorization | role route groups, affiliation states | users/memberships | cross-role and cross-affiliation access |
+| §3 Auth/School/Class | Google login; school token; join changes affiliation; one-class Student | identity, schools, classes | onboarding, teacher verification, admin school | users, schools, token, memberships | token race, ownership, one-class uniqueness, Mandiri access |
+| §4 Material/Pretest | Chapter→Subchapter→Level; 20 questions/chapter; max 3 unlocked levels on perfect pretest | content, assessments, progress | core learning | taxonomy, package, attempt, level progress | OPEN distribution/placement; no duplicate pretest |
+| §5 Drill | 10 questions, count-up, 80% mastery, stars, variants, 90-day explanation, baseline XP | assessments, progress, recommendations, XP | core learning | attempts, answers, variants, progress, XP ledger | 70/80 conflict, unlock, stars, retry, idempotency |
+| §6 Tryout/Scoring | Weekly shared package Monday 00:00 WIB; one attempt/package; result after IRT; PG MVP | assessments, tryout, scoring, IRT | core learning | package period, attempt, scoring/IRT version | shared package, weekly boundary, gated result |
+| §7 PvP | 1v1 realtime across Mandiri/School; classmate invite only for School; 20s reconnect | pvp gateway/match engine | PvP | Redis transient + PostgreSQL result | cross-type access, synchronization, authoritative score |
+| §8 Leaderboard | class Drill+Tryout XP vs global PvP best XP; hourly; Wed archive | leaderboard, XP | leaderboard pages | XP ledger, periods, projection/cache | no double count, archive, separation, all-Student PvP |
 | §9 Monitoring/support | teacher dashboard, feedback, videos, reports | monitoring, feedback, videos, reports | teacher/admin/student support | feedback/reports/video metadata | resource ownership, read state |
 | §10 Admin/content/IRT | content status, audit, historical integrity, IRT | admin, content, audit, IRT | admin | question versions, audit, IRT result | historical immutability |
 | §11 Data/NFR | events, reliability, time, privacy, WebSocket/jobs | cross-cutting | states/accessibility | outbox, logging, Redis/BullMQ | idempotency, observability |
 | §12 Handoff | module specs with I/O/states/validation/tests | all | all | contracts | DoR/DoD |
-| §13 OPEN items | unresolved academic/product policy | policy abstractions | feature states | config/versioning | tests gated by approved policy |
+| §13 OPEN items | OPEN-01–18 plus documented ambiguities | policy abstractions | feature states | config/versioning | tests gated by approved policy |
 | §14 Terms | canonical vocabulary | naming | labels | naming | terminology consistency |
 
 ## User stories to technical capabilities
@@ -26,37 +26,37 @@ This document maps product requirements to implementation areas. It is not a rep
 | US-01 join class | class code/link/QR resolution, membership transaction, one-class constraint |
 | US-02 pretest | pretest eligibility, package selection, placement policy, progress unlock |
 | US-03 repeat Drill | assessment persistence, variant rotation, scoring, progress, XP |
-| US-04 tryout | daily eligibility, simulation package, result/explanation |
-| US-05 PvP | WebSocket room/match state, Redis, durable result, PvP leaderboard |
+| US-04 tryout | weekly shared package, one attempt/package, IRT-gated result/explanation |
+| US-05 PvP | cross-affiliation WebSocket room/match state, Redis, durable result, global PvP leaderboard |
 | US-06 teacher monitoring | resource-scoped query, progress aggregation, feedback |
 | US-07 content correction | question versioning, archive, immutable historical attempts |
 | US-08 teacher verification | single-use token transaction + teacher-school membership |
 | US-09 school operations | Admin school/token/class/member interfaces + audit |
 | US-10 video report | recommendation metadata + report workflow |
 | US-11 IRT | response extraction, daily batch, model/versioned result, admin display |
+| US-12 Mandiri upgrade | join Class and change affiliation without losing historical learning state; School exit behavior OPEN-15 |
+| US-13 stars | derive 1–3 stars from Drill score independently of 80% unlock and XP |
+
+## Sprint 2 slice and dependency
+
+The supplied Sprint 2 Goal targets `Google login → Student profile → join Class → seeded Level-1 Drill → persisted score/result → progress → Level-2 unlock`. Scope includes FE/API/PostgreSQL integration and idempotent submit. It does not claim completion of the whole PRD. The sprint PDF's 70% threshold conflicts with PRD v0.5's 80%; resolve CLARIFICATION-003 before final acceptance.
 
 ## Current dependency order
 
 ```text
-Identity
-  ↓
-School verification / Class
-  ↓
-Content taxonomy & question model
-  ↓
-Assessment engine
-  ├── Pretest
-  ├── Drill
-  └── Tryout
-       ↓
-Progress + XP ledger
-  ├── Monitoring / Feedback
-  └── Leaderboards
+Identity ──┬── Mandiri Student
+           └── School verification / Class ── School Student
 
-Content/question model also feeds:
-  ├── PvP
-  ├── Recommendation/reporting
-  └── IRT/analytics
+Content taxonomy & question model
+  ├── Assessment engine
+  │     ├── Drill (both affiliations) ── Progress + XP ledger
+  │     ├── Pretest (School; OPEN placement)
+  │     └── Weekly Tryout (School MVP; IRT-gated result)
+  ├── PvP (both affiliations) ── global PvP best XP
+  ├── Recommendation / reporting
+  └── IRT / analytics
+
+Progress + XP ledger ── class leaderboard / monitoring / feedback
 ```
 
 ## Change-impact rule

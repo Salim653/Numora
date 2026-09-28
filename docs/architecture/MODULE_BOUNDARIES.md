@@ -14,9 +14,9 @@ The backend is a modular monolith. Modules own business behavior, not merely tab
 | `scoring` | scoring policy interfaces/versions | content |
 | `progress` | level access/completion, latest/best score | assessments |
 | `xp` | XP policy interface and immutable ledger | assessments/PvP |
-| `tryout` | daily eligibility and tryout package selection policy | assessments |
+| `tryout` | weekly shared package release, one-attempt-per-package eligibility, IRT-gated result policy | assessments, IRT |
 | `leaderboards` | periods/projections/archive | XP, PvP results |
-| `pvp` | room/invite/match state, scoring orchestration | content, identity, XP |
+| `pvp` | cross-affiliation room/invite/match state, scoring orchestration | content, identity, XP |
 | `monitoring` | teacher-facing aggregates | classes, progress, assessments |
 | `feedback` | one-way teacher notes/read state | classes, identity |
 | `videos` | curated recommendation metadata | content |

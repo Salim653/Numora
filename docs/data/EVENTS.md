@@ -25,13 +25,15 @@ Recommended versioned envelope:
 
 ## PRD event vocabulary
 
-PRD v0.4 lists at least:
+PRD v0.5 lists at least:
 
 - `account_registered`
 - `class_joined`
+- `user_type_changed`
 - `assessment_started`
 - `assessment_completed`
 - `level_unlocked`
+- `star_earned`
 - `explanation_viewed`
 - `feedback_sent`
 - `feedback_read`

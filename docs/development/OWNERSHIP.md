@@ -2,6 +2,13 @@
 
 This file reflects the final job-list image supplied by the team. GitHub usernames should be added to CODEOWNERS once known.
 
+## Team structure clarified on 28 September 2026
+
+- **Departemen Software Engineering** combines the divisions and coordinates shared engineering decisions/work.
+- A **divisi** is the primary engineering discipline, such as Frontend Engineering or Backend Engineering.
+- A **tim** focuses on a feature area while members retain their division scope. For example, a Frontend member in Core Learning/PvP owns frontend work for those features, not backend domain policy.
+- The coordinator who supplied this context leads the Software Engineering department, belongs to the Frontend Engineering division, and works on Core Learning and PvP frontend. Product/academic OPEN decisions are made jointly with the responsible PO, Curriculum, Data, Software, and QA owners; department coordination is not unilateral product approval.
+
 | Member | Role | Main ownership | Secondary ownership |
 |---|---|---|---|
 | Ferdiansyah Dwana Putra S | Frontend | Core Learning | PvP & Leaderboard |

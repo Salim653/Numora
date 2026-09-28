@@ -2,7 +2,7 @@
 
 ## Product requirements
 
-PRD v0.4 states:
+PRD v0.5 states:
 
 - IRT runs as a daily batch/cron process;
 - uses cumulative Student responses rather than a weekly period;
@@ -11,6 +11,7 @@ PRD v0.4 states:
 - current baseline threshold: minimum 30 responses;
 - below threshold displays “Data belum cukup”;
 - IRT must not modify historical Student score/XP.
+- weekly Tryout uses one shared package for all users in a period, and its result/explanation is released only after the related IRT batch; max 3×24h target after the package ends, with timing/failure policy OPEN-18.
 
 Detailed thresholds/model parameters remain OPEN-12.
 

@@ -5,7 +5,7 @@
 The architecture must support:
 
 - mobile-first responsive web usage;
-- clear Student/Teacher/Admin authorization;
+- clear Student/Teacher/Admin authorization plus Student Mandiri/School affiliation checks;
 - durable assessment and historical integrity;
 - realtime PvP without making the entire platform realtime;
 - scalable asynchronous processing for analytics, leaderboards, IRT, and outbox delivery;
@@ -111,9 +111,9 @@ Resource authorization
 Authorization examples:
 
 - Teacher must be verified and own the Class.
-- Student must be a member of a Class before starting assessment/PvP.
+- Student Mandiri may start Drill and create/share a PvP room; Pretest, Tryout, and class leaderboard require Class membership.
 - Admin routes require an internally provisioned Admin identity.
-- Global PvP leaderboard exposes minimum display information only.
+- Global PvP leaderboard includes Mandiri and School Students and exposes minimum display information only.
 
 ## 7. Assessment architecture
 
@@ -128,7 +128,7 @@ CREATED → IN_PROGRESS → SUBMITTED → SCORING → COMPLETED
 
 Key rules:
 
-- package/variant is selected server-side;
+- package/variant is selected server-side; Tryout uses one shared weekly package for all users in a period;
 - refresh resumes the same in-progress attempt where product rules require it;
 - duplicate submit creates one final result;
 - attempt stores references/snapshots required to preserve historical context;
@@ -196,6 +196,7 @@ Expected jobs:
 - hourly leaderboard projection refresh;
 - Wednesday 23:59 WIB leaderboard period close/archive;
 - daily IRT batch trigger;
+- Monday 00:00 WIB weekly Tryout package release/lock coordination and result publication after IRT;
 - continuous/retry outbox processing.
 
 All business-calendar scheduling must explicitly use `Asia/Jakarta` rather than host timezone assumptions.

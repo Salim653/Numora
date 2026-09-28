@@ -30,7 +30,7 @@ The current repository is a **walking skeleton**, not a product-feature implemen
 - product UI routes;
 - resolved behavior for OPEN PRD items.
 
-Those are Sprint-3/P1 work and must follow existing ADRs/contracts rather than being improvised.
+Those were outside the original walking-skeleton bootstrap. The newly supplied Sprint 2 Goal now requires Google Student login, Class join, and a persisted Level-1 Drill vertical slice; see `SPRINT_2_GOAL.md`. Remaining feature order follows PRD v0.5 and team refinement.
 
 ## Bootstrap acceptance test
 
@@ -58,7 +58,7 @@ Then verify:
 6. Worker logs a completed startup probe.
 7. Supabase Studio shows foundational tables and DEMO rows.
 
-If this only works on one person's laptop, Sprint-2 bootstrap is not done.
+If this only works on one person's laptop, the original bootstrap reproducibility goal is not met. Passing this check alone does not complete the current Sprint 2 Student flow.
 
 ## First team actions after cloning
 
@@ -67,4 +67,4 @@ If this only works on one person's laptop, Sprint-2 bootstrap is not done.
 3. Generate and review the first Drizzle migration; commit schema + migration.
 4. Replace `.github/CODEOWNERS.example` with `.github/CODEOWNERS` after collecting GitHub usernames.
 5. Enable protected `main` and required CI in GitHub.
-6. Create tickets for Auth, School Verification, Class, Content Model, and Assessment Engine vertical slice.
+6. Refine Auth, Class, seeded content, and Assessment Engine work against the current Sprint 2 Student vertical slice; record the 70%/80% conflict before acceptance.

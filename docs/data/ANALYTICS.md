@@ -11,6 +11,7 @@ Data should support analysis of:
 - feedback;
 - PvP;
 - school/class activity;
+- activity by Student affiliation (Mandiri vs School) without exposing unnecessary PII;
 - content/report quality;
 - leaderboard periods;
 - IRT.

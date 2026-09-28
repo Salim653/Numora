@@ -18,6 +18,7 @@
 
 - User role cannot be changed by the user after registration.
 - A Student has at most one active class membership in the current product version.
+- A Student without a Class is Mandiri and may have durable Drill/PvP history. Joining a Class changes affiliation without deleting that history; School exit semantics remain OPEN-15.
 - Teacher resource access is limited to Classes they own/manage.
 - Teacher product access requires a valid school membership created through token verification.
 
@@ -200,17 +201,18 @@ Model-specific optional fields should not be added as product facts before Data/
 - `audit_logs`
 - optional processed-event/integration tables as needed
 
-## 4. Tryout daily eligibility
+## 4. Weekly Tryout package eligibility
 
-The product rule is one Tryout start per local calendar day, reset at 00:00 WIB based on start date.
+PRD v0.5 replaces the daily-start rule. A new shared package releases Monday 00:00 WIB; the previous package becomes locked. A Student may start a given package at most once. Only School Students access the active package in the MVP while Mandiri payment is deferred.
 
 Recommended persistence technique:
 
-- compute `business_start_date` in `Asia/Jakarta` at successful Tryout creation;
-- enforce one eligible Tryout start per Student per business date with transaction/unique constraint semantics;
-- do not implement “24 hours since last attempt.”
+- represent package identity, release/lock window, and IRT/result availability durably;
+- select the active package using `Asia/Jakarta` business time, not a user's device clock;
+- enforce unique `(student_id, package_id)` attempt creation transactionally;
+- preserve prior attempts and publish their result/explanation only after the related IRT batch completes according to the approved policy.
 
-This allows 23:58 and 00:01 attempts on adjacent WIB dates, as the product rule implies.
+Do not keep the former `business_start_date` daily-eligibility constraint.
 
 ## 5. Idempotency and uniqueness examples
 
@@ -220,7 +222,7 @@ Use DB constraints in addition to application idempotency where possible:
 - token can transition unused → used once;
 - one final result per attempt;
 - one XP ledger contribution per unique source event;
-- one Tryout start per Student/business date;
+- one Tryout attempt per Student/package;
 - one answer per PvP player/question state where product requires single submission.
 
 ## 6. Deletion and archival

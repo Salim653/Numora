@@ -1,288 +1,82 @@
-# Product Context — Platform Latihan TKA Matematika SMP
+# Product Context — Numora
 
-**Product source:** PRD v0.4, 22 September 2026.  
-**Document purpose:** concise shared context for Software, Data, QA, UI/UX, and AI coding agents.  
-**Language note:** business/product rules are written in Indonesian; technical identifiers remain English.
+**Product source:** PRD v0.5, 28 September 2026, supplied by the Software Engineering coordinator. The PRD labels itself a consolidated draft for review; this document records its current product baseline, not an additional approval.
+**Document purpose:** shared context for Software, Data/AI, QA, UI/UX, Research & Curriculum, and coding agents.
 
-## 1. Tujuan produk
+## 1. Tujuan dan tahap produk
 
-Platform menyediakan latihan mandiri TKA Matematika untuk siswa kelas IX SMP/MTs dalam kelas digital yang berada di bawah sekolah terdaftar. Sekolah dikelola Admin, Guru terverifikasi membuat/mengelola kelas, dan Siswa bergabung menggunakan kode/QR/link kelas.
+Numora menyediakan latihan TKA Matematika bagi siswa kelas IX SMP/MTs melalui web responsif. Hipotesis masalahnya: latihan belum terarah, hasil kurang memberi tindak lanjut, guru sulit memantau progres, dan latihan dapat membosankan. Hipotesis ini perlu diuji dengan pengguna; daftar fitur bukan bukti validasi.
 
-Hipotesis masalah produk menurut PRD:
+Target terdekat yang disampaikan koordinator Software Engineering pada 28 September 2026 adalah **prototipe awal yang siap diuji coba oleh siswa dan guru dalam sekitar dua minggu**. Cakupan uji coba, peserta, lingkungan, dan kriteria siap uji perlu disepakati bersama. Pengembangan untuk penggunaan lebih luas adalah tahap berikutnya. Sasaran Sprint 2 yang lebih sempit ada di `docs/development/SPRINT_2_GOAL.md`.
 
-- latihan belum terarah;
-- hasil belum memberi tindak lanjut yang cukup;
-- guru sulit memantau progres;
-- latihan dapat menimbulkan kejenuhan.
+## 2. Skema pengguna, peran, dan akses
 
-Daftar fitur bukan bukti bahwa kebutuhan telah tervalidasi; validasi pengguna tetap diperlukan.
+Role tetap `Student`, `Teacher`, dan `Admin`. `Student` memiliki dua status afiliasi, bukan dua role baru:
 
-## 2. Hierarki operasional
+| Status Student | Akses MVP v0.5 | Batas utama |
+|---|---|---|
+| User Mandiri | Login Google, Drill, membuat room PvP dan membagikan kode, leaderboard PvP global | Belum bergabung kelas; Pretest, Tryout, leaderboard kelas, dan undangan teman sekelas terkunci; tryout berbayar ditunda dari MVP |
+| User Terafiliasi Sekolah | Seluruh fitur belajar yang tersedia gratis; leaderboard kelas dan global; dapat mengundang teman sekelas ke PvP | Maksimal satu kelas; tidak melihat hasil pribadi siswa lain |
 
-```text
-Admin
-  └── School
-       └── Verified Teacher
-            └── Class
-                 └── Student
-```
+User Mandiri dapat bergabung ke kelas dengan kode/QR/link valid dan menjadi User Terafiliasi Sekolah. Siswa tidak dapat keluar/berpindah kelas sendiri; penanganan oleh Admin serta dampaknya pada riwayat/progres masih `OPEN-08`/`OPEN-15`. Afiliasi kelas harus diperiksa di server. Riwayat Student Mandiri tetap disimpan.
 
-Catatan: PRD mendefinisikan role utama Student, Teacher, dan Admin. Tidak ada role teknis terpisah bernama `SchoolAdmin` pada v0.4.
+Hierarki operasional sekolah: `Admin → School → Verified Teacher → Class → Student`. Guru yang terverifikasi dapat membuat banyak kelas, melihat progres siswa pada kelasnya, dan memberi feedback satu arah. Guru tidak mengelola bank soal. Admin adalah satu role internal pada v0.5, mengelola sekolah/token, pengguna/kelas, konten/paket, laporan, IRT/analitik, dan audit. Pemecahan sub-role Admin masih `OPEN-16`. Admin tidak dapat mengubah parameter inti produk melalui UI.
 
-## 3. Peran dan batas akses
+## 3. Autentikasi, sekolah, dan kelas
 
-### Student
+- Student dan Teacher login dengan Google. Saat registrasi pertama, user memilih role dan melengkapi profil; role tidak dapat diubah sendiri. Foto mengikuti Google dengan avatar inisial sebagai fallback. Admin memakai akun internal/seeder.
+- Admin membuat sekolah dan menerbitkan token verifikasi guru yang single-use, berlaku 3×24 jam, dapat diterbitkan ulang, dan hangus setelah dipakai. Guru memilih sekolah dan memasukkan token; token gagal tidak membuka fitur Guru.
+- Guru terverifikasi membuat kelas dengan kode/link/QR. Student bergabung lewat salah satunya dan hanya boleh menjadi anggota satu kelas dalam versi ini.
+- Tanpa kelas, Student tetap boleh mengerjakan Drill dan membuat/membagikan room PvP. Pretest, Tryout, dan leaderboard kelas memerlukan keanggotaan kelas.
 
-Hak utama:
+## 4. Materi dan Pretest
 
-- latihan/pretest/tryout;
-- hasil dan riwayat pribadi;
-- feedback pribadi;
-- PvP;
-- leaderboard.
+Hierarki akademik: `Chapter → Subchapter → Level`. PRD v0.5 memberi baseline 5 level per subbab dan 10 soal per level, tetapi juga menyerahkan daftar, urutan, jumlah level, kompetensi, dan definisi tuntas kepada Curriculum (`OPEN-01`). Jangan mengunci skema ke angka lima sebelum keputusan Curriculum; gunakan konten demo yang diberi label jelas.
 
-Batas utama:
+Pretest opsional, maksimal sekali selesai per bab, dapat dilewati, dan tidak memberi XP. Baseline: 20 soal per bab, diusahakan mewakili seluruh subbab. Tanpa Pretest, Level 1 tiap subbab terbuka. Hasil sempurna dapat membuka maksimal 3 level per subbab. Distribusi soal (`OPEN-02`) serta pemetaan hasil yang tidak sempurna ke level (`OPEN-03`) belum final. Pretest yang sedang berlangsung dilanjutkan saat refresh dan level yang sudah terbuka tidak dikunci kembali.
 
-- hanya satu kelas pada versi awal;
-- tidak mengelola soal;
-- tidak melihat hasil pribadi siswa lain;
-- tanpa kelas, pretest/drill/tryout/PvP terkunci.
+## 5. Drill, progres, bintang, dan XP
 
-### Teacher
+- Student memilih Bab → Subbab → Level; Level terkunci tidak boleh dimulai.
+- Satu sesi berisi 10 soal untuk satu level. Timer count-up tanpa batas produk. Jawaban boleh dilewati/diubah dan soal dapat dinavigasi sebelum submit; konfirmasi submit menampilkan jumlah soal kosong.
+- Ambang Ketuntasan v0.5 adalah **80%**. Skor ≥80 membuka level berikutnya; skor lebih rendah tidak mencabut akses yang sudah dimiliki. Retry tanpa batas memakai varian setara yang berbeda. Refresh mempertahankan attempt dan paket yang sama.
+- Jawaban disimpan selama sesi dengan status penyimpanan yang jelas. Koneksi putus tidak menghentikan timer. Submit berulang tidak membuat hasil/XP ganda.
+- Hasil memuat nilai 0–100, poin mentah, jawaban, pembahasan, status ketuntasan, bintang, dan perubahan akses. Pembahasan Drill dapat diakses selama 90 hari sejak pengerjaan; riwayat hasil dan versi konten tetap dipertahankan.
+- Bintang adalah dorongan psikologis, **bukan** syarat unlock atau pengali XP: 1 bintang untuk 10–50, 2 untuk 60–90, 3 untuk 100. Tampilan skor 0 belum dijelaskan eksplisit di PRD dan perlu klarifikasi sebelum final.
+- Jika skor <80, hasil menampilkan hingga 3 video terkait subbab dari metadata tersimpan; tidak ada pencarian web saat request Student. Kondisi tanpa video tidak menghalangi hasil.
+- PRD memberi baseline XP Drill: `(jumlahBenar × 100) + max(0, (15 − menit) × 10)`. Formula final masih `OPEN-11`; simpan versi kebijakan XP. Bintang tidak mengubah XP.
 
-Hak utama:
+## 6. Tryout
 
-- membuat dan mengelola kelas;
-- melihat progres siswa pada kelas yang dikelola;
-- memberi feedback satu arah.
+- Paket baru rilis setiap **Senin 00:00 WIB**; paket lama dikunci saat paket baru rilis. Semua peserta pada periode yang sama mengerjakan paket yang sama untuk kebutuhan IRT. Satu paket hanya dapat dikerjakan sekali per user.
+- User Sekolah mengakses paket berjalan secara gratis. Tryout berbayar bagi User Mandiri dan pembelian paket lama ditunda dari MVP (`OPEN-17`); jangan membuka akses berbayar tanpa alur yang disetujui.
+- Hasil dan pembahasan tersedia setelah batch IRT terkait selesai, dengan target maksimum 3×24 jam setelah periode berakhir. Detail jaminan waktu batch masih `OPEN-18`. Paket lama yang pernah dikerjakan hanya dapat dibuka untuk pembahasan setelah syarat tersebut terpenuhi.
+- Tryout tidak membuka level Drill. Jumlah soal, durasi, domain, bentuk, dan komposisi resmi masih `OPEN-05`. MVP penskoran fokus pilihan ganda satu jawaban; PGK menunggu `OPEN-04`.
+- Nilai ditampilkan sebagai hasil simulasi, bukan nilai TKA resmi.
 
-Batas utama:
+## 7. PvP dan leaderboard
 
-- wajib terverifikasi pada sekolah;
-- tidak membuat/mengelola bank soal;
-- hanya dapat mengakses kelas dan siswa yang dikelola.
+PvP adalah pertandingan 1v1 realtime via WebSocket dan dapat mempertemukan Student Mandiri dengan Student Sekolah, termasuk lintas kelas. Semua Student boleh membuat room dan berbagi kode/link/QR; hanya Student Sekolah dapat mengundang teman sekelas lewat notifikasi. Kategori awal Mudah/Sedang/Sulit, 10 soal dengan urutan sama untuk kedua pemain, timer 30/45/60 detik per soal, jawaban terkunci setelah submit, dan transisi setelah kedua pemain menjawab atau waktu habis. Server menentukan waktu, validitas, dan poin. Jawaban benar memperoleh `100 + floor(50 × remainingTime / questionDuration)`; salah/kosong memperoleh 0. Reconnect 20 detik; gagal kembali berarti forfeit dan hasil itu tidak masuk rekor. Detail expiry/putus dua pemain masih `OPEN-07`.
 
-### Admin
+| Papan peringkat | Peserta dan sumber | Periode |
+|---|---|---|
+| Kelas | Anggota kelas yang sama; akumulasi XP Drill + Tryout. Pretest/PvP tidak berkontribusi. Menunjukkan keaktifan, bukan kemampuan akademik. | Perbarui tiap jam; tutup/arsip Rabu 23:59 WIB. |
+| Global PvP | Semua Student Mandiri dan Sekolah; best XP dari sesi PvP valid per kategori kesulitan. Tampilkan top 20 dan peringkat sendiri bila di luar top 20. | Perbarui tiap jam; tutup/arsip Rabu 23:59 WIB. |
 
-Hak utama:
+Leaderboard menampilkan data identitas minimum, bukan email atau riwayat belajar pribadi. PvP XP tidak membuka level Drill.
 
-- sekolah dan token guru;
-- akun/kelas;
-- bank soal dan paket;
-- laporan soal/video;
-- IRT dan analitik;
-- audit;
-- ban/unban sesuai kebijakan produk.
+## 8. Monitoring, dukungan, Admin, dan IRT
 
-Batas utama:
+- Dashboard Student menunjukkan status mandiri/kelas, progres, level, bintang, nilai terakhir/terbaik, dan aktivitas. Nilai akademik dan XP keaktifan diberi label terpisah.
+- Guru memilih kelas, mencari/mengurutkan siswa, melihat progres dan riwayat siswa miliknya, lalu memberi feedback satu arah maksimal 1.000 karakter dengan status dibaca. Ekspor laporan belum termasuk v0.5.
+- Student dapat melaporkan soal atau video; laporan menyimpan referensi versi/varian/attempt yang relevan untuk ditinjau Admin. Student tidak memperoleh riwayat laporan atau notifikasi tindak lanjut pada versi ini.
+- Admin mengelola konten versi/varian dan paket. Perubahan soal tidak menghitung ulang hasil lama; attempt tetap merujuk versi dan kebijakan penilaian yang digunakan.
+- IRT adalah batch harian atas akumulasi respons. Hasil pada detail soal Admin memerlukan minimal 30 responden; di bawah itu tampilkan “Data belum cukup”. Model/parameter final masih `OPEN-12`. IRT tidak mengubah nilai/XP historis.
 
-- tidak mengubah kebijakan produk;
-- login melalui mekanisme internal/seeder.
+## 9. Batas kualitas dan status keputusan
 
-## 4. Autentikasi, sekolah, dan kelas
+Autorisasi, batas akses Mandiri/Sekolah, waktu asesmen/PvP, penilaian, dan idempotensi harus ditegakkan server-side. Simpan waktu durable dalam UTC; aturan jadwal bisnis menggunakan `Asia/Jakarta`. UI memerlukan state loading, kosong, gagal, validasi, sukses, sesi berakhir, dan akses ditolak. Perlindungan privasi siswa dan pengujian pengguna nyata harus disepakati sebelum uji coba.
 
-### Authentication
+PRD v0.5 masih berstatus **draf untuk review**. `docs/product/OPEN_DECISIONS.md` membedakan baseline yang dapat dipakai untuk desain dari kebijakan yang belum final. Dokumen Sprint 2 yang diberikan masih mencantumkan 70% untuk unlock Drill; angka itu bertentangan dengan baseline 80% dalam PRD v0.5 dan dicatat sebagai klarifikasi, bukan keputusan terselubung.
 
-- Student dan Teacher login menggunakan Google Auth.
-- Role dipilih pada registrasi pertama dan tidak dapat diubah sendiri.
-- Foto profil mengikuti Google; bila tidak ada, UI membuat fallback inisial.
-- Admin menggunakan akun internal/seeder.
-
-### Teacher verification
-
-- Admin membuat sekolah.
-- Admin dapat generate token verifikasi guru tanpa batas jumlah.
-- Token single-use.
-- Masa berlaku token: 3×24 jam.
-- Token hangus setelah dipakai.
-- Teacher memilih sekolah lalu mengirim token untuk verifikasi.
-- Teacher dengan token gagal/tidak valid tidak dapat mengakses fitur Teacher.
-
-### Class
-
-- Verified Teacher dapat membuat banyak kelas.
-- Sistem menghasilkan kode, link, dan QR.
-- Student bergabung lewat kode/QR/link.
-- Satu Student hanya satu kelas.
-
-## 5. Materi dan pretest
-
-Hierarki akademik:
-
-```text
-Chapter → Subchapter → Level
-```
-
-Curriculum menentukan daftar chapter/subchapter, kompetensi, urutan, jumlah level, dan kriteria kesulitan.
-
-Pretest:
-
-- opsional;
-- maksimum sekali per chapter;
-- dapat dilewati;
-- membuka titik awal level per subchapter;
-- tanpa pretest, Student mulai dari Level 1;
-- tidak memberi XP/leaderboard;
-- detail jumlah soal, durasi, placement, dan batas pembukaan masih OPEN-01 sampai OPEN-03.
-
-## 6. Drill
-
-Baseline PRD v0.4:
-
-- memilih Chapter → Subchapter → Level;
-- 10 soal per sesi satu level;
-- navigasi bebas dan jawaban dapat diubah sebelum submit;
-- timer count-up dan dinyatakan tidak dibatasi;
-- mastery threshold/KKM: 70%;
-- ≥70% membuka level berikutnya;
-- retry tidak dibatasi;
-- attempt berikutnya menggunakan variasi setara berbeda;
-- setiap attempt final dicatat terpisah;
-- pembahasan dapat diakses 90 hari;
-- attempt yang gagal menampilkan maksimal 3 video rekomendasi terkait subchapter;
-- formula XP final masih OPEN-11.
-
-**Known ambiguity:** beberapa kalimat/acceptance criteria masih menyebut timeout atau “timer selesai” walaupun timer disebut count-up tanpa batas. Jangan menambahkan timeout produk tanpa klarifikasi PO.
-
-## 7. Tryout
-
-- simulasi TKA Matematika;
-- paket dipilih backend, bukan Student;
-- limit 1 start per hari berdasarkan tanggal mulai;
-- reset 00:00 WIB (`Asia/Jakarta`);
-- variasi berbeda pada attempt/hari berikutnya;
-- hasil dan pembahasan tersedia setelah selesai;
-- pembahasan tidak memiliki batas waktu;
-- tidak membuka level Drill;
-- MVP fokus PG; PGK menunggu OPEN-04;
-- spesifikasi resmi jumlah/durasi/domain/difficulty/navigation menunggu OPEN-05.
-
-**Known inconsistency:** satu paragraf masih menggunakan wording lama bahwa Tryout dapat diulang tanpa batas, tetapi ringkasan perubahan, bullet, dan acceptance criteria v0.4 menetapkan 1× per hari. Engineering baseline mengikuti daily limit sambil menjaga catatan klarifikasi.
-
-## 8. XP dan leaderboard
-
-### Class leaderboard
-
-- scope: anggota kelas yang sama;
-- sumber: akumulasi XP Drill + Tryout;
-- Pretest dan PvP tidak berkontribusi;
-- update setiap 1 jam;
-- reset/close period Rabu 23:59 WIB;
-- periode lama diarsipkan, bukan dihapus;
-- makna: keaktifan latihan, bukan ukuran kemampuan akademik.
-
-### PvP leaderboard
-
-- global;
-- kategori Easy/Medium/Hard (nama kategori masih dapat berubah);
-- berdasarkan Best XP per sesi valid;
-- update setiap 1 jam;
-- reset/arsip Rabu 23:59 WIB;
-- top 20 + peringkat sendiri bila di luar top 20.
-
-Formula XP Drill/Tryout final masih OPEN-11.
-
-## 9. PvP
-
-- satu-satunya minigame versi awal;
-- 1v1 realtime via WebSocket;
-- lintas kelas diperbolehkan selama dua pemain adalah Student yang valid;
-- room melalui kode/link/QR;
-- dapat invite teman sekelas via notifikasi;
-- 10 soal;
-- kedua pemain menerima soal dan urutan yang sama;
-- jawaban dikunci setelah submit;
-- soal berikutnya saat kedua pemain sudah menjawab atau timer habis;
-- server menentukan waktu, jawaban valid, dan skor;
-- reconnect window: 20 detik;
-- tidak kembali → forfeit;
-- forfeit tidak memperbarui rekor leaderboard;
-- PvP XP tidak masuk class leaderboard.
-
-Baseline score PvP:
-
-- benar: 100 poin dasar;
-- bonus kecepatan maksimum: 50;
-- `floor(50 × remainingTime / questionDuration)`;
-- salah/kosong: 0;
-- timer per question: Easy 30s, Medium 45s, Hard 60s.
-
-## 10. Monitoring, feedback, rekomendasi, laporan
-
-Teacher monitoring:
-
-- memilih kelas;
-- daftar siswa, search/sort;
-- detail progres/riwayat;
-- feedback maksimum 1.000 karakter;
-- feedback satu arah dan mempunyai read state.
-
-Recommendation:
-
-- maksimal 3 video per subchapter;
-- video dicari/dihimpun sebelumnya dan disimpan sebagai metadata DB;
-- tidak melakukan web search realtime pada request Student;
-- Student dapat melaporkan video tidak relevan.
-
-Reporting:
-
-- Student dapat melaporkan soal maupun video;
-- laporan memiliki kategori dan referensi target;
-- Admin menindaklanjuti;
-- Student tidak memiliki history laporan atau notifikasi tindak lanjut pada versi awal.
-
-## 11. Admin dan integritas historis
-
-Admin mengelola:
-
-- school/token;
-- classes, mentors/participants, ban/unban;
-- question bank, variants, statuses;
-- packages untuk pretest/drill/tryout/PvP;
-- video;
-- question/video reports;
-- IRT;
-- analytics;
-- audit.
-
-Historical integrity:
-
-- revisi/arsip soal tidak mengubah skor/poin lama;
-- snapshot/version konteks soal harus tersedia untuk result lama;
-- product parameters MVP tidak diubah melalui Admin UI.
-
-## 12. IRT
-
-- batch harian;
-- menggunakan akumulasi response;
-- PRD baseline minimum 30 response sebelum ditampilkan;
-- output dapat mencakup difficulty, discrimination, guessing sesuai kemampuan Data team;
-- hasil ditampilkan pada detail question Admin;
-- tidak mengubah nilai/poin attempt historis;
-- model/parameter statistik detail masih OPEN-12.
-
-## 13. Analytics events
-
-PRD menyebut antara lain:
-
-`account_registered`, `class_joined`, `assessment_started`, `assessment_completed`, `level_unlocked`, `explanation_viewed`, `feedback_sent`, `feedback_read`, `question_reported`, `pvp_disconnected`, `school_created`, `token_generated`, `teacher_verified`, `class_created`, `pretest_started`, `drill_started`, `drill_completed`, `tryout_started`, `tryout_completed`, `pvp_started`, `pvp_completed`, `video_reported`, `leaderboard_archived`, `irt_calculated`, `pvp_cancelled`.
-
-Event schema rinci harus disepakati bersama Data dan PO.
-
-## 14. Nonfunctional baseline
-
-PRD v0.4 meminta:
-
-- server-side access validation;
-- refresh tidak menduplikasi attempts/points/PvP answers;
-- authoritative time behavior;
-- responsive interface, keyboard navigation, form labels, no color-only status;
-- loading/empty/error/validation/success/session-end/access-denied states;
-- privacy according to role/class;
-- traceable failures;
-- WebSocket PvP;
-- automated leaderboard update/archive;
-- daily IRT batch;
-- server-side validation for single-use teacher tokens.
-
-Engineering alignment additionally targets mobile-first web, WCAG 2.2 AA where feasible, and production capacity/load testing before real-user release.
+Peristiwa analitik tambahan v0.5 antara lain `user_type_changed` dan `star_earned`; kontrak lengkap ada di `docs/data/EVENTS.md`. Kebutuhan keamanan, privasi, observabilitas, dan QA ada di folder `docs/security`, `docs/operations`, serta `docs/testing`.

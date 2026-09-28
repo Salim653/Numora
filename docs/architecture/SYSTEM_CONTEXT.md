@@ -2,7 +2,7 @@
 
 ## System under design
 
-The TKA Mathematics SMP Platform is a responsive web system used by Students, Teachers, and Admins. It centralizes school verification, learning content, assessment attempts, progress, PvP, recommendations, monitoring, and analytics-related event production.
+Numora is a responsive web system used by independent and school-affiliated Students, Teachers, and Admins. It centralizes school verification, learning content, assessment attempts, progress, PvP, recommendations, monitoring, and analytics-related event production.
 
 ## Actors and external systems
 
@@ -23,7 +23,8 @@ Admin ─────────┘       │
 ### Student
 
 - authenticates with Google;
-- joins one Class;
+- may join at most one Class;
+- may begin as Mandiri without a Class and retain Drill/PvP history when joining one;
 - performs Pretest/Drill/Tryout;
 - views results/progress/feedback;
 - participates in PvP;

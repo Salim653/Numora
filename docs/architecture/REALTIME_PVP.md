@@ -2,11 +2,12 @@
 
 ## Product baseline
 
-PRD v0.4 requires:
+PRD v0.5 baseline requires:
 
 - 1v1 realtime PvP via WebSocket;
 - room share by code/link/QR;
-- optional invite to classmate;
+- participation across Mandiri and School Students, including across classes;
+- optional classmate invite for School Students; Mandiri can create/share a room but cannot send classmate notification invites;
 - Easy/Medium/Hard categories (names temporary);
 - 10 questions;
 - both players receive the same questions/order;
@@ -17,6 +18,7 @@ PRD v0.4 requires:
 - failure to reconnect causes forfeit;
 - forfeit does not update leaderboard record;
 - PvP XP does not contribute to class leaderboard.
+- global PvP leaderboard includes both Student affiliations.
 
 ## Container responsibilities
 
@@ -53,6 +55,7 @@ EXPIRED (room/invite; exact policy OPEN-07)
 
 - `pvp:room:create`
 - `pvp:room:join`
+- validate both players as Students; Class membership is not required to create/join a valid room;
 - `pvp:invite:create`
 - `pvp:invite:accept`
 - `pvp:invite:decline`

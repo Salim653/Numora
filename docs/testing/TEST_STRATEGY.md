@@ -11,9 +11,9 @@ Testing protects product rules, authorization, historical integrity, realtime sy
 High priority:
 
 - teacher token expiry and consumption rules;
-- Drill 70% mastery/unlock;
+- Drill 80% mastery/unlock and star independence (the supplied Sprint 2 PDF's 70% is a recorded conflict, not an approved v0.5 rule);
 - level lock checks;
-- Tryout WIB daily eligibility;
+- Tryout Monday 00:00 WIB shared-package release, one attempt/package, and IRT-gated result;
 - scoring-policy behavior;
 - XP policy when OPEN-11 becomes final;
 - PvP score calculation;
@@ -27,7 +27,7 @@ Use real PostgreSQL/Redis test dependencies where valuable:
 - one Student cannot join two Classes;
 - assessment submit idempotency;
 - finalization writes result/progress/XP/outbox consistently;
-- Tryout double-start race;
+- Tryout duplicate start for the same weekly package;
 - XP ledger uniqueness;
 - question version retained after revision;
 - outbox retry behavior.
@@ -48,7 +48,7 @@ Critical flows:
 3. Student authenticates/joins Class.
 4. Student completes Drill and sees result/progress.
 5. Teacher views Student progress and sends feedback.
-6. Student starts Tryout subject to daily rule.
+6. School Student starts the current weekly Tryout package once; result remains gated until IRT completion.
 7. PvP room/join/match flow where practical in automated browser tests.
 
 ### Load tests (k6 before real-user release)

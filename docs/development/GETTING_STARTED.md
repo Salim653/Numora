@@ -72,7 +72,7 @@ Bootstrap seed is deterministic and marked `DEMO`. It currently proves database 
 
 ## Authentication
 
-Google OAuth/Supabase Auth integration is intentionally not a blocker for the Sprint-2 walking skeleton. Missing OAuth credentials must not block web/API/worker/database/contract work.
+Google OAuth/Supabase Auth integration was not a blocker for the original walking skeleton. The current Sprint 2 Student flow includes Google login; environment credentials and callback configuration are therefore a delivery dependency for that flow. See `SPRINT_2_GOAL.md`.
 
 ## Quality
 

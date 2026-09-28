@@ -4,7 +4,7 @@
 
 This file is the default engineering context for contributors and AI coding agents working on the TKA Mathematics SMP platform.
 
-The project is a responsive school-based learning platform for Grade IX SMP/MTs students preparing for TKA Mathematics. It includes school/teacher verification, classes, pretest, drill, tryout, progress, feedback, content administration, reports, leaderboards, realtime PvP, video recommendations, analytics, and IRT.
+The project is a responsive learning platform for independent and school-affiliated Grade IX SMP/MTs students preparing for TKA Mathematics. It includes school/teacher verification, classes, pretest, drill, tryout, progress, feedback, content administration, reports, leaderboards, realtime PvP, video recommendations, analytics, and IRT.
 
 ## Mandatory reading order
 
@@ -19,7 +19,7 @@ Before implementing a feature, read:
 
 ## Source-of-truth precedence
 
-1. Latest approved PRD — product behavior and acceptance criteria.
+1. Latest PRD with its actual approval status — product behavior and acceptance criteria. PRD v0.5 is a consolidated draft for review; unresolved details remain OPEN.
 2. Approved ADR — technical decision only.
 3. Approved module specification.
 4. Machine-readable contract.
@@ -32,7 +32,7 @@ Never invent an answer for an OPEN item. Implement extensibility around it or us
 
 When adding or changing documentation, distinguish:
 
-- **PRD RULE** — directly required by PRD v0.4.
+- **PRD RULE** — directly stated in the current PRD v0.5 baseline; record its draft status until approved.
 - **ENGINEERING DECISION** — approved technical decision from team alignment/ADR.
 - **PROPOSED** — recommendation awaiting approval.
 - **OPEN** — unresolved product/academic decision.
@@ -49,31 +49,31 @@ Do not present a proposal as a PRD rule.
 - PvP time, answer validity, transition, and score are server-authoritative.
 - Historical assessment results must not be recalculated after question/scoring revisions.
 - Attempts must reference the content/scoring versions actually used.
-- Business time rules such as tryout daily eligibility and leaderboard reset use `Asia/Jakarta`; durable timestamps are stored in UTC.
+- Business time rules such as weekly Tryout package release and leaderboard reset use `Asia/Jakarta`; durable timestamps are stored in UTC.
 - Sensitive state-changing operations must be idempotent or protected by equivalent database constraints/transactions.
 
-## Product invariants from PRD v0.4
+## Product baseline from PRD v0.5 (draft for review)
 
 - Students and Teachers authenticate with Google.
 - Teacher features require valid school verification through a single-use token valid for 3×24 hours.
 - A Student belongs to at most one class in the current version.
-- Student without a class cannot start pretest, drill, tryout, or PvP.
-- Pretest is optional and at most once per chapter; final placement rules remain OPEN.
-- Drill baseline: 10 questions, count-up timer, 70% mastery threshold, unlimited retry, a different equivalent variant on subsequent attempt, explanation access for 90 days.
-- Tryout: at most one start per local calendar day (reset 00:00 WIB); final official configuration remains OPEN-05; MVP scoring focuses on single-answer multiple choice while PGK scoring remains OPEN-04.
+- Student without a class is User Mandiri: may use Drill and create/share a PvP room; Pretest, Tryout, and class leaderboard require a Class. Joining a Class changes affiliation to User Sekolah.
+- Pretest is optional, at most once completed per chapter, with a 20-question baseline and at most 3 initially unlocked levels per subchapter on a perfect result; distribution and placement rules remain OPEN.
+- Drill baseline: 10 questions, unlimited count-up timer, 80% mastery threshold, unlimited retry, a different equivalent variant on subsequent attempt, explanation access for 90 days, and score-based stars.
+- Tryout: shared weekly package released Monday 00:00 WIB, one attempt per package per user, result/explanation after IRT; official content/configuration remains OPEN-05. Payment for User Mandiri is deferred; MVP scoring focuses on single-answer multiple choice while PGK remains OPEN-04.
 - Class leaderboard uses Drill + Tryout XP. PvP XP does not contribute.
 - Leaderboards update hourly and reset/archive Wednesday 23:59 WIB.
-- PvP uses realtime WebSocket, 10 questions, server-authoritative scoring, and a 20-second reconnect window.
+- PvP permits Mandiri and School students together; uses realtime WebSocket, 10 questions, server-authoritative scoring, and a 20-second reconnect window.
 - IRT runs as a daily batch and PRD baseline requires at least 30 responses before showing the result.
 - Admin cannot modify MVP product parameters such as mastery threshold, tryout limit, XP formula, or leaderboard reset in the UI.
 
 ## Known PRD ambiguities that must not be guessed
 
 - Drill is described as an unlimited count-up timer, while some wording still refers to timeout/timer completion. Treat product timeout semantics as clarification pending; do not introduce a hidden timeout.
-- Tryout prose contains older wording about unlimited retry, while the v0.4 change summary, bullets, and acceptance criteria specify one start per day. Implement daily eligibility and record the text inconsistency in product decisions.
-- Formula XP is OPEN-11.
+- The supplied Sprint 2 Goal uses 70% Drill mastery, whereas PRD v0.5 uses 80%; record this as CLARIFICATION-003 until the owners decide. Do not silently use 70% for v0.5.
+- Final XP formula is OPEN-11; PRD v0.5 provides a Drill baseline.
 - PGK scoring is OPEN-04.
-- Pretest amount/duration/placement are OPEN-01 through OPEN-03.
+- Pretest question count is 20 per chapter; question distribution and placement remain OPEN-01 through OPEN-03.
 - Official tryout configuration is OPEN-05.
 
 ## Coding rules
@@ -106,9 +106,9 @@ At minimum, test business-critical rules:
 - teacher token expiry and single-use race condition
 - one-class-per-student constraint
 - locked-level access rejection
-- drill 70% unlock logic
+- drill 80% unlock logic and star independence
 - duplicate submit/idempotency
-- tryout one-start-per-WIB-calendar-day
+- weekly Tryout package release, one attempt/package, and IRT-gated result
 - historical content/scoring version preservation
 - class vs PvP leaderboard separation
 - PvP scoring/timer/reconnect/forfeit

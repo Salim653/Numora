@@ -46,20 +46,23 @@ For main flows verify:
 - duplicate submit;
 - refresh/resume;
 - retry receives another variant;
-- 69% vs 70% boundary;
+- 70% vs 80% boundary for 10-question Drill; only ≥80% unlocks under the v0.5 baseline;
+- star ranges do not replace the 80% unlock rule; score 0 display awaits clarification;
 - explanation visibility at 90-day boundary;
 - clarification around timeout must not be silently assumed.
 
 ### Tryout
 
-- first start in WIB day succeeds;
-- second start same WIB day denied;
-- 23:59 → 00:00 boundary;
-- explanation remains available;
+- one shared package for all Students in the same weekly period;
+- second start of the same package denied or resumes existing attempt;
+- Sunday 23:59 → Monday 00:00 WIB package boundary and previous-package lock;
+- result/explanation hidden until IRT batch completes;
+- Mandiri access unavailable while payment is deferred;
 - Tryout does not unlock Drill.
 
 ### PvP
 
+- Mandiri and School Students may match across affiliations; Mandiri cannot send classmate notification invites;
 - same question/order both players;
 - one/both answer timeout;
 - reconnect within 20s;

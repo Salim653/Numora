@@ -1,99 +1,73 @@
 # Open Decisions Register
 
-**Product source:** PRD v0.4 §13.  
-**Rule:** an OPEN item must not be silently resolved in implementation. Recommendations below are technical proposals, not product facts, unless approved by the stated owner(s).
+**Product source:** PRD v0.5 §13, 28 September 2026 (consolidated draft for review).
+**Rule:** an `OPEN` item must not be silently resolved. A PRD baseline can guide a demo or schema, but does not make its unresolved details final. Product decisions are made jointly with the responsible owners listed in the PRD; the Software Engineering coordinator coordinates FE/BE execution but does not unilaterally change academic/product policy.
 
-## Decision status legend
+## Status legend
 
-- `OPEN` — unresolved.
-- `BASELINE EXISTS` — PRD contains a usable baseline but some final parameters remain open.
-- `TECH RECOMMENDATION` — engineering can implement an abstraction/default but PO/owner approval is still required.
-- `BLOCKS FINAL` — final product behavior/publication cannot be completed safely before the item is resolved.
+- **PRD BASELINE** — stated behavior in v0.5 usable for planning while the PRD is reviewed.
+- **OPEN** — unresolved policy/academic detail.
+- **PROPOSED** — engineering recommendation awaiting owner agreement.
+- **BLOCKS FINAL** — cannot publish the affected final behavior before resolution.
 
-| ID | Product decision needed | Owner in PRD | Engineering treatment now | Impact |
+| ID | Decision needed | PRD owner | Baseline / treatment now | Impact |
 |---|---|---|---|---|
-| OPEN-01 | Chapter/subchapter/competency list, level count/order, completion definition | Curriculum + PO | Dynamic taxonomy and level schema; never hardcode level count | Blocks final pretest/progress semantics |
-| OPEN-02 | Exact pretest question count/distribution | Curriculum + PO | Package-driven engine; demo fixtures only | Blocks final pretest package |
-| OPEN-03 | Pretest duration, placement mapping, unlock cap | Curriculum + PO | `PretestPlacementPolicy`; no official mapping in code yet | Blocks final placement |
-| OPEN-04 | PGK MCMA/Category scoring and rounding | Research & Curriculum + PO | Implement PG final; support extensible answer/scoring types | Blocks final PGK and some point semantics |
-| OPEN-05 | Official tryout specification | Research & Curriculum + PO | Generic timed assessment engine + demo package | Blocks public/final tryout configuration |
-| OPEN-06 | Brand/name/language/visual identity | PO + UI/UX | Design tokens and neutral components | Does not block backend |
-| OPEN-07 | PvP invitation expiry/readiness/two-player disconnect edge cases | PO + Software + QA | Explicit state machine; TTL configurable; **proposed default 15 min only for demo if needed** | Blocks final edge behavior |
-| OPEN-08 | Class end lifecycle and wrong-class correction with existing progress/XP | PO + Data | No self-transfer; preserve immutable history and delay destructive migration | Blocks class-transfer final behavior |
-| OPEN-09 | Performance, browser, retention, backup/recovery, Google integration feasibility | Technical + PO | Engineering baselines below | Must be finalized before real-user release |
-| OPEN-10 | Number of variants/packages and recommendation mapping | Curriculum + PO | Metadata-based mapping; no fixed count | Blocks content-completeness decision |
-| OPEN-11 | Final XP formula | PO + Data | Versioned `XpPolicy`; XP ledger schema independent of formula | Blocks final Drill/Tryout XP |
-| OPEN-12 | IRT threshold and parameters | Data + PO | PRD baseline: minimum 30 responses; persist `modelVersion` and sample size | Blocks final statistical configuration, not pipeline |
-| OPEN-13 | Admin ban policy | PO | Generic restriction record with reason/start/end/revoke; no invented outcomes | Blocks final ban effects |
-| OPEN-14 | Local password, if any | PO + Software | Recommend **no local password for MVP**; Google Auth for Student/Teacher and internally provisioned Admin identity | Needs PO approval |
+| OPEN-01 | Bab/subbab/kompetensi, jumlah/urutan level, definisi tuntas | Curriculum + PO | PRD mentions 5 levels per subbab; keep taxonomy dynamic until Curriculum confirms | Blocks final content/progress |
+| OPEN-02 | Distribution of 20 Pretest questions per subbab | Curriculum + PO | 20 total per bab is baseline; demo package only until distribution approved | Blocks final Pretest package |
+| OPEN-03 | Placement mapping to at most 3 unlocked levels | Curriculum + PO | Perfect score can unlock at most 3; mapping for other outcomes is open | Blocks final placement |
+| OPEN-04 | PGK MCMA/Category scoring and rounding | Research & Curriculum + PO | Publish PG scoring first; retain extensible question types | Blocks PGK |
+| OPEN-05 | Official Tryout specification | Research & Curriculum + PO | Weekly package cadence is baseline; question count/duration/content still open | Blocks final Tryout publication |
+| OPEN-06 | Name/positioning/language/visual identity | PO + UI/UX | Numora is current name; brand can still be reviewed | Does not block backend |
+| OPEN-07 | PvP invite expiry and two-player disconnect/readiness edges | PO + Software + QA | Explicit state machine; no undocumented final outcome | Blocks final edge behavior |
+| OPEN-08 | Class end and wrong-class correction with history | PO + Data | No self-transfer; preserve immutable history | Blocks correction/transfer flow |
+| OPEN-09 | Performance, browser, retention, backup/recovery, Google integration | Technical + PO | Engineering planning targets below | Must close before broader real-user release |
+| OPEN-10 | Variant/package counts and video mapping | Curriculum + PO | Metadata-driven mapping; no assumed final count | Blocks content completeness |
+| OPEN-11 | Final XP formula | PO + Data | PRD gives Drill baseline `(correct × 100) + max(0, (15 − minutes) × 10)`; policy version needed | Blocks final XP semantics |
+| OPEN-12 | IRT model/parameter details | Data + PO | Minimum 30 respondents and daily batch are PRD baselines | Blocks final statistical configuration |
+| OPEN-13 | Admin ban policy | PO | Represent restriction with status/reason; avoid invented effects | Blocks final ban behavior |
+| OPEN-14 | Local password, if any | PO + Software | Google for Student/Teacher; internal Admin | Needs PO decision if local passwords are desired |
+| OPEN-15 | Conversion School ↔ Mandiri on leaving class | PO + Data | Joining class changes affiliation; no self-leave or automatic downgrade in v0.5 | Blocks exit/downgrade behavior |
+| OPEN-16 | Admin sub-role split | PO + Software | One Admin role in v0.5 | Deferred |
+| OPEN-17 | Tryout price/payment method | PO + Software | Payment deferred from MVP; Mandiri Tryout remains unavailable | Deferred |
+| OPEN-18 | IRT batch duration for weekly Tryout package | Data + PO | PRD says result/explanation after IRT, target max 3×24h after package ends | Blocks final release timing/failure rule |
 
 ## Engineering recommendations for OPEN-09
 
-These were agreed as technical planning baselines, not PRD product claims:
+These are planning targets, not confirmed product performance or privacy policy:
 
-### Capacity targets
+- 1,000–3,000 registered users planning range; load scenarios of 100 baseline, 500 target, 1,000 stress.
+- Mobile-first; Android Chrome/iOS Safari and desktop Chrome/Edge/Firefox, latest two major versions where practical.
+- WCAG 2.2 AA where feasible.
+- Backup planning RPO ≤24h and RTO ≤4h, validated through a restore exercise before broad release.
+- Supabase Auth + Google OAuth for Student/Teacher, NestJS authorization. Do not change providers without a migration plan.
+- Drill explanation access is 90 days. Tryout result/explanation access is gated by IRT; historical retention and other deletion periods require a separate policy. Do not auto-delete attempts, XP, events, audit, PvP history, or IRT inputs.
 
-- Registered-user planning range: ~1,000–3,000.
-- Baseline load test: 100 concurrent.
-- Normal engineering target: 500 concurrent.
-- Stress target: 1,000 concurrent.
-- Treat these as test targets, not forecasts.
+## Clarifications to discuss together
 
-### Browser support
+### CLARIFICATION-001 — Drill timeout
 
-- Mobile-first.
-- Android Chrome and iOS Safari.
-- Chrome/Edge/Firefox desktop.
-- Target latest two major versions where practical.
+PRD v0.5 specifies an unlimited count-up timer but DRL-AC4 still mentions timeout. **Proposed engineering treatment:** no hidden product timeout; server tracks elapsed time for result/XP. Owner: PO + Software + QA. Status: OPEN.
 
-### Accessibility
+### CLARIFICATION-002 — Drill explanation and history
 
-- Target WCAG 2.2 AA where feasible.
+PRD limits explanation access to 90 days while requiring immutable historic scores/content. **Proposed engineering treatment:** expire access to explanation without deleting attempt/version facts. Owner: PO + Data + Software. Status: PROPOSED.
 
-### Backup/recovery baseline
+### CLARIFICATION-003 — Sprint 2 mastery threshold
 
-- RPO ≤ 24 hours.
-- RTO ≤ 4 hours.
-- Must be validated by an actual restore exercise before real-user release.
+The supplied Sprint 2 Goal PDF says Level 2 unlocks at **≥70%**, while PRD v0.5 says **≥80%**. The older number must not become an unstated exception. Until joint clarification, docs use 80% as the latest PRD baseline and mark the Sprint 2 acceptance threshold as a conflict. Owner: PO + Software + QA. Status: OPEN clarification.
 
-### Authentication feasibility
+### CLARIFICATION-004 — Star at score 0
 
-Recommended architecture: Supabase Auth + Google OAuth for Student/Teacher, with NestJS authorization. Do not replace auth provider between development and production unless an approved migration plan exists.
+The PRD defines 1 star at 10–50, 2 at 60–90, and 3 at 100. It does not state how score 0 is shown. Owner: PO + UI/UX. Status: OPEN clarification.
 
-### Retention
+### CLARIFICATION-005 — Level count wording
 
-Explicit PRD rule exists for Drill explanation visibility (90 days) and Tryout explanation (unlimited). Other retention periods remain unapproved; do not automatically delete attempts, analytics, audit, XP, PvP history, or IRT inputs until policy is approved.
+MAT-01 states 5 levels per subbab but also says Curriculum defines the number of levels; OPEN-01 repeats that dependency. The schema should stay flexible until the owner confirms whether five is a fixed MVP rule. Owner: Curriculum + PO. Status: OPEN.
 
-## Clarifications created by PRD text inconsistencies
+### CLARIFICATION-006 — Prototype trial scope
 
-### CLARIFICATION-001 — Drill timeout semantics
+The coordinator targets a prototype ready for Student and Teacher trial in about two weeks, whereas the supplied Sprint 2 Goal defines one Student vertical slice and excludes full Teacher UI from sprint blockers. Confirm minimum Teacher-visible functionality, pilot participants, and trial environment before declaring the prototype ready. Owner: PO + Software + QA. Status: OPEN.
 
-**Observed text:** timer is “count-up, unlimited,” but DRL text/acceptance still references timer completion/timeout.  
-**Engineering baseline:** no hidden product timeout. Compute duration from server timestamps; support only user submit until PO clarifies otherwise.  
-**Owner:** PO + Software/QA.  
-**Status:** OPEN clarification.
+## Decision workflow
 
-### CLARIFICATION-002 — Tryout retry wording
-
-**Observed text:** one older paragraph says tryout can be repeated without limit, while v0.4 summary, detailed bullet, and TRY-AC1 specify limit 1× per day.  
-**Engineering baseline:** enforce one start per `Asia/Jakarta` calendar day.  
-**Owner:** PO.  
-**Status:** daily limit treated as current v0.4 decision; textual cleanup recommended.
-
-### CLARIFICATION-003 — Drill 90-day “storage” wording
-
-**Observed text:** PRD frames 90-day Drill explanation as storage efficiency while also requiring historical result/version integrity.  
-**Engineering recommendation:** retain attempt/question/scoring history; restrict explanation access after 90 days rather than destructively deleting historical assessment context unless PO explicitly requires physical deletion.  
-**Owner:** PO + Data + Software.  
-**Status:** PROPOSED.
-
-## Approval workflow
-
-When an OPEN item is resolved:
-
-1. PO/owner records the decision and effective date.
-2. Update PRD/module specification.
-3. Update this file.
-4. Identify impacted modules/contracts/schema/tests using `PRD_MAPPING.md`.
-5. Create/update ADR only when the technical solution changes.
-6. Implement through reviewed PR.
+When a joint decision is reached, record its owner/date and update the PRD or module specification first; then update this register, `PRD_MAPPING.md`, affected contracts/schema/tests, and an ADR only if architecture changes. The PRD draft status should be recorded as approved only when the owners actually approve it.

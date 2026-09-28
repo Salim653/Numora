@@ -30,7 +30,7 @@ PRD uses Google profile photo with initial fallback. Avoid copying photos to R2 
 
 ## Leaderboards
 
-Global PvP leaderboard exposes only minimum display information needed, not email or learning history.
+Global PvP leaderboard includes Mandiri and School Students and exposes only minimum display information needed, not email or learning history.
 
 ## Analytics
 
@@ -41,7 +41,7 @@ Prefer internal IDs/pseudonymous identifiers. Generic events should not carry un
 Known product retention/display rule:
 
 - Drill explanation access: 90 days;
-- Tryout explanation access: unlimited;
+- Tryout result/explanation: available after the package's IRT batch, subject to OPEN-18 timing/failure details; no fixed expiration is stated in PRD v0.5;
 - leaderboard periods: archived, not deleted.
 
 Other data retention remains unresolved under OPEN-09. Do not automatically delete durable attempts/audit/XP/IRT inputs until an approved policy exists.

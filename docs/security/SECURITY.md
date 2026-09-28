@@ -30,7 +30,7 @@ Treat as credential:
 
 ## Authorization
 
-Check role + resource relation + account status. UI hiding is never authorization.
+Check role + Student affiliation (Mandiri/School) + resource relation + account status. Mandiri may use Drill and create/share a PvP room; Pretest, Tryout, and class leaderboard require Class membership. UI hiding is never authorization.
 
 ## API protection
 
