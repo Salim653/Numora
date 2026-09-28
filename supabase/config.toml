@@ -1,4 +1,4 @@
-project_id = "tka-platform"
+project_id = "numora-supabase"
 
 [api]
 enabled = true
