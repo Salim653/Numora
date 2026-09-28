@@ -54,6 +54,8 @@ packages/config
 packages/testing
 ```
 
+For concrete code placement, existing paths, and feature examples, use [PROJECT_STRUCTURE](../development/PROJECT_STRUCTURE.md).
+
 ## 4. Why a modular monolith
 
 The current recommendation is a **modular monolith**, not microservices.

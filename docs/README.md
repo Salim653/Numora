@@ -40,6 +40,7 @@ PRD v0.5 (28 September 2026) is the team-approved product source of truth, as co
 
 ## Development
 
+- `development/PROJECT_STRUCTURE.md` — panduan utama lokasi kode, struktur folder saat ini dan yang direncanakan, serta contoh kerja lintas tim.
 - `development/GETTING_STARTED.md`
 - `development/SPRINT_2_GOAL.md` — first Student vertical slice and additional Teacher UI needed for the prototype trial.
 - `development/GIT_WORKFLOW.md`
