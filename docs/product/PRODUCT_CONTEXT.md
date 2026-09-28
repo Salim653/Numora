@@ -13,8 +13,9 @@ Ruang lingkup minimum prototipe:
 
 - Admin melihat daftar, membuat, mengedit, dan mengubah status sekolah; menerbitkan, membuat ulang, dan mencabut token guru melalui UI.
 - Guru login Google, memilih sekolah, memverifikasi token, membuat kelas, lalu membuka daftar kelas dan detail siswa miliknya. Detail menunjukkan status level serta nilai Drill terakhir dan terbaik.
-- Siswa login Google, bergabung ke kelas, mengerjakan 10 soal PG demo Level 1 berupa teks dan rumus matematika sederhana, lalu melihat hasil/progres tersimpan; skor **≥80%** membuka Level 2.
+- Siswa login Google, bergabung ke kelas, mengerjakan 10 soal PG demo Level 1 dengan empat opsi `A`–`D` dan rumus sederhana dalam LaTeX inline, lalu melihat hasil/progres tersimpan; skor **≥80%** membuka Level 2.
 - Draf soal demo disiapkan tim Software bersama Curriculum, diberi label jelas, dan **ditinjau Curriculum sebelum uji coba**; hasilnya tidak dipresentasikan sebagai ukuran kemampuan TKA resmi.
+- Schema JSON soal yang ada ditujukan untuk impor dari Data/AI, bukan sebagai format fixture demo atau respons soal untuk Siswa. Empat opsi dan LaTeX inline adalah pilihan untuk prototipe pertama; detail akademik final tetap mengikuti Curriculum/PRD.
 - Uji coba belum dimulai jika login, hak akses, penyimpanan jawaban/hasil, atau aturan unlock 80% gagal. Tim Product/Design bersama sekolah mengurus izin sekolah, persetujuan peserta/wali bila diperlukan, dan pemberitahuan soal demo.
 
 Domain staging serta akses proyek Supabase/Google OAuth **belum tersedia** pada 28 September 2026; penyediaannya adalah dependensi nyata untuk uji coba online. Guru hanya boleh melihat progres siswa dari kelas yang ia kelola.

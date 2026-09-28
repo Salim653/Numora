@@ -4,7 +4,7 @@
 
 Question content is expected to be generated/supplied by Data/AI workflows and validated by Curriculum/Admin before it becomes usable. Software must not wait for final real questions to build the platform.
 
-This document defines semantic expectations. A machine-readable JSON Schema should be created under `packages/contracts/questions/` next.
+This document defines semantic expectations for **Data/AI question import**. Draft machine-readable schemas already exist at `packages/contracts/questions/question.schema.json` and `question-variant.schema.json`. They describe import envelopes, not the internal demo-question fixture format and not the Student-facing API response. The current contract validator checks JSON syntax; instance-level schema validation still needs implementation before relying on imported content.
 
 ## Workflow
 
@@ -22,7 +22,7 @@ Student/PvP usage
 
 AI generation does not imply content approval.
 
-For the first school prototype trial, Software and Curriculum will prepare 10 clearly labeled demo `SINGLE_CHOICE` Level-1 questions with text and simple math formulas. Curriculum reviews the stem, answer key, and explanation before real school participants use them. These demo fixtures are not the final Curriculum-approved question bank.
+For the first school prototype trial, Software and Curriculum will prepare 10 clearly labeled demo `SINGLE_CHOICE` Level-1 questions. Each has exactly four options labeled `A`–`D`; simple mathematical expressions use inline LaTeX within text. Curriculum reviews the stem, four options, answer key, and explanation before real school participants use them. These demo fixtures are not the final Curriculum-approved question bank. The four-option and inline-LaTeX choices are **prototype fixture decisions confirmed by the Software Engineering coordinator**, not general constraints on the Data/AI import schemas or final academic policy. The fixture storage/seed shape should be defined with the assessment/content implementation; do not assume an import envelope is a Student-facing response or expose the answer key before submission.
 
 ## Supported conceptual question types
 
@@ -81,30 +81,32 @@ Recommended:
 
 These fields help trace AI-generated content quality but do not replace academic review.
 
-## Example semantic shape (not final JSON Schema)
+## Example Data/AI import envelope
+
+This illustrative object follows the field names and required top-level structure of the current draft `question.schema.json`. It is not one of the Curriculum-reviewed demo questions. The draft schema still treats `answer` as an unconstrained object; the `correctOptionIds` shape below is illustrative, not yet enforced. Codes are examples, not an approved Curriculum taxonomy.
 
 ```json
 {
-  "externalId": "AI-Q-00001",
+  "externalId": "EXAMPLE-Q-00001",
   "type": "SINGLE_CHOICE",
-  "taxonomy": {
-    "chapterCode": "BILANGAN",
-    "subchapterCode": "PECAHAN",
-    "competencyCode": "KOMP-001",
-    "level": 1,
-    "difficulty": "EASY"
-  },
-  "stem": {"text": "..."},
+  "chapterCode": "EXAMPLE-BAB",
+  "subchapterCode": "EXAMPLE-SUBBAB",
+  "competencyCode": "EXAMPLE-KOMP",
+  "levelCode": "EXAMPLE-L1",
+  "difficulty": "EASY",
+  "stem": {"text": "Berapakah hasil $2+3$?"},
   "options": [
-    {"id": "A", "text": "..."},
-    {"id": "B", "text": "..."}
+    {"id": "A", "content": {"text": "4"}},
+    {"id": "B", "content": {"text": "5"}},
+    {"id": "C", "content": {"text": "6"}},
+    {"id": "D", "content": {"text": "7"}}
   ],
   "answer": {"correctOptionIds": ["B"]},
-  "explanation": {"text": "..."},
-  "generation": {
-    "source": "AI",
-    "modelVersion": "...",
-    "batchId": "..."
+  "explanation": {"text": "Karena $2+3=5$, jawaban yang benar adalah B."},
+  "metadata": {
+    "source": "EXAMPLE",
+    "generationModel": null,
+    "generationBatchId": null
   }
 }
 ```

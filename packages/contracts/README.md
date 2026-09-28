@@ -11,3 +11,5 @@ Current bootstrap contents:
 - `websocket/pvp-events.schema.json` — initial PvP event-name/envelope contract.
 
 These schemas intentionally define transport/envelope shape without inventing unresolved PRD academic rules. Human-readable semantics live under `docs/api/` and `docs/data/`.
+
+The question schemas are **for Data/AI import**, not the internal fixtures for the first school trial and not Student-facing responses. The first trial's four-option, inline-LaTeX demo-question choices are recorded in `docs/data/QUESTION_CONTRACT.md`. `scripts/validate-contracts.mjs` currently checks JSON syntax only; it does not validate question instances against their schemas.
