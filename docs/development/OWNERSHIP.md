@@ -13,7 +13,7 @@ This file reflects the final job-list image supplied by the team. GitHub usernam
 |---|---|---|---|
 | Ferdiansyah Dwana Putra S | Frontend | Core Learning | PvP & Leaderboard |
 | Avicenna A. G. M Benamen | Frontend | Admin & Content | Core Learning |
-| Abdullah Ali Wafa | Frontend | Onboarding | — |
+| Abdullah Ali Wafa | Frontend | Onboarding | Monitoring |
 | Qurotul A'ini | Backend | Core Learning | PvP & Leaderboard |
 | Mch. Andi Mai Fatah | Backend | Onboarding | Monitoring |
 | Tangguh Ittibaur Rosul | Backend | Admin & Content | — |
