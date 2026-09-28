@@ -14,9 +14,10 @@ Before implementing a feature, read:
 2. `docs/product/OPEN_DECISIONS.md`
 3. `docs/product/PRD_MAPPING.md`
 4. `docs/development/SPRINT_2_GOAL.md` for prototype or current-sprint work
-5. Relevant architecture/API/data document
-6. Relevant ADRs
-7. Existing tests and contracts for the module
+5. For frontend UI work, `docs/design/README.md` and `docs/design/NUMORA_UI_DESIGN_SYSTEM.md`; use `docs/design/NUMORA_UI_SKILL.md` as the team workflow reference
+6. Relevant architecture/API/data document
+7. Relevant ADRs
+8. Existing tests and contracts for the module
 
 ## Source-of-truth precedence
 
@@ -28,6 +29,8 @@ Before implementing a feature, read:
 6. Code.
 
 Never invent an answer for an OPEN item. Implement extensibility around it or use explicitly labeled demo/test fixtures.
+
+For visual decisions, use the latest approved UI/UX handoff for screen-specific layout and interaction, then the team-supplied UI design-system baseline for shared tokens, components, responsive behavior, and accessibility. The handoff is not available yet. Neither visual source changes product rules from the approved PRD. Keep provisional design values easy to replace when UI/UX finalizes them.
 
 ## Requirement labels
 

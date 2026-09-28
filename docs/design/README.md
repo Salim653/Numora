@@ -1,0 +1,9 @@
+# NUMORA UI guidance
+
+The UI/UX team supplied [NUMORA_UI_DESIGN_SYSTEM.md](NUMORA_UI_DESIGN_SYSTEM.md) (v0.1, 28 September 2026) and [NUMORA_UI_SKILL.md](NUMORA_UI_SKILL.md) as a visual and frontend workflow baseline while screen designs are being prepared. The design-system document is copied from the supplied file. The skill document is copied with its relative design-system path adjusted for this directory and its asset availability clarified. It is a team reference document here, not an installed Codex skill.
+
+Use the team-approved PRD v0.5 and [product context](../product/PRODUCT_CONTEXT.md) for product behavior. Use the latest approved UI/UX handoff for final screen-specific design when it arrives. Until then, use this baseline for tokens, shared components, responsive layouts, interaction states, and accessibility. The [Sprint 2 trial scope](../development/SPRINT_2_GOAL.md) still allows a simple mock UI for the first school trial.
+
+The referenced `assets/numora-logo.png` and `assets/reference-mobile-screens.png` were not included with the supplied Markdown files and are not in this repository. References to supplied concept screens in the design-system text should be read as the authors' description, not as available visual assets or an approved page-level handoff. Request the actual assets or Figma handoff from UI/UX before implementing logo or screen-specific visuals. Final typography, neutral/semantic colors, desktop layout, and other items listed in section 22 of the design system remain provisional. This baseline does not close [OPEN-06](../product/OPEN_DECISIONS.md) or any other product decision.
+
+When the approved UI arrives, compare it with this baseline, update shared tokens/components first, then adjust page composition and run visual, responsive, and accessibility checks. Keep feature behavior and API integration aligned with the PRD.

@@ -32,6 +32,12 @@ PRD v0.5 (28 September 2026) is the team-approved product source of truth, as co
 - `data/ANALYTICS.md`
 - `data/IRT_INTEGRATION.md`
 
+## Design
+
+- `design/README.md` — status, provenance, and use of the UI/UX baseline.
+- `design/NUMORA_UI_DESIGN_SYSTEM.md` — team-supplied visual, component, responsive, and accessibility guidance before final UI handoff.
+- `design/NUMORA_UI_SKILL.md` — team-supplied frontend workflow reference, adapted to local document paths; not an installed agent skill.
+
 ## Development
 
 - `development/GETTING_STARTED.md`

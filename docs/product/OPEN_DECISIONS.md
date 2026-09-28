@@ -18,7 +18,7 @@
 | OPEN-03 | Placement mapping to at most 3 unlocked levels | Curriculum + PO | Perfect score can unlock at most 3; mapping for other outcomes is open | Blocks final placement |
 | OPEN-04 | PGK MCMA/Category scoring and rounding | Research & Curriculum + PO | Publish PG scoring first; retain extensible question types | Blocks PGK |
 | OPEN-05 | Official Tryout specification | Research & Curriculum + PO | Weekly package cadence is baseline; question count/duration/content still open | Blocks final Tryout publication |
-| OPEN-06 | Name/positioning/language/visual identity | PO + UI/UX | Numora is current name; brand can still be reviewed | Does not block backend |
+| OPEN-06 | Name/positioning/language/visual identity | PO + UI/UX | Numora is current name; UI/UX supplied a v0.1 visual implementation baseline, but final identity/handoff remains open | Does not block backend |
 | OPEN-07 | PvP invite expiry and two-player disconnect/readiness edges | PO + Software + QA | Explicit state machine; no undocumented final outcome | Blocks final edge behavior |
 | OPEN-08 | Class end and wrong-class correction with history | PO + Data | No self-transfer; preserve immutable history | Blocks correction/transfer flow |
 | OPEN-09 | Performance, browser, retention, backup/recovery, Google integration | Technical + PO | Engineering planning targets below | Must close before broader real-user release |
