@@ -19,7 +19,7 @@ Ruang lingkup minimum prototipe:
 
 Domain staging serta akses proyek Supabase/Google OAuth **belum tersedia** pada 28 September 2026; penyediaannya adalah dependensi nyata untuk uji coba online. Guru hanya boleh melihat progres siswa dari kelas yang ia kelola.
 
-Desain/wireframe masih akan disiapkan divisi UI/UX. **Mock UI sederhana boleh dipakai untuk pengembangan awal dan uji coba sekolah pertama**, selama alur berfungsi dan aksesibilitas dasarnya terpenuhi. Penyedia hosting staging belum dipilih. Koordinasi domain oleh DevOps dan Supabase/Google OAuth oleh tim Database adalah perkiraan pembagian kerja yang **belum dikonfirmasi**.
+Desain/wireframe masih akan disiapkan divisi UI/UX. **Mock UI sederhana boleh dipakai untuk pengembangan awal dan uji coba sekolah pertama**, selama alur berfungsi dan aksesibilitas dasarnya terpenuhi. Penyedia hosting staging dan penanggung jawab setup akan **diputuskan bersama tim**; keduanya belum dipilih. Koordinasi domain oleh DevOps dan Supabase/Google OAuth oleh tim Database adalah perkiraan pembagian kerja yang **belum dikonfirmasi**.
 
 Uji coba pertama hanya menguji rantai **Admin → Guru → Siswa → Drill → progres Guru**. Pretest, Tryout, PvP, leaderboard, feedback, dan alur Mandiri tetap bagian dari PRD v0.5 tetapi bukan sasaran sesi pertama.
 

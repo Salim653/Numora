@@ -30,7 +30,7 @@ This file reflects the final job-list image supplied by the team. GitHub usernam
 
 ## Tentative staging ownership
 
-As of 28 September 2026, the coordinator expects DevOps to handle the staging domain and the Database team to prepare Supabase/Google OAuth, but these assignments have **not been confirmed**. The hosting provider and accountable owner for end-to-end staging readiness are still open. Record confirmed assignments here before relying on them for the 12 October target.
+As of 28 September 2026, the coordinator expects DevOps to handle the staging domain and the Database team to prepare Supabase/Google OAuth, but these assignments have **not been confirmed**. The **team will decide together** which staging hosting provider to use and who is accountable for its setup. Both the provider and accountable owner are still open. Record the team's decision and confirmed assignments here before relying on them for the 12 October target.
 
 ## CODEOWNERS plan
 
