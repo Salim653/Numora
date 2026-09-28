@@ -1,0 +1,22 @@
+{
+  "name": "@tka/worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "bullmq": "6.3.9",
+    "ioredis": "6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.0",
+    "tsx": "^4.23.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.2"
+  }
+}

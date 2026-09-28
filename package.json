@@ -1,0 +1,43 @@
+{
+  "name": "tka-platform",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=12 <13"
+  },
+  "scripts": {
+    "dev": "dotenv -e .env -- pnpm --filter @tka/database build && dotenv -e .env -- turbo run dev --parallel --filter=@tka/web --filter=@tka/api --filter=@tka/worker",
+    "build": "turbo run build",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "ci": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "db:generate": "dotenv -e .env -- pnpm --filter @tka/database db:generate",
+    "db:migrate": "dotenv -e .env -- pnpm --filter @tka/database db:migrate",
+    "db:seed": "dotenv -e .env -- pnpm --filter @tka/database db:seed",
+    "db:studio": "dotenv -e .env -- pnpm --filter @tka/database db:studio",
+    "openapi:generate": "dotenv -e .env -- pnpm --filter @tka/database build && dotenv -e .env -- pnpm --filter @tka/api openapi:generate",
+    "contracts:validate": "node scripts/validate-contracts.mjs",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:logs": "docker compose logs -f",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "24.19.0",
+    "eslint": "9.39.5",
+    "prettier": "3.9.9",
+    "supabase": "2.118.0",
+    "turbo": "^2.5.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.0",
+    "dotenv-cli": "11.0.0"
+  }
+}

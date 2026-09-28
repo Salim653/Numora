@@ -1,0 +1,33 @@
+name: PRD clarification
+description: Record an ambiguity/open product rule before implementation assumes an answer
+title: "[PRD] "
+labels: ["prd-clarification"]
+body:
+  - type: input
+    id: requirement
+    attributes:
+      label: PRD reference
+      placeholder: "e.g. DRL-AC4 / OPEN-11"
+    validations:
+      required: true
+  - type: textarea
+    id: ambiguity
+    attributes:
+      label: Ambiguity / unresolved decision
+    validations:
+      required: true
+  - type: textarea
+    id: recommendation
+    attributes:
+      label: Engineering recommendation
+      description: Clearly mark this as a recommendation, not a PRD rule.
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact if unresolved
+      placeholder: "API / database / UI / tests / release"
+  - type: input
+    id: owner
+    attributes:
+      label: Decision owner
+      placeholder: "PO / Curriculum / Data / Software / QA"

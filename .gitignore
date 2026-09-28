@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+.next/
+dist/
+coverage/
+.turbo/
+
+# env
+.env
+.env.*
+!.env.example
+
+# local tooling
+.DS_Store
+.vscode/
+.idea/
+
+# supabase local
+supabase/.temp/
+supabase/.branches/
+
+# logs
+*.log
+
+# generated

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tka.local/contracts/events/analytics-event.schema.json",
+  "title": "Analytics Event Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "eventName",
+    "eventVersion",
+    "occurredAt",
+    "entityType",
+    "entityId",
+    "payload"
+  ],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "eventName": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "eventVersion": { "type": "integer", "minimum": 1 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "actorId": { "type": ["string", "null"], "format": "uuid" },
+    "actorRole": { "type": ["string", "null"], "enum": ["STUDENT", "TEACHER", "ADMIN", null] },
+    "entityType": { "type": "string", "minLength": 1 },
+    "entityId": { "type": "string", "format": "uuid" },
+    "correlationId": { "type": ["string", "null"], "format": "uuid" },
+    "payload": { "type": "object" }
+  }
+}

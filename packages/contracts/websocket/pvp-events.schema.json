@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tka.local/contracts/websocket/pvp-events.schema.json",
+  "title": "PvP WebSocket Event Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event", "eventVersion", "sentAt", "payload"],
+  "properties": {
+    "event": {
+      "type": "string",
+      "enum": [
+        "room:create",
+        "room:join",
+        "player:ready",
+        "answer:submit",
+        "match:reconnect",
+        "room:state",
+        "match:started",
+        "question:started",
+        "answer:acknowledged",
+        "question:resolved",
+        "match:completed",
+        "match:forfeited"
+      ]
+    },
+    "eventVersion": { "type": "integer", "minimum": 1 },
+    "sentAt": { "type": "string", "format": "date-time" },
+    "requestId": { "type": ["string", "null"] },
+    "payload": { "type": "object" }
+  }
+}

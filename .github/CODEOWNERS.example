@@ -1,0 +1,22 @@
+# Replace placeholders with real GitHub usernames, then rename to CODEOWNERS.
+# Keep this aligned with docs/development/OWNERSHIP.md.
+
+# Global fallback
+* @software-coordinator
+
+# Frontend
+/apps/web/ @frontend-core-owner @frontend-admin-owner @frontend-onboarding-owner
+/packages/ui/ @frontend-core-owner @frontend-admin-owner
+
+# Backend / database
+/apps/api/ @backend-core-owner @backend-onboarding-owner @backend-admin-owner
+/apps/worker/ @backend-core-owner
+/packages/database/ @backend-core-owner @backend-admin-owner
+
+# Contracts shared with Data/AI
+/packages/contracts/ @software-coordinator @backend-core-owner
+
+# Documentation / architecture
+/AGENTS.md @software-coordinator
+/docs/architecture/ @software-coordinator
+/docs/adr/ @software-coordinator

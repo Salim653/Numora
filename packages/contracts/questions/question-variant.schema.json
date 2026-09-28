@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tka.local/contracts/questions/question-variant.schema.json",
+  "title": "TKA Question Variant Draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["questionExternalId", "variantExternalId", "payload", "answer", "explanation"],
+  "properties": {
+    "questionExternalId": { "type": "string", "minLength": 1 },
+    "variantExternalId": { "type": "string", "minLength": 1 },
+    "payload": { "type": "object" },
+    "answer": { "type": "object" },
+    "explanation": { "type": "object" },
+    "generation": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}

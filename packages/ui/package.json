@@ -1,0 +1,22 @@
+{
+  "name": "@tka/ui",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('ui: source package consumed by Next.js')\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "peerDependencies": {
+    "react": ">=19"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "19.3.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.2"
+  }
+}

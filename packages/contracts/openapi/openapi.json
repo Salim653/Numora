@@ -1,0 +1,44 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_getHealth",
+        "summary": "Check API process health",
+        "tags": [
+          "health"
+        ],
+        "responses": {
+          "200": {
+            "description": "API is healthy"
+          }
+        }
+      }
+    },
+    "/api/v1/health/database": {
+      "get": {
+        "operationId": "HealthController_getDatabaseHealth",
+        "summary": "Check PostgreSQL connectivity",
+        "tags": [
+          "health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Database is reachable"
+          }
+        }
+      }
+    }
+  },
+  "info": {
+    "title": "TKA Mathematics SMP API",
+    "description": "REST contract for the TKA Mathematics SMP platform.",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {}
+  }
+}
