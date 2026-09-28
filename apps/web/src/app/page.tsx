@@ -23,7 +23,7 @@ export default async function Home() {
         </h1>
         <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
           This page proves the monorepo web layer is running and can reach the backend health
-          endpoint. Product behavior remains governed by PRD v0.4 and the repository docs.
+          endpoint. Product behavior follows the team-approved PRD v0.5 and the repository docs.
         </p>
 
         <div className="mt-8 flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">

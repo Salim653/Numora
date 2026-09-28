@@ -33,7 +33,6 @@ pnpm install
 cp .env.example .env
 pnpm supabase:start
 pnpm infra:up
-pnpm db:generate
 pnpm db:migrate
 pnpm db:seed
 pnpm dev
@@ -66,7 +65,7 @@ pnpm typecheck
 pnpm test
 pnpm build
 # or all together
-pnpm ci
+pnpm run ci
 ```
 
 ## Database workflow

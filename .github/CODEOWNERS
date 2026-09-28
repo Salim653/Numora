@@ -1,0 +1,45 @@
+# Review ownership. GitHub handles need write access to this repository.
+# Narrow feature rules override the broader rules above them.
+# First handle follows the job list; other handles keep review possible for the author's PR.
+* @splakplutoy @ayiinee
+
+# Frontend
+/apps/web/ @splakplutoy @Noir-MD @a-ali-wafa
+/apps/web/src/features/core-learning/ @splakplutoy @Noir-MD
+/apps/web/src/features/onboarding/ @a-ali-wafa @splakplutoy
+/apps/web/src/features/monitoring/ @a-ali-wafa @splakplutoy
+/apps/web/src/features/admin/ @Noir-MD @splakplutoy
+/apps/web/src/features/content/ @Noir-MD @splakplutoy
+/apps/web/src/features/pvp/ @splakplutoy @Noir-MD
+/apps/web/src/features/leaderboard/ @splakplutoy @Noir-MD
+/packages/ui/ @splakplutoy @Noir-MD @a-ali-wafa
+
+# Backend and shared data
+/apps/api/ @ayiinee @NafiAzka @fathh04 @tangguhir
+/apps/api/src/modules/identity/ @fathh04 @ayiinee
+/apps/api/src/modules/schools/ @fathh04 @tangguhir
+/apps/api/src/modules/classes/ @fathh04 @tangguhir
+/apps/api/src/modules/content/ @tangguhir @ayiinee
+/apps/api/src/modules/admin/ @tangguhir @ayiinee
+/apps/api/src/modules/assessments/ @ayiinee @NafiAzka
+/apps/api/src/modules/scoring/ @ayiinee @NafiAzka
+/apps/api/src/modules/progress/ @ayiinee @NafiAzka
+/apps/api/src/modules/xp/ @ayiinee @NafiAzka
+/apps/api/src/modules/tryout/ @ayiinee @NafiAzka
+/apps/api/src/modules/pvp/ @ayiinee @NafiAzka
+/apps/api/src/modules/leaderboards/ @ayiinee @NafiAzka
+/apps/api/src/modules/monitoring/ @fathh04 @ayiinee
+/apps/api/src/modules/feedback/ @fathh04 @ayiinee
+/apps/worker/ @ayiinee @NafiAzka
+/packages/database/ @ayiinee @NafiAzka @fathh04 @tangguhir
+/packages/contracts/ @splakplutoy @ayiinee
+
+# QA and team process
+/packages/testing/ @Salim653 @splakplutoy
+/docs/ @splakplutoy @ayiinee
+/docs/architecture/ @splakplutoy @ayiinee
+/docs/adr/ @splakplutoy @ayiinee
+/docs/testing/ @Salim653 @splakplutoy
+/.github/ @ayiinee @splakplutoy
+/.github/workflows/ @ayiinee @Salim653
+/.github/CODEOWNERS @ayiinee @splakplutoy
