@@ -46,6 +46,13 @@ async function run() {
         (SELECT count(*)::int FROM drizzle.__drizzle_migrations) AS migrations,
         (SELECT count(*)::int FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND NOT rowsecurity) AS "withoutRls"`;
     assert.deepEqual(state, { tables: 52, migrations: 4, withoutRls: 0 });
+    const columnsQuery = `SELECT table_name, column_name, udt_name, is_nullable
+      FROM information_schema.columns WHERE table_schema = 'public'
+      ORDER BY table_name, column_name`;
+    const indexesQuery = `SELECT tablename, indexname FROM pg_catalog.pg_indexes
+      WHERE schemaname = 'public' ORDER BY tablename, indexname`;
+    assert.deepEqual(await client.unsafe(columnsQuery), await admin.unsafe(columnsQuery));
+    assert.deepEqual(await client.unsafe(indexesQuery), await admin.unsafe(indexesQuery));
     console.log('Audited Staging baseline bridged; normal migrator skipped duplicate DDL.');
   } finally {
     if (client) await client.end();
