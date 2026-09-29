@@ -23,6 +23,8 @@ Preferred local stack:
 
 The local processes use cloud dependencies; Docker is not required for development. Developer credentials must not grant staging schema migration or seed access. A development branch must not copy real-user staging data.
 
+**ENGINEERING DECISION (prototype, 30 September 2026):** the project named `Numora-Staging` is temporarily used for shared Development demo work. It is not the school-facing Staging environment; real-user trials require a separate database, Auth configuration, and credentials. The `/demo/*` UI previews use fictional local fixtures and do not read Cloud product tables.
+
 ## Staging
 
 Purpose:
