@@ -12,6 +12,19 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test_only
+          POSTGRES_DB: numora_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d numora_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
@@ -39,7 +52,13 @@ jobs:
         run: pnpm typecheck
 
       - name: Test
-        run: pnpm test
+        env:
+          NODE_ENV: test
+          TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
+          DATABASE_MIGRATION_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
+        run: |
+          pnpm --filter @tka/database db:migrate
+          pnpm test
 
       - name: Build
         run: pnpm build

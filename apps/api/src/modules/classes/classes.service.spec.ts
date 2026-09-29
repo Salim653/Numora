@@ -89,7 +89,7 @@ describe('ClassesService Teacher reads', () => {
   });
 
   it('returns only the Class and Student identity fields after authorization', async () => {
-    database([ownedClass], [{ id: 'membership-id' }], [{ id: 'student-id', displayName: 'Nisa' }]);
+    database([ownedClass], [{ id: 'membership-id' }], [{ id: schoolId }], [{ id: 'student-id', displayName: 'Nisa' }]);
     await expect(service().students('Bearer ok', classId)).resolves.toEqual({
       class: { id: classId, name: 'IX A' },
       items: [{ id: 'student-id', displayName: 'Nisa' }],

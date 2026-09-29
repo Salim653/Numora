@@ -73,6 +73,8 @@ The guarded seed now includes a deterministic `DEMO` school/users plus one Chapt
 
 Google OAuth/Supabase Auth integration was not a blocker for the original walking skeleton. The current Sprint 2 Student flow includes Google login; environment credentials and callback configuration are therefore a delivery dependency for that flow. See `SPRINT_2_GOAL.md`.
 
+The Admin school/token screen requires an Admin profile provisioned by an operator against a real Supabase Auth identity; public registration accepts only Student and Teacher. Admin login policy remains OPEN-14. For the Teacher demo, an Admin creates an active school and issues a 3×24 hour token, then a Google-authenticated Teacher consumes that token before creating a Class. A Student joins with the Class code and completes a Drill before Teacher monitoring can show persisted progress.
+
 ## Quality
 
 ```bash
@@ -90,6 +92,8 @@ pnpm run ci
 ```
 
 Use `pnpm run ci`: pnpm 12 reserves `pnpm ci` for a clean dependency install.
+
+The PostgreSQL integration test runs when `TEST_DATABASE_URL` points to a **dedicated, migrated test database**. CI starts PostgreSQL, applies migrations, and supplies this URL. Local runs can use `sslmode=disable` only with `NODE_ENV=test` and a localhost URL; non-test connections still require TLS. Do not point the test at a shared development, staging, or production database.
 
 ## Read before coding
 

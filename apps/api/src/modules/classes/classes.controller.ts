@@ -1,10 +1,33 @@
-import { Controller, Get, Headers, Param, ParseUUIDPipe } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
+import { IsString, Length, Matches } from 'class-validator';
 import { ClassesService } from './classes.service';
 
 class ClassSummaryDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() name!: string;
+  @ApiProperty({ required: false }) joinCode?: string;
+}
+
+class CreatedClassDto extends ClassSummaryDto {
+  @ApiProperty() declare joinCode: string;
+}
+class CreateClassDto {
+  @ApiProperty({ minLength: 1, maxLength: 80 })
+  @IsString()
+  @Length(1, 80)
+  @Matches(/\S/)
+  name!: string;
+}
+class JoinClassDto {
+  @ApiProperty({ minLength: 8, maxLength: 32 })
+  @IsString()
+  @Length(8, 32)
+  joinCode!: string;
+}
+class JoinedClassDto {
+  @ApiProperty({ type: ClassSummaryDto }) class!: ClassSummaryDto;
+  @ApiProperty() joined!: boolean;
 }
 
 class StudentSummaryDto {
@@ -31,6 +54,24 @@ export class ClassesController {
   @ApiOkResponse({ type: ClassesResponseDto })
   list(@Headers('authorization') authorization?: string) {
     return this.classes.list(authorization);
+  }
+
+  @Post()
+  @ApiCreatedResponse({ type: CreatedClassDto })
+  create(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: CreateClassDto,
+  ) {
+    return this.classes.create(authorization, body.name);
+  }
+
+  @Post('join')
+  @ApiCreatedResponse({ type: JoinedClassDto })
+  join(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: JoinClassDto,
+  ) {
+    return this.classes.join(authorization, body.joinCode);
   }
 
   @Get(':classId/students')

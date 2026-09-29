@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@tka/ui';
 import { destination, useAuth } from './auth';
 import { getSupabase } from '@/lib/supabase';
+import { getSchools, verifyTeacher, type SchoolSummary } from '@/lib/api';
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -224,19 +225,18 @@ export function CallbackScreen() {
 function RegistrationForm({ initialName, email }: { initialName: string; email: string }) {
   const { register } = useAuth();
   const [role, setRole] = useState<'STUDENT' | 'TEACHER' | ''>('');
-  const [name, setName] = useState(initialName);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!role || !name.trim()) {
-      setError('Pilih role dan isi nama tampilan.');
+    if (!role) {
+      setError('Pilih role.');
       return;
     }
     setBusy(true);
     setError('');
     try {
-      await register(role, name.trim());
+      await register(role);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Profil belum tersimpan. Coba lagi.');
       setBusy(false);
@@ -271,18 +271,7 @@ function RegistrationForm({ initialName, email }: { initialName: string; email: 
           </label>
         </div>
       </fieldset>
-      <label className="field-label" htmlFor="display-name">
-        Nama tampilan
-      </label>
-      <input
-        className="text-input"
-        id="display-name"
-        name="displayName"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        maxLength={80}
-        required
-      />
+      <p className="field-help">Nama akun Google: {initialName}</p>
       <p className="field-help">Email Google: {email}</p>
       <p className="field-help">Role tidak dapat diubah sendiri setelah profil disimpan.</p>
       {error && (
@@ -409,6 +398,102 @@ export function RoleHomeScreen({
             Memeriksa akses…
           </p>
         )}
+      </section>
+    </Shell>
+  );
+}
+
+export function TeacherVerificationScreen() {
+  const router = useRouter();
+  const { state, refresh } = useAuth();
+  const [schools, setSchools] = useState<SchoolSummary[] | null>(null);
+  const [schoolId, setSchoolId] = useState('');
+  const [token, setToken] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const accessToken = state.status === 'ready' ? state.session.access_token : null;
+  useEffect(() => {
+    if (state.status === 'signed_out') router.replace('/');
+    if (state.status === 'registration') router.replace('/onboarding');
+    if (state.status === 'ready' && destination(state.profile) !== '/teacher/verification-required')
+      router.replace(destination(state.profile));
+  }, [router, state]);
+  useEffect(() => {
+    if (!accessToken || state.status !== 'ready' || state.profile.role !== 'TEACHER') return;
+    let active = true;
+    getSchools(accessToken).then(
+      (result) => { if (active) setSchools(result.items); },
+      (cause: unknown) => {
+        if (active) setError(cause instanceof Error ? cause.message : 'Sekolah belum dapat dimuat.');
+      },
+    );
+    return () => { active = false; };
+  }, [accessToken, revision, state.status, state]);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!accessToken || !schoolId || !token.trim()) return;
+    setBusy(true);
+    setError('');
+    try {
+      await verifyTeacher(accessToken, schoolId, token.trim());
+      setToken('');
+      await refresh();
+      router.replace('/teacher');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Verifikasi belum berhasil.');
+      setBusy(false);
+    }
+  }
+  return (
+    <Shell>
+      <section className="panel form-panel">
+        <span className="eyebrow">Akses Guru</span>
+        <h1>Verifikasi sekolah</h1>
+        <p>Pilih sekolah lalu masukkan token sekali pakai dari Admin. Token berlaku 3×24 jam.</p>
+        {state.status === 'ready' && state.profile.role === 'TEACHER' && !state.profile.teacherVerified ? (
+          <>
+            {schools === null && !error ? <p role="status">Memuat sekolah…</p> : (
+              <form onSubmit={(event) => void submit(event)}>
+                <label className="field-label" htmlFor="teacher-school">Sekolah</label>
+                <select
+                  className="text-input"
+                  id="teacher-school"
+                  value={schoolId}
+                  onChange={(event) => setSchoolId(event.target.value)}
+                  required
+                >
+                  <option value="">Pilih sekolah</option>
+                  {schools?.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}
+                </select>
+                {schools?.length === 0 && <p role="status">Belum ada sekolah aktif.</p>}
+                <label className="field-label" htmlFor="teacher-token">Token verifikasi</label>
+                <input
+                  className="text-input"
+                  id="teacher-token"
+                  type="password"
+                  autoComplete="off"
+                  value={token}
+                  onChange={(event) => setToken(event.target.value)}
+                  required
+                />
+                {error && <p className="form-error" role="alert">{error}</p>}
+                <Button className="primary-button" type="submit" disabled={busy || !schools?.length}>
+                  {busy ? 'Memverifikasi…' : 'Verifikasi dan lanjutkan'}
+                </Button>
+              </form>
+            )}
+            {error && schools === null && (
+              <Button className="secondary-button" onClick={() => { setError(''); setRevision((n) => n + 1); }}>
+                Coba lagi
+              </Button>
+            )}
+            <div className="form-logout"><LogoutButton /></div>
+          </>
+        ) : state.status === 'error' ? (
+          <Notice title="Akun belum dapat diperiksa" message={state.message ?? 'Coba lagi.'} retry={() => void refresh()} />
+        ) : <p role="status">Memeriksa akses…</p>}
       </section>
     </Shell>
   );

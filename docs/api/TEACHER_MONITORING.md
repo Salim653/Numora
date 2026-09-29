@@ -6,10 +6,16 @@
 
 **ENGINEERING DECISION:** Endpoint baca berikut memerlukan bearer token Supabase yang dipetakan ke akun Teacher aktif dan keanggotaan sekolah terverifikasi yang masih berlaku. Class arsip dan anggota yang sudah keluar tidak masuk hasil.
 
-- `GET /api/v1/classes` → `{ "items": [{ "id": "UUID", "name": "IX A" }] }`.
+- `GET /api/v1/classes` → `{ "items": [{ "id": "UUID", "name": "IX A", "joinCode": "KODE" }] }` untuk Guru pemilik Class.
 - `GET /api/v1/classes/{classId}/students` → `{ "class": { "id": "UUID", "name": "IX A" }, "items": [{ "id": "UUID", "displayName": "Nisa" }] }`.
 
-Kesalahan memakai `application/problem+json`: 401 untuk sesi tidak berlaku, 403 untuk role/verifikasi/kepemilikan yang tidak memenuhi syarat, dan 404 untuk Class yang tidak ada atau diarsipkan. Path ID divalidasi sebagai UUID. Nama dan identitas minimum saja yang dikirim; email dan kode join tidak disertakan.
+Kesalahan memakai `application/problem+json`: 401 untuk sesi tidak berlaku, 403 untuk role/verifikasi/kepemilikan yang tidak memenuhi syarat, dan 404 untuk Class yang tidak ada atau diarsipkan. Path ID divalidasi sebagai UUID. Daftar Student hanya mengirim identitas minimum tanpa email atau kode join.
+
+## Alur persiapan Class
+
+**PRD RULE:** Token Guru berlaku 3×24 jam dan sekali pakai. Siswa hanya boleh menjadi anggota aktif satu Class.
+
+**ENGINEERING IMPLEMENTATION awaiting FE/BE/QA review:** Admin yang sudah diprovisikan mengelola sekolah dan token melalui `/api/v1/admin/schools`. Token acak hanya dikembalikan ketika diterbitkan atau diterbitkan ulang; database menyimpan SHA-256, waktu kedaluwarsa, pemakaian, dan pencabutan. Guru memilih sekolah aktif dan mengirim token ke `POST /api/v1/schools/{schoolId}/teacher-verifications`. Konsumsi token dan pembuatan keanggotaan Guru berlangsung dalam satu transaksi; kondisi belum terpakai, belum dicabut, dan belum kedaluwarsa diperiksa saat pembaruan. Guru terverifikasi membuat Class melalui `POST /api/v1/classes`; respons dan daftar Class miliknya memuat `joinCode`. Siswa bergabung melalui `POST /api/v1/classes/join` dan keunikan anggota aktif ditegakkan indeks database. Akun Admin belum dapat didaftarkan dari formulir publik; kebijakan autentikasi Admin final mengikuti OPEN-14.
 
 ## Student Detail Drill demo
 
