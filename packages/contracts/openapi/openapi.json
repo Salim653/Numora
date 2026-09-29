@@ -117,6 +117,454 @@
           "identity"
         ]
       }
+    },
+    "/api/v1/classes": {
+      "get": {
+        "operationId": "ClassesController_list",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students": {
+      "get": {
+        "operationId": "ClassesController_students",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassStudentsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/chapters": {
+      "get": {
+        "operationId": "LearningController_catalog",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/chapters/{chapterId}": {
+      "get": {
+        "operationId": "LearningController_chapter",
+        "parameters": [
+          {
+            "name": "chapterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/subchapters/{subchapterId}": {
+      "get": {
+        "operationId": "LearningController_subchapter",
+        "parameters": [
+          {
+            "name": "subchapterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubchapterDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/students/me/progress": {
+      "get": {
+        "operationId": "LearningController_progress",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentProgressDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/assessments/drill/attempts": {
+      "post": {
+        "operationId": "LearningController_start",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartDrillDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrillAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/assessment-attempts/{attemptId}": {
+      "get": {
+        "operationId": "LearningController_attempt",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrillAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/assessment-attempts/{attemptId}/answers/{questionInstanceId}": {
+      "patch": {
+        "operationId": "LearningController_saveAnswer",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "questionInstanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDrillAnswerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedAnswerDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/assessment-attempts/{attemptId}/submit": {
+      "post": {
+        "operationId": "LearningController_submit",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrillResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/assessment-attempts/{attemptId}/result": {
+      "get": {
+        "operationId": "LearningController_result",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrillResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/progress": {
+      "get": {
+        "operationId": "MonitoringController_read",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherStudentProgressDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "monitoring"
+        ]
+      }
     }
   },
   "info": {
@@ -200,6 +648,567 @@
         },
         "required": [
           "role"
+        ]
+      },
+      "ClassSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "ClassesResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClassSummaryDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "StudentSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "displayName"
+        ]
+      },
+      "ClassStudentsResponseDto": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "$ref": "#/components/schemas/ClassSummaryDto"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentSummaryDto"
+            }
+          }
+        },
+        "required": [
+          "class",
+          "items"
+        ]
+      },
+      "ChapterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "order"
+        ]
+      },
+      "CatalogDto": {
+        "type": "object",
+        "properties": {
+          "chapters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChapterDto"
+            }
+          }
+        },
+        "required": [
+          "chapters"
+        ]
+      },
+      "SubchapterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "chapterId",
+          "title",
+          "order"
+        ]
+      },
+      "ChapterDetailDto": {
+        "type": "object",
+        "properties": {
+          "chapter": {
+            "$ref": "#/components/schemas/ChapterDto"
+          },
+          "subchapters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubchapterDto"
+            }
+          }
+        },
+        "required": [
+          "chapter",
+          "subchapters"
+        ]
+      },
+      "LevelDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "locked",
+              "open",
+              "inProgress",
+              "completed"
+            ]
+          },
+          "latestScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "bestScore": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "order",
+          "status",
+          "latestScore",
+          "bestScore"
+        ]
+      },
+      "SubchapterDetailDto": {
+        "type": "object",
+        "properties": {
+          "subchapter": {
+            "$ref": "#/components/schemas/SubchapterDto"
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LevelDto"
+            }
+          }
+        },
+        "required": [
+          "subchapter",
+          "levels"
+        ]
+      },
+      "StudentProgressDto": {
+        "type": "object",
+        "properties": {
+          "completedLevels": {
+            "type": "number"
+          },
+          "totalLevels": {
+            "type": "number"
+          },
+          "latestScore": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "completedLevels",
+          "totalLevels",
+          "latestScore"
+        ]
+      },
+      "StartDrillDto": {
+        "type": "object",
+        "properties": {
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "levelId"
+        ]
+      },
+      "OptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ]
+      },
+      "DrillQuestionDto": {
+        "type": "object",
+        "properties": {
+          "questionInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionDto"
+            }
+          },
+          "selectedOptionId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "questionInstanceId",
+          "stem",
+          "options",
+          "selectedOptionId"
+        ]
+      },
+      "DrillAttemptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "levelTitle": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "inProgress",
+              "completed"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DrillQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "levelId",
+          "levelTitle",
+          "status",
+          "startedAt",
+          "isDemo",
+          "questions"
+        ]
+      },
+      "SaveDrillAnswerDto": {
+        "type": "object",
+        "properties": {
+          "optionId": {
+            "type": "string",
+            "nullable": true,
+            "description": "A-D for demo; null clears the answer."
+          }
+        },
+        "required": [
+          "optionId"
+        ]
+      },
+      "SavedAnswerDto": {
+        "type": "object",
+        "properties": {
+          "questionInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "selectedOptionId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "questionInstanceId",
+          "selectedOptionId"
+        ]
+      },
+      "ReviewedQuestionDto": {
+        "type": "object",
+        "properties": {
+          "questionInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionDto"
+            }
+          },
+          "selectedOptionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "correctOptionId": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "questionInstanceId",
+          "stem",
+          "options",
+          "selectedOptionId",
+          "correctOptionId",
+          "explanation"
+        ]
+      },
+      "DrillResultDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "levelTitle": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "rawPoints": {
+            "type": "number"
+          },
+          "correctCount": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "mastered": {
+            "type": "boolean"
+          },
+          "stars": {
+            "type": "number",
+            "nullable": true
+          },
+          "unlockedLevelId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "explanationState": {
+            "type": "string",
+            "enum": [
+              "available",
+              "expired"
+            ]
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewedQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "attemptId",
+          "levelId",
+          "levelTitle",
+          "score",
+          "rawPoints",
+          "correctCount",
+          "questionCount",
+          "mastered",
+          "stars",
+          "unlockedLevelId",
+          "isDemo",
+          "explanationState",
+          "questions"
+        ]
+      },
+      "ClassDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "StudentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "displayName"
+        ]
+      },
+      "MonitoredLevelDto": {
+        "type": "object",
+        "properties": {
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chapterLabel": {
+            "type": "string"
+          },
+          "subchapterLabel": {
+            "type": "string"
+          },
+          "levelLabel": {
+            "type": "string"
+          },
+          "accessStatus": {
+            "type": "string",
+            "enum": [
+              "LOCKED",
+              "UNLOCKED"
+            ]
+          },
+          "inProgress": {
+            "type": "boolean"
+          },
+          "latestDrillScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "bestDrillScore": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "levelId",
+          "chapterLabel",
+          "subchapterLabel",
+          "levelLabel",
+          "accessStatus",
+          "inProgress",
+          "latestDrillScore",
+          "bestDrillScore"
+        ]
+      },
+      "TeacherStudentProgressDto": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "$ref": "#/components/schemas/ClassDto"
+          },
+          "student": {
+            "$ref": "#/components/schemas/StudentDto"
+          },
+          "latestDrillScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoredLevelDto"
+            }
+          }
+        },
+        "required": [
+          "class",
+          "student",
+          "latestDrillScore",
+          "levels"
         ]
       }
     }

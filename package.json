@@ -15,14 +15,16 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "ci": "pnpm contracts:validate && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "ci": "pnpm contracts:validate && pnpm contracts:types:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "db:generate": "pnpm --filter @tka/database db:generate",
     "db:migrate": "dotenv -e .env -- pnpm --filter @tka/database db:migrate",
     "db:seed": "dotenv -e .env -- pnpm --filter @tka/database db:seed",
     "db:studio": "dotenv -e .env -- pnpm --filter @tka/database db:studio",
     "worker:probe": "dotenv -e .env -- pnpm --filter @tka/worker worker:probe",
     "openapi:generate": "pnpm --filter @tka/database build && pnpm --filter @tka/api openapi:generate",
-    "contracts:validate": "node scripts/validate-contracts.mjs"
+    "contracts:validate": "node scripts/validate-contracts.mjs",
+    "contracts:types": "node scripts/generate-learning-types.mjs",
+    "contracts:types:check": "node scripts/generate-learning-types.mjs --check"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

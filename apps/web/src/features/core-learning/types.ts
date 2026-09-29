@@ -1,64 +1,26 @@
-// PROPOSED until the NestJS OpenAPI contract is generated. Replace these with
-// generated types when the matching backend endpoints land.
-export type Level = {
-  id: string;
-  title: string;
-  order: number;
-  status: 'locked' | 'open' | 'inProgress' | 'completed';
-  latestScore: number | null;
-  bestScore: number | null;
-};
+import type {
+  CatalogDto,
+  ChapterDto,
+  ChapterDetailDto,
+  DrillAttemptDto,
+  DrillQuestionDto,
+  DrillResultDto,
+  LevelDto,
+  StudentProgressDto,
+  SubchapterDto,
+  SubchapterDetailDto,
+} from './generated-types';
 
-export type Chapter = { id: string; title: string; order: number };
-export type Subchapter = { id: string; chapterId: string; title: string; order: number };
-export type Catalog = { chapters: Chapter[] };
-export type ChapterDetail = { chapter: Chapter; subchapters: Subchapter[] };
-export type SubchapterDetail = { subchapter: Subchapter; levels: Level[] };
-export type StudentProgress = {
-  completedLevels: number;
-  totalLevels: number;
-  latestScore: number | null;
-};
-
-export type DrillQuestion = {
-  questionInstanceId: string;
-  stem: string;
-  options: { id: string; text: string }[];
-  selectedOptionId: string | null;
-};
-
-export type DrillAttempt = {
-  id: string;
-  levelId: string;
-  levelTitle: string;
-  status: 'inProgress' | 'completed';
-  startedAt: string;
-  isDemo: boolean;
-  questions: DrillQuestion[];
-};
-
-export type DrillResult = {
-  attemptId: string;
-  levelId: string;
-  levelTitle: string;
-  score: number;
-  correctCount: number;
-  questionCount: number;
-  rawPoints: number;
-  mastered: boolean;
-  stars: number | null;
-  unlockedLevelId: string | null;
-  isDemo: boolean;
-  explanationState: 'available' | 'expired';
-  questions: {
-    questionInstanceId: string;
-    stem: string;
-    selectedOptionId: string | null;
-    correctOptionId: string;
-    options: { id: string; text: string }[];
-    explanation: string;
-  }[];
-};
+export type Level = LevelDto;
+export type Chapter = ChapterDto;
+export type Subchapter = SubchapterDto;
+export type Catalog = CatalogDto;
+export type ChapterDetail = ChapterDetailDto;
+export type SubchapterDetail = SubchapterDetailDto;
+export type StudentProgress = StudentProgressDto;
+export type DrillQuestion = DrillQuestionDto;
+export type DrillAttempt = DrillAttemptDto;
+export type DrillResult = DrillResultDto;
 
 // PROPOSED until the Backend publishes its generated OpenAPI contract.
 export type TryoutPackage =

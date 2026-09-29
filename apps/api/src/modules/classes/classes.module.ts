@@ -7,5 +7,6 @@ import { ClassesService } from './classes.service';
   imports: [IdentityModule],
   controllers: [ClassesController],
   providers: [ClassesService],
+  exports: [ClassesService],
 })
 export class ClassesModule {}

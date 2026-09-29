@@ -67,7 +67,7 @@ Run `pnpm db:generate` only after changing the Drizzle schema. It generates SQL 
 
 ## Seed data
 
-Bootstrap seed is deterministic and marked `DEMO`. It currently proves database wiring only; richer Curriculum-independent fixtures should be added as assessment modules land.
+The guarded seed now includes a deterministic `DEMO` school/users plus one Chapter/Subchapter, two published Levels, and two equivalent 10-question Level-1 Drill packages. The 20 demo variants are implementation fixtures; Curriculum must review all stems, keys, and explanations before school participants use them. Seed only the isolated development database after its reviewed migration is applied. The fixed demo auth IDs do not create Google accounts.
 
 ## Authentication
 

@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { closeDatabaseConnection, getDatabase } from './client.js';
 import { schools, users } from './schema/index.js';
+import { seedDemoLearning } from './demo-learning.js';
 
 const ids = {
   adminAuth: '00000000-0000-4000-8000-000000000001',
@@ -51,6 +52,8 @@ async function seed() {
   }
 
   console.log('Seeded deterministic DEMO identity fixtures.');
+  await seedDemoLearning();
+  console.log('Seeded DEMO Level 1 question variants and packages.');
   await closeDatabaseConnection();
 }
 

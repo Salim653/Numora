@@ -1,6 +1,6 @@
-# Core Learning Student API — PROPOSED integration contract
+# Core Learning Student API — Drill implementation contract
 
-**Status: PROPOSED.** The current generated OpenAPI contains only health endpoints. This document records the frontend's expected interface for Backend review; it is not an approved or implemented API. Once Backend controllers/DTOs land, regenerate OpenAPI, replace the provisional types in `apps/web/src/features/core-learning/types.ts`, and align the frontend with the generated contract.
+**Status: ENGINEERING IMPLEMENTATION awaiting FE/BE/QA review.** The Drill endpoints below are implemented in NestJS and generated in `packages/contracts/openapi/openapi.json`; frontend Drill types are generated from that contract. The TryOut and Penilaian section remains **PROPOSED**. This document does not approve unresolved product rules.
 
 All endpoints use `/api/v1`, Supabase access token Bearer authentication, UUID identifiers, camelCase JSON, ISO-8601 UTC timestamps, and `application/problem+json` errors. NestJS authorizes the current Student, each attempt, and level access. No endpoint accepts a client-computed score, elapsed time, XP, or unlock state.
 
@@ -20,7 +20,7 @@ Before submit, each question has `{ questionInstanceId, stem, options: { id, tex
 
 Frontend saves each selection before allowing final submission. A failed save remains visible and retryable. Server owns the assessment lifecycle, finalization, 80% unlock rule, historical question/scoring context, and idempotency. The UI invalidates cached progress and level status after submit, then fetches the persisted result. Student onboarding and teacher monitoring have separate contracts and owners.
 
-**Review needed before integration:** Backend confirms endpoint paths and response fields, defines authorization/error codes and answer-clear semantics, and publishes generated OpenAPI. QA verifies 7/10 stays locked, 8/10 unlocks, refresh resumes the same attempt, duplicate submit returns one result, and another Student cannot access the attempt.
+**Implementation details for review:** `optionId: null` clears an answer; active attempts return no answer key or explanation. Error codes include `LEVEL_LOCKED`, `ATTEMPT_NOT_FOUND`, `ATTEMPT_COMPLETED`, `RESULT_PENDING`, `QUESTION_NOT_FOUND`, `OPTION_INVALID`, and `DRILL_PACKAGE_UNAVAILABLE`. The first demo fixture has two 10-question equivalent packages for retry. Submit persists score, progress, and outbox atomically; XP is deferred pending OPEN-11. QA still needs database-backed evidence for concurrent submit, retry, and another Student's attempt access after the controlled migration is applied.
 
 ## TryOut and Penilaian — PROPOSED
 
