@@ -23,6 +23,7 @@ function mount(
     questionId: string,
     optionId: string | null,
   ) => Promise<{ questionInstanceId: string; selectedOptionId: string | null }>,
+  questions = [question],
 ) {
   const onSubmit = vi.fn().mockResolvedValue({});
   const onSubmitted = vi.fn();
@@ -31,7 +32,7 @@ function mount(
     <QueryClientProvider client={queryClient}>
       <AssessmentSession
         title="Level 1"
-        questions={[question]}
+        questions={questions}
         submitLabel="Kirim Drill"
         confirmMessage={(empty) => `${empty} kosong`}
         onSave={onSave}
@@ -82,5 +83,28 @@ describe('sesi asesmen', () => {
       ),
     );
     expect(onSave).toHaveBeenCalledTimes(2);
+  });
+
+  it('menahan jawaban soal lain sampai simpan yang gagal diperbaiki', async () => {
+    const onSave = vi.fn()
+      .mockRejectedValueOnce(new Error('Jaringan putus'))
+      .mockResolvedValueOnce({ questionInstanceId: 'question-1', selectedOptionId: 'A' })
+      .mockResolvedValueOnce({ questionInstanceId: 'question-2', selectedOptionId: 'A' });
+    const questions = [question, { ...question, questionInstanceId: 'question-2' }];
+    const { onSubmit } = mount(onSave, questions);
+
+    fireEvent.click(screen.getByRole('radio', { name: /^A\./ }));
+    await screen.findByText('Jaringan putus');
+    fireEvent.click(screen.getByRole('button', { name: 'Berikutnya' }));
+    expect(screen.getByRole('radio', { name: /^A\./ }).closest('fieldset')?.hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Kirim Drill' }).hasAttribute('disabled')).toBe(true);
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Coba simpan lagi' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.getByRole('radio', { name: /^A\./ }).closest('fieldset')?.hasAttribute('disabled')).toBe(false));
+    fireEvent.click(screen.getByRole('radio', { name: /^A\./ }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(3));
   });
 });
