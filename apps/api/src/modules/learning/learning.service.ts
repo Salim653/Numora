@@ -507,7 +507,7 @@ export class LearningService {
         .onConflictDoUpdate({
           target: [levelProgress.studentId, levelProgress.levelId],
           set: {
-            unlockedAt: sql`coalesce(${levelProgress.unlockedAt}, ${now})`,
+            unlockedAt: sql`coalesce(${levelProgress.unlockedAt}, ${now.toISOString()}::timestamptz)`,
             latestScore: scored.score,
             bestScore: sql`greatest(coalesce(${levelProgress.bestScore}, 0), ${scored.score})`,
             completedAt: scored.mastered ? now : sql`${levelProgress.completedAt}`,

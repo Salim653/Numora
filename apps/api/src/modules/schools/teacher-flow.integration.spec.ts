@@ -58,7 +58,7 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
 
     const expired = await schools.issueToken('admin', school.id);
     await db.update(teacherVerificationTokens)
-      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .set({ createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), expiresAt: new Date(Date.now() - 1000) })
       .where(eq(teacherVerificationTokens.id, expired.id));
     await expect(schools.verifyTeacher('teacherA', school.id, expired.token)).rejects.toMatchObject({ status: 403 });
 
