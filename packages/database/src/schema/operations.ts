@@ -13,7 +13,7 @@ export const analyticsOutbox = pgTable('analytics_outbox', {
   occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
   processedAt: timestamp('processed_at', { withTimezone: true }),
   failedAt: timestamp('failed_at', { withTimezone: true }),
-});
+}).enableRLS();
 
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -23,4 +23,4 @@ export const auditLogs = pgTable('audit_logs', {
   entityId: uuid('entity_id'),
   metadata: jsonb('metadata').notNull().default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}).enableRLS();
