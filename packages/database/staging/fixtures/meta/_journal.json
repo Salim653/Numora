@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790604821659,
+      "tag": "0000_outgoing_thunderbolts",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790690050100,
+      "tag": "0001_lucky_triton",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790690135460,
+      "tag": "0002_lock_down_numora_data_api",
+      "breakpoints": true
+    }
+  ]
+}

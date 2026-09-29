@@ -1,1 +1,3 @@
 *.pdf binary
+packages/database/drizzle/*.sql text eol=lf
+packages/database/staging/fixtures/*.sql text eol=lf
