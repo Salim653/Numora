@@ -11,6 +11,10 @@ function sortByOrder<T extends { order: number }>(items: T[]) {
 }
 
 export function DashboardScreen() {
+  return <StudentGate>{(token) => <DashboardContent token={token} />}</StudentGate>;
+}
+
+function DashboardContent({ token }: { token: string }) {
   const areas = [
     {
       number: '01',
@@ -71,7 +75,7 @@ export function DashboardScreen() {
       </div>
       <section className="mt-8" aria-label="Ringkasan progres">
         <h2 className="mb-4 text-xl font-bold">Progresmu</h2>
-        <StudentGate>{(token) => <DashboardData token={token} />}</StudentGate>
+        <DashboardData token={token} />
       </section>
     </LearningFrame>
   );
