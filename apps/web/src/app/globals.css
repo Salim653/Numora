@@ -1,8 +1,14 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   color-scheme: light;
-  --background: #f7f8fa;
+  --numora-purple: #722cce;
+  --numora-purple-soft: #b88ac9;
+  --numora-peach: #fa9a71;
+  --numora-gold: #f8d080;
+  --numora-ivory: #f6efcd;
+  --numora-pearl: #f3faf8;
+  --background: var(--numora-ivory);
   --foreground: #111827;
 }
 
@@ -13,6 +19,11 @@
 html,
 body {
   min-height: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid var(--numora-purple);
+  outline-offset: 3px;
 }
 
 body {
