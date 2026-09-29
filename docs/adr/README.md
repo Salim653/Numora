@@ -38,4 +38,4 @@ ADRs capture durable technical decisions. They do not override PRD product rules
 - ADR-007 Transactional outbox for reliable domain events
 - ADR-008 Versioned question/history model
 - ADR-009 Immutable XP ledger + derived leaderboards
-- ADR-010 Production topology: VPS application + managed DB/Auth preferred
+- ADR-010 Production topology: VPS application + managed DB/Auth/Redis

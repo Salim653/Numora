@@ -225,13 +225,13 @@ Preferred production topology:
 Cloudflare DNS/CDN/R2
           │
           ▼
-VPS: Next.js + NestJS + Worker (+ Redis initially)
+VPS: Next.js + NestJS + Worker
           │
           ▼
-Managed PostgreSQL + Supabase Auth
+Supabase cloud PostgreSQL + Auth; Redis cloud
 ```
 
-Fallback if budget forces self-hosting must be separately reviewed because it adds database/auth operational ownership.
+Development runs the three application processes locally against an isolated Supabase cloud branch/project and Redis cloud. Staging with real-user data remains separate. A self-hosted fallback would add database/auth/Redis operational ownership and requires separate review.
 
 ## 14. Scale posture
 

@@ -19,7 +19,7 @@ coverage/
 .vscode/
 .idea/
 
-# optional Supabase Local state
+# Leftover Supabase CLI state from older checkouts
 supabase/.temp/
 supabase/.branches/
 

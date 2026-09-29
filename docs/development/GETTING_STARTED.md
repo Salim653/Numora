@@ -5,9 +5,8 @@
 - Git
 - Node.js 24 LTS
 - Corepack
-- Docker Desktop / Docker Engine + Compose
 
-pnpm is pinned by the repository. The Supabase CLI is available only for optional isolated local work.
+pnpm is pinned by the repository. Obtain the isolated cloud development credentials from the cloud team before running the apps.
 
 On Windows, run `node --version` in the terminal you will use for development. It must report v24; an older system installation can take precedence over a user-installed Node 24 in `PATH`.
 
@@ -19,7 +18,6 @@ cd <repository>
 corepack enable
 pnpm install
 cp .env.example .env
-pnpm infra:up
 pnpm dev
 ```
 
@@ -30,27 +28,30 @@ The lockfile and initial Drizzle migration are committed with the bootstrap. Use
 - `apps/web` — Next.js on `http://localhost:3000`
 - `apps/api` — NestJS on `http://localhost:3001`
 - `apps/worker` — BullMQ worker/scheduler process
-- PostgreSQL/Auth — shared Supabase Cloud Development project
-- Redis — root Docker Compose
+- PostgreSQL/Auth — isolated Supabase cloud development branch/project
+- Redis — cloud TCP/TLS endpoint, with a developer-specific BullMQ prefix
 
 Useful checks:
 
 - API: `http://localhost:3001/api/v1/health`
 - DB: `http://localhost:3001/api/v1/health/database`
 - Swagger: `http://localhost:3001/api/docs`
-- Supabase dashboard: the team's Cloud Development project
+
+The Supabase dashboard URL is supplied by the cloud team. Local web and API ports remain 3000 and 3001.
 
 ## Environment files
 
-Use one root `.env` for the local bootstrap. It is loaded by root scripts and is ignored by Git.
+Use one ignored root `.env` for development. It is loaded by root scripts. Fill it from the development cloud handoff; never copy staging credentials containing real-user data.
 
 ```bash
 cp .env.example .env
 ```
 
-Fill the root `.env` from the team's secure Development configuration before starting the apps. The two `NEXT_PUBLIC_SUPABASE_*` values belong to Next.js; `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` must refer to the same project for NestJS token verification. Set `DATABASE_URL` to the Cloud session-pooler URL with TLS. The Google Client Secret and database password must never enter Git or chat. Next.js public values are embedded at build time, so configure each deployed web build for its own environment.
+Required current values: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DATABASE_URL`, `REDIS_URL`, and `BULLMQ_PREFIX`. The web and API Supabase values must refer to the same development project; the API uses them to validate bearer sessions. Keep `NEXT_PUBLIC_API_URL`, `API_INTERNAL_URL`, and `CORS_ORIGINS` pointed at the local web/API processes. A public key is browser-visible; database and Redis URLs are secrets.
 
-The Database team configures the Google provider and Google OAuth consent screen. Google redirects to the project's Supabase Auth callback; Supabase allows `http://localhost:3000/auth/callback` for local Next.js development. Staging and Production need their own project URLs, callbacks, and credentials. See [Environments](ENVIRONMENTS.md).
+After the worker connects, run `pnpm worker:probe` only against the development Redis endpoint. It explicitly enqueues one job under a `numora:dev:<your-name>` prefix; the worker should log its completion. The command rejects staging prefixes. Do not run this check until the cloud team confirms the target endpoint and prefix.
+
+Use a direct PostgreSQL connection when reachable or a session pooler for IPv4-only laptops; do not use the transaction pooler with this Postgres.js client. Append `sslmode=require` to PostgreSQL URLs, or use `sslmode=verify-full` with the provider CA. Use a Redis protocol endpoint with `rediss://`, not a REST-only URL. The cloud team should confirm BullMQ compatibility and `noeviction`. The Next.js public values are embedded at build time, so restart/rebuild after changing them.
 
 Never commit real credentials.
 
@@ -59,21 +60,18 @@ Never commit real credentials.
 The source schema lives in `packages/database/src/schema`.
 
 ```bash
-# Run only as the designated Database operator after schema review:
-pnpm db:migrate
+pnpm db:generate
 ```
 
-The shared Cloud database receives committed migrations once through a controlled Database-team operation using `DATABASE_MIGRATION_URL` (direct PostgreSQL connection with `sslmode=require`). Do not run `db:migrate` or `db:seed` on each developer machine. Run `pnpm db:generate` only after changing Drizzle schema; review and commit its SQL.
+Run `pnpm db:generate` only after changing the Drizzle schema. It generates SQL offline; review and commit the migration with the schema change. A designated operator sets `DATABASE_MIGRATION_URL` to the target's direct connection and runs `pnpm db:migrate` separately. Do not place migration credentials in a developer's routine `.env`. `pnpm db:seed` requires both `NODE_ENV=development` and `ALLOW_DEMO_SEED=true`; use it only against the isolated development branch. Its fixed `DEMO` auth IDs do not create Google accounts.
 
 ## Seed data
 
-Bootstrap seed is deterministic and marked `DEMO`. It contains fictional Auth UUIDs, so do not apply it automatically to shared Development. Coordinate any shared fixture with the Database team.
+Bootstrap seed is deterministic and marked `DEMO`. It currently proves database wiring only; richer Curriculum-independent fixtures should be added as assessment modules land.
 
 ## Authentication
 
-Google login, cookie session, and internal role selection are available once the Database team enables the provider and redirect settings. The current Sprint 2 flow still needs the separate Class and Drill features. See `SPRINT_2_GOAL.md`.
-
-Onboarding now uses Google OAuth with PKCE. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_URL` for the same Supabase project. Configure Google as an Auth provider and allow `<web-origin>/auth/callback` in Supabase redirect URLs; configure the matching Google OAuth client in Google Cloud. Local `supabase/config.toml` has the callback URL but no Google credentials, so local Google login requires provider setup. Never put the Google client secret or Supabase service-role key in a `NEXT_PUBLIC_` variable. The NestJS API validates each bearer session with Supabase Auth and reads the internal role from PostgreSQL.
+Google OAuth/Supabase Auth integration was not a blocker for the original walking skeleton. The current Sprint 2 Student flow includes Google login; environment credentials and callback configuration are therefore a delivery dependency for that flow. See `SPRINT_2_GOAL.md`.
 
 ## Quality
 

@@ -10,8 +10,8 @@ Monorepo bootstrap for Numora, the independent and school-affiliated TKA Mathema
 - `packages/database` — PostgreSQL/Drizzle schema, migrations, seed.
 - `packages/contracts` — OpenAPI and Data/AI/event/WebSocket contracts.
 - `packages/ui` — reusable accessible UI primitives.
-- Supabase Cloud Development — shared PostgreSQL + Auth for local application processes.
-- Redis — cache, queues, rate-limit/PvP ephemeral state.
+- Supabase cloud — PostgreSQL + Auth, with an isolated development branch/project.
+- Redis cloud — cache, queues, rate-limit/PvP ephemeral state.
 - Cloudflare R2 — media assets; not required for the first walking skeleton.
 
 Read `AGENTS.md` before implementing product features. Use `docs/development/PROJECT_STRUCTURE.md` as the code-placement guide. For frontend work before the final UI/UX handoff, see `docs/design/README.md` and the team-supplied design system there.
@@ -20,10 +20,9 @@ Read `AGENTS.md` before implementing product features. Use `docs/development/PRO
 
 - Node.js 24 LTS
 - pnpm 12
-- Docker Engine/Desktop + Compose for Redis
 - Git
 
-The pinned Supabase CLI and `pnpm supabase:*` scripts remain optional for isolated local work. Normal development uses the team's Cloud Development project.
+The cloud team must provide a development Supabase URL/key, a database runtime URL, and a Redis TCP/TLS URL. Development must not use the staging database that contains real-user data. The Redis instance may be shared only with a unique BullMQ prefix per developer.
 
 ## First setup
 
@@ -31,11 +30,10 @@ The pinned Supabase CLI and `pnpm supabase:*` scripts remain optional for isolat
 corepack enable
 pnpm install
 cp .env.example .env
-pnpm infra:up
 pnpm dev
 ```
 
-Before `pnpm dev`, obtain the Cloud Development project URL, publishable key, and runtime database connection from the team's secure channel and fill `.env` as described in [Getting Started](docs/development/GETTING_STARTED.md). Database migrations are applied once by the Database team, not by each developer.
+Fill `.env` with the development cloud values before `pnpm dev`; `.env` is ignored by Git. The API and worker need their cloud endpoints. Schema migrations are applied separately by a designated operator, so first run does not modify the database. See [Getting Started](docs/development/GETTING_STARTED.md) for the credential handoff.
 
 ### Local URLs
 
@@ -43,13 +41,11 @@ Before `pnpm dev`, obtain the Cloud Development project URL, publishable key, an
 - API health: http://localhost:3001/api/v1/health
 - API database health: http://localhost:3001/api/v1/health/database
 - Swagger UI: http://localhost:3001/api/docs
-- Supabase dashboard: the team's Cloud Development project
-- Redis: `redis://127.0.0.1:6379`
+- Supabase dashboard and Redis endpoints: use the development cloud resources supplied by the cloud team.
 
 ## Normal development
 
 ```bash
-pnpm infra:up
 pnpm dev
 ```
 
@@ -70,8 +66,8 @@ pnpm run ci
 2. Run `pnpm db:generate`.
 3. Review the generated SQL under `packages/database/drizzle`.
 4. Commit schema + migration together.
-5. Have the Database team review and apply the migration to the shared environment using `DATABASE_MIGRATION_URL`; never run it as part of every developer's startup.
-6. Update seed if the new model needs fixtures.
+5. A designated operator applies the reviewed migration with `DATABASE_MIGRATION_URL` against the intended isolated branch, then rehearses it before staging.
+6. Update seed if the new model needs fixtures. Run the `DEMO` seed only on the development sandbox with `ALLOW_DEMO_SEED=true`; never on staging with real users.
 
 Do not make normal shared schema changes manually in Supabase Studio.
 

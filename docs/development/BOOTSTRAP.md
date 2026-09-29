@@ -2,7 +2,7 @@
 
 ## Goal
 
-The current repository is a **walking skeleton**, not a product-feature implementation. It proves that the three application processes and local infrastructure can be developed from one reproducible monorepo before feature teams branch into product modules.
+The current repository is a **walking skeleton**, not a product-feature implementation. It proves that the three application processes and cloud development dependencies can be used from one reproducible monorepo before feature teams branch into product modules.
 
 ## Implemented P0 bootstrap
 
@@ -11,8 +11,8 @@ The current repository is a **walking skeleton**, not a product-feature implemen
 - NestJS API with `/api/v1/health`, database health and Swagger;
 - BullMQ worker connecting to Redis;
 - PostgreSQL/Drizzle package with foundational Identity/School/Class/Outbox/Audit schema;
-- optional Supabase Local configuration (normal development now uses Supabase Cloud Development);
-- Redis Docker Compose;
+- Supabase cloud development connection configuration;
+- Redis cloud connection and BullMQ prefix configuration;
 - deterministic `DEMO` seed;
 - machine-readable OpenAPI/question/event/PvP envelopes;
 - TypeScript strict baseline, ESLint, Prettier;
@@ -21,7 +21,7 @@ The current repository is a **walking skeleton**, not a product-feature implemen
 
 ## Explicitly not implemented yet
 
-- complete product authorization and onboarding flows beyond the initial Google login/identity API;
+- Google OAuth flow and NestJS JWT authorization;
 - complete domain schema for content/assessment/XP/PvP/IRT;
 - R2 integration;
 - transaction outbox processor;
@@ -40,7 +40,6 @@ A fresh developer machine should be able to run:
 corepack enable
 pnpm install
 cp .env.example .env
-pnpm infra:up
 pnpm dev
 ```
 
@@ -51,16 +50,16 @@ Then verify:
 3. API `/api/v1/health` is healthy.
 4. API `/api/v1/health/database` is healthy.
 5. Swagger opens at `/api/docs`.
-6. Worker logs a completed startup probe.
-7. The Database team confirms that the shared Cloud Development project has the committed foundational migration; developers do not run migrations or DEMO seed during startup.
+6. Worker logs a successful connection to development Redis, without adding a job on startup.
+7. The Supabase development branch has the reviewed Drizzle schema; optional `DEMO` rows exist only if seeded there deliberately.
 
-Fill `.env` with the team's Cloud Development configuration through a secure channel before running this check. If this only works on one person's laptop, the original bootstrap reproducibility goal is not met. Passing this check alone does not complete the current Sprint 2 Student flow.
+If this only works on one person's laptop, the original bootstrap reproducibility goal is not met. Passing this check alone does not complete the current Sprint 2 Student flow.
 
 ## First team actions after cloning
 
 1. Run the acceptance test on at least two different team members' machines.
 2. Verify `pnpm install --frozen-lockfile` using the committed lockfile.
-3. Have the Database team review and apply the committed first Drizzle migration once to Cloud Development.
+3. Have a designated operator review and apply the committed Drizzle migration to the isolated development branch using a direct `DATABASE_MIGRATION_URL`.
 4. Confirm each account in `.github/CODEOWNERS` has repository write access.
 5. Enable protected `main` and required CI in GitHub.
 6. Refine Auth, Class, seeded content, and Assessment Engine work against the Sprint 2 Student vertical slice at the approved 80% mastery threshold; plan Admin School/token UI and Teacher verification/create-Class/progress UI for the online school prototype trial.

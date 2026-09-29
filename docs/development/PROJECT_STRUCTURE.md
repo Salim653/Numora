@@ -33,8 +33,7 @@ Numora/
 │   ├── config/                 tempat konfigurasi bersama (masih kerangka)
 │   └── testing/                tempat bantuan tes bersama (masih kerangka)
 ├── docs/                       konteks produk, desain, arsitektur, dan panduan kerja
-├── infra/docker/               catatan infrastruktur lokal
-├── supabase/config.toml         konfigurasi opsional Supabase Local; bukan Cloud
+├── .env.example                 contoh koneksi layanan cloud development
 ├── scripts/                     skrip repo, misalnya validasi kontrak
 ├── .github/                     CI, template PR, dan rencana CODEOWNERS
 └── package.json                 perintah workspace
@@ -58,7 +57,7 @@ Pohon ini sengaja ringkas. Lihat [ARCHITECTURE](../architecture/ARCHITECTURE.md)
 | Kontrak soal, event, WebSocket | `packages/contracts/questions/`, `events/`, `websocket/` | Perbarui skema dan penjelasan di `docs/data/` atau `docs/api/` bersama perubahan kontrak. |
 | Tes unit/integrasi satu modul | Dekat modul yang diuji, seperti `apps/api/src/health/health.controller.spec.ts` | Sesuaikan dengan tool dan [TEST_STRATEGY](../testing/TEST_STRATEGY.md). |
 | Alur E2E lintas peran | Lokasi runner E2E **belum ditetapkan** | QA dan pemilik fitur menyepakati penempatan saat runner Playwright ditambahkan. Jangan menganggap `packages/testing` sudah menjadi suite E2E. |
-| Konfigurasi environment, CI, atau layanan lokal | `.env.example`, `.github/`, `supabase/`, `docker-compose.yml`, `infra/` | Koordinasikan perubahan lintas tim; jangan commit rahasia. |
+| Konfigurasi environment dan CI | `.env.example`, `.github/`, `package.json` | Koordinasikan perubahan lintas tim; jangan commit rahasia. |
 
 ## 4. Struktur fitur Frontend
 
