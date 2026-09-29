@@ -21,6 +21,15 @@
   --foreground: #111827;
   --numora-primary: #722cce;
   --numora-surface: #f3faf8;
+  --numora-purple: #722cce;
+  --numora-purple-soft: #b88ac9;
+  --numora-peach: #fa9a71;
+  --numora-gold: #f8d080;
+  --numora-ivory: #f6efcd;
+  --numora-pearl: #f3faf8;
+  --demo-text: #2f213d;
+  --demo-muted: #675b72;
+  --demo-border: #e4ddcf;
 }
 
 :focus-visible {
