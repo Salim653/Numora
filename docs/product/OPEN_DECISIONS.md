@@ -82,6 +82,8 @@ MAT-01 states 5 levels per subbab but also says Curriculum defines the number of
 
 The supplied Sprint 2 Goal defines one Student vertical slice and excludes *full* Admin/Teacher UI from sprint blockers; the specified Admin/Teacher actions are additional prototype requirements. The first partner school has **not been selected**. The **team will decide together** which staging host to use and who owns its setup; no provider or accountable owner is confirmed yet, and the monthly budget is **not set**. DevOps for the domain and Database for Supabase/Google OAuth are **tentative owners pending team confirmation**. Exact participant count, staging hosting/OAuth configuration, and QA evidence still need scoping. Owner: PO + Software + QA. **Status: PARTLY OPEN.**
 
+**ENGINEERING UPDATE, 29 September 2026:** the Database team prepared a shared Supabase Cloud Development project. Development now uses Cloud PostgreSQL/Auth and no longer requires Supabase Local. The Database team owns Google provider/dashboard configuration for this migration. This does not close the separate staging domain, OAuth, hosting, or trial-readiness dependencies above.
+
 ## Decision workflow
 
 When a joint decision is reached, record its owner/date and update the PRD or module specification first; then update this register, `PRD_MAPPING.md`, affected contracts/schema/tests, and an ADR only if architecture changes. The original PDF metadata should be synchronized with the team's approval record when its owner republishes it.

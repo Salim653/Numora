@@ -33,7 +33,7 @@
     },
     "/api/v1/identity/me": {
       "get": {
-        "operationId": "IdentityController_getMe",
+        "operationId": "IdentityController_getProfile",
         "parameters": [
           {
             "name": "authorization",
@@ -54,6 +54,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Google account has no internal profile yet."
           }
         },
         "security": [
@@ -64,18 +73,16 @@
         "tags": [
           "identity"
         ]
-      }
-    },
-    "/api/v1/identity/registrations": {
+      },
       "post": {
-        "operationId": "IdentityController_register",
+        "operationId": "IdentityController_registerProfile",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RegistrationDto"
+                "$ref": "#/components/schemas/RegisterProfileDto"
               }
             }
           }
@@ -90,6 +97,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "409": {
+            "description": "Profile already exists or email is already in use."
           }
         },
         "security": [
@@ -99,77 +115,6 @@
         ],
         "tags": [
           "identity"
-        ]
-      }
-    },
-    "/api/v1/classes": {
-      "get": {
-        "operationId": "ClassesController_list",
-        "parameters": [
-          {
-            "name": "authorization",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ClassesResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "classes"
-        ]
-      }
-    },
-    "/api/v1/classes/{classId}/students": {
-      "get": {
-        "operationId": "ClassesController_students",
-        "parameters": [
-          {
-            "name": "classId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ClassStudentsResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "classes"
         ]
       }
     }
@@ -202,7 +147,15 @@
             "type": "string",
             "enum": [
               "STUDENT",
-              "TEACHER"
+              "TEACHER",
+              "ADMIN"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
             ]
           },
           "displayName": {
@@ -211,26 +164,30 @@
           "email": {
             "type": "string"
           },
-          "status": {
+          "teacherVerified": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "studentAffiliation": {
             "type": "string",
             "enum": [
-              "ACTIVE"
-            ]
-          },
-          "teacherVerified": {
-            "type": "boolean"
+              "MANDIRI",
+              "SCHOOL"
+            ],
+            "nullable": true
           }
         },
         "required": [
           "id",
           "role",
+          "status",
           "displayName",
           "email",
-          "status",
-          "teacherVerified"
+          "teacherVerified",
+          "studentAffiliation"
         ]
       },
-      "RegistrationDto": {
+      "RegisterProfileDto": {
         "type": "object",
         "properties": {
           "role": {
@@ -239,80 +196,10 @@
               "STUDENT",
               "TEACHER"
             ]
-          },
-          "displayName": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 80
           }
         },
         "required": [
-          "role",
-          "displayName"
-        ]
-      },
-      "ClassSummaryDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "name"
-        ]
-      },
-      "ClassesResponseDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ClassSummaryDto"
-            }
-          }
-        },
-        "required": [
-          "items"
-        ]
-      },
-      "StudentSummaryDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "displayName": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "displayName"
-        ]
-      },
-      "ClassStudentsResponseDto": {
-        "type": "object",
-        "properties": {
-          "class": {
-            "$ref": "#/components/schemas/ClassSummaryDto"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StudentSummaryDto"
-            }
-          }
-        },
-        "required": [
-          "class",
-          "items"
+          "role"
         ]
       }
     }

@@ -1,182 +1,132 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
   UnauthorizedException,
-  ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
+import { getDatabase, classMemberships, teacherSchoolMemberships, users } from '@tka/database';
+import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { and, eq, isNull } from 'drizzle-orm';
-import { getDatabase, teacherSchoolMemberships, users } from '@tka/database';
-
-type GoogleUser = { id: string; email?: string; app_metadata?: { providers?: string[] } };
-type AppUser = typeof users.$inferSelect;
+import type { IdentityProfileDto, RegisterProfileDto } from './identity.dto';
 
 @Injectable()
 export class IdentityService {
-  private async googleUser(authorization?: string): Promise<GoogleUser> {
-    const token = authorization?.match(/^Bearer (\S+)$/i)?.[1];
-    if (!token)
-      throw new UnauthorizedException({
-        code: 'AUTH_REQUIRED',
-        detail: 'Login dengan Google diperlukan.',
-      });
+  private supabase?: SupabaseClient;
 
+  private authClient() {
+    if (this.supabase) return this.supabase;
     const url = process.env.SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key || key === 'replace-me') {
-      throw new ServiceUnavailableException({
-        code: 'AUTH_NOT_CONFIGURED',
-        detail: 'Layanan login belum dikonfigurasi.',
-      });
-    }
-
-    let response: Response;
-    try {
-      response = await fetch(`${url}/auth/v1/user`, {
-        headers: { apikey: key, authorization: `Bearer ${token}` },
-        signal: AbortSignal.timeout(5000),
-      });
-    } catch {
-      throw new ServiceUnavailableException({
-        code: 'AUTH_UNAVAILABLE',
-        detail: 'Layanan login sedang tidak tersedia.',
-      });
-    }
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        throw new UnauthorizedException({
-          code: 'INVALID_SESSION',
-          detail: 'Sesi login tidak berlaku.',
-        });
-      }
-      throw new ServiceUnavailableException({
-        code: 'AUTH_UNAVAILABLE',
-        detail: 'Layanan login sedang tidak tersedia.',
-      });
-    }
-
-    const user = (await response.json()) as GoogleUser;
-    if (!user.id || !user.email || !user.app_metadata?.providers?.includes('google')) {
-      throw new UnauthorizedException({
-        code: 'GOOGLE_REQUIRED',
-        detail: 'Login dengan Google diperlukan.',
-      });
-    }
-    return user;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new ServiceUnavailableException('Authentication is not configured.');
+    this.supabase = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    return this.supabase;
   }
 
-  private async profile(user: AppUser) {
-    if (user.role === 'ADMIN') {
-      throw new ForbiddenException({
-        code: 'GOOGLE_ROLE_FORBIDDEN',
-        detail: 'Akun ini tidak tersedia melalui login Google.',
-      });
-    }
-    if (user.status === 'DISABLED') {
-      throw new ForbiddenException({ code: 'ACCOUNT_DISABLED', detail: 'Akun ini tidak aktif.' });
-    }
+  private async authenticate(authorization?: string): Promise<User> {
+    const token = /^Bearer ([^\s]+)$/.exec(authorization ?? '')?.[1];
+    if (!token) throw new UnauthorizedException('Bearer token is required.');
+    const { data, error } = await this.authClient().auth.getUser(token);
+    if (error || !data.user) throw new UnauthorizedException('Invalid or expired token.');
+    return data.user;
+  }
+
+  async getProfile(authorization?: string): Promise<IdentityProfileDto> {
+    const authUser = await this.authenticate(authorization);
     const { db } = getDatabase();
-    const membership =
-      user.role === 'TEACHER'
-        ? await db
-            .select({ id: teacherSchoolMemberships.id })
-            .from(teacherSchoolMemberships)
-            .where(
-              and(
-                eq(teacherSchoolMemberships.teacherUserId, user.id),
-                isNull(teacherSchoolMemberships.endedAt),
-              ),
-            )
-            .limit(1)
-        : [];
+    const [profile] = await db
+      .select()
+      .from(users)
+      .where(eq(users.authUserId, authUser.id))
+      .limit(1);
+    if (!profile) throw new NotFoundException('Profile has not been created.');
+    if (profile.status !== 'ACTIVE') throw new ForbiddenException('Account is disabled.');
+
+    let teacherVerified: boolean | null = null;
+    let studentAffiliation: 'MANDIRI' | 'SCHOOL' | null = null;
+    if (profile.role === 'TEACHER') {
+      const membership = await db
+        .select({ id: teacherSchoolMemberships.id })
+        .from(teacherSchoolMemberships)
+        .where(
+          and(
+            eq(teacherSchoolMemberships.teacherUserId, profile.id),
+            isNull(teacherSchoolMemberships.endedAt),
+          ),
+        )
+        .limit(1);
+      teacherVerified = membership.length > 0;
+    }
+    if (profile.role === 'STUDENT') {
+      const membership = await db
+        .select({ id: classMemberships.id })
+        .from(classMemberships)
+        .where(and(eq(classMemberships.studentUserId, profile.id), isNull(classMemberships.leftAt)))
+        .limit(1);
+      studentAffiliation = membership.length > 0 ? 'SCHOOL' : 'MANDIRI';
+    }
+
     return {
-      id: user.id,
-      role: user.role,
-      displayName: user.displayName,
-      email: user.email,
-      status: user.status,
-      teacherVerified: membership.length > 0,
+      id: profile.id,
+      role: profile.role,
+      status: profile.status,
+      displayName: profile.displayName,
+      email: profile.email,
+      teacherVerified,
+      studentAffiliation,
     };
   }
 
-  async me(authorization?: string) {
-    const google = await this.googleUser(authorization);
-    const { db } = getDatabase();
-    const [user] = await db.select().from(users).where(eq(users.authUserId, google.id)).limit(1);
-    if (!user)
-      throw new NotFoundException({
-        code: 'ACCOUNT_NOT_REGISTERED',
-        detail: 'Lengkapi profil untuk melanjutkan.',
-      });
-    return this.profile(user);
+  // Compatibility alias for domain modules that use the shorter profile lookup name.
+  async me(authorization?: string): Promise<IdentityProfileDto> {
+    return this.getProfile(authorization);
   }
 
-  async register(
+  async registerProfile(
     authorization: string | undefined,
-    role: 'STUDENT' | 'TEACHER',
-    displayName: string,
-  ) {
-    const google = await this.googleUser(authorization);
-    const name = displayName.trim();
-    if (!name)
-      throw new BadRequestException({
-        code: 'INVALID_DISPLAY_NAME',
-        detail: 'Nama tampilan wajib diisi.',
-      });
-    const { db } = getDatabase();
-    const [existing] = await db
-      .select()
-      .from(users)
-      .where(eq(users.authUserId, google.id))
-      .limit(1);
-    if (existing) {
-      if (existing.role !== role)
-        throw new ConflictException({
-          code: 'ROLE_ALREADY_SET',
-          detail: 'Role akun tidak dapat diubah.',
-        });
-      return this.profile(existing);
+    input: RegisterProfileDto,
+  ): Promise<IdentityProfileDto> {
+    const authUser = await this.authenticate(authorization);
+    const googleProvider =
+      authUser.app_metadata.provider === 'google' ||
+      authUser.app_metadata.providers?.includes('google');
+    if (!googleProvider || !authUser.email) {
+      throw new ForbiddenException('Student and Teacher registration requires Google sign-in.');
     }
 
+    const name = authUser.user_metadata.full_name ?? authUser.user_metadata.name;
+    const displayName =
+      typeof name === 'string' && name.trim()
+        ? name.trim().slice(0, 120)
+        : (authUser.email.split('@')[0] ?? authUser.email);
+    const { db } = getDatabase();
     try {
-      const [created] = await db
+      const inserted = await db
         .insert(users)
-        .values({ authUserId: google.id, role, displayName: name, email: google.email! })
+        .values({
+          authUserId: authUser.id,
+          role: input.role,
+          displayName,
+          email: authUser.email,
+        })
         .onConflictDoNothing({ target: users.authUserId })
-        .returning();
-      if (created) return this.profile(created);
+        .returning({ id: users.id });
+      if (inserted.length === 0) throw new ConflictException('Profile already exists.');
     } catch (error) {
+      if (error instanceof ConflictException) throw error;
       if (
         typeof error === 'object' &&
         error !== null &&
         'code' in error &&
         error.code === '23505'
       ) {
-        throw new ConflictException({
-          code: 'EMAIL_ALREADY_REGISTERED',
-          detail: 'Email ini sudah terhubung ke akun lain.',
-        });
+        throw new ConflictException('Profile email is already in use.');
       }
       throw error;
     }
-
-    const [concurrent] = await db
-      .select()
-      .from(users)
-      .where(eq(users.authUserId, google.id))
-      .limit(1);
-    if (!concurrent)
-      throw new ServiceUnavailableException({
-        code: 'REGISTRATION_FAILED',
-        detail: 'Pendaftaran belum berhasil. Coba lagi.',
-      });
-    if (concurrent.role !== role)
-      throw new ConflictException({
-        code: 'ROLE_ALREADY_SET',
-        detail: 'Role akun tidak dapat diubah.',
-      });
-    return this.profile(concurrent);
+    return this.getProfile(authorization);
   }
 }

@@ -18,7 +18,7 @@ export function getDatabase(): DatabaseConnection {
   }
 
   const client = postgres(databaseUrl, {
-    max: Number(process.env.DB_POOL_MAX ?? 10),
+    max: Number(process.env.DB_POOL_MAX ?? 3),
     idle_timeout: 20,
   });
 

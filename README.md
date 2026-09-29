@@ -10,7 +10,7 @@ Monorepo bootstrap for Numora, the independent and school-affiliated TKA Mathema
 - `packages/database` — PostgreSQL/Drizzle schema, migrations, seed.
 - `packages/contracts` — OpenAPI and Data/AI/event/WebSocket contracts.
 - `packages/ui` — reusable accessible UI primitives.
-- Supabase Local — local PostgreSQL + Auth stack.
+- Supabase Cloud Development — shared PostgreSQL + Auth for local application processes.
 - Redis — cache, queues, rate-limit/PvP ephemeral state.
 - Cloudflare R2 — media assets; not required for the first walking skeleton.
 
@@ -20,10 +20,10 @@ Read `AGENTS.md` before implementing product features. Use `docs/development/PRO
 
 - Node.js 24 LTS
 - pnpm 12
-- Docker Engine/Desktop + Compose
+- Docker Engine/Desktop + Compose for Redis
 - Git
 
-The Supabase CLI is pinned as a root dev dependency, so use `pnpm supabase:*` scripts rather than relying on a global version.
+The pinned Supabase CLI and `pnpm supabase:*` scripts remain optional for isolated local work. Normal development uses the team's Cloud Development project.
 
 ## First setup
 
@@ -31,14 +31,11 @@ The Supabase CLI is pinned as a root dev dependency, so use `pnpm supabase:*` sc
 corepack enable
 pnpm install
 cp .env.example .env
-pnpm supabase:start
 pnpm infra:up
-pnpm db:migrate
-pnpm db:seed
 pnpm dev
 ```
 
-After `pnpm supabase:start`, copy the local anon/service keys shown by `pnpm supabase:status` into `.env` when auth work begins.
+Before `pnpm dev`, obtain the Cloud Development project URL, publishable key, and runtime database connection from the team's secure channel and fill `.env` as described in [Getting Started](docs/development/GETTING_STARTED.md). Database migrations are applied once by the Database team, not by each developer.
 
 ### Local URLs
 
@@ -46,13 +43,12 @@ After `pnpm supabase:start`, copy the local anon/service keys shown by `pnpm sup
 - API health: http://localhost:3001/api/v1/health
 - API database health: http://localhost:3001/api/v1/health/database
 - Swagger UI: http://localhost:3001/api/docs
-- Supabase Studio: http://localhost:54323
+- Supabase dashboard: the team's Cloud Development project
 - Redis: `redis://127.0.0.1:6379`
 
 ## Normal development
 
 ```bash
-pnpm supabase:start   # once per local session if not already running
 pnpm infra:up
 pnpm dev
 ```
@@ -74,7 +70,7 @@ pnpm run ci
 2. Run `pnpm db:generate`.
 3. Review the generated SQL under `packages/database/drizzle`.
 4. Commit schema + migration together.
-5. Run `pnpm db:migrate` locally.
+5. Have the Database team review and apply the migration to the shared environment using `DATABASE_MIGRATION_URL`; never run it as part of every developer's startup.
 6. Update seed if the new model needs fixtures.
 
 Do not make normal shared schema changes manually in Supabase Studio.

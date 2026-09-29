@@ -34,7 +34,7 @@ Numora/
 │   └── testing/                tempat bantuan tes bersama (masih kerangka)
 ├── docs/                       konteks produk, desain, arsitektur, dan panduan kerja
 ├── infra/docker/               catatan infrastruktur lokal
-├── supabase/config.toml         konfigurasi Supabase lokal
+├── supabase/config.toml         konfigurasi opsional Supabase Local; bukan Cloud
 ├── scripts/                     skrip repo, misalnya validasi kontrak
 ├── .github/                     CI, template PR, dan rencana CODEOWNERS
 └── package.json                 perintah workspace

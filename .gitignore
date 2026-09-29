@@ -19,7 +19,7 @@ coverage/
 .vscode/
 .idea/
 
-# supabase local
+# optional Supabase Local state
 supabase/.temp/
 supabase/.branches/
 

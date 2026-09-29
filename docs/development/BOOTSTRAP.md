@@ -11,7 +11,7 @@ The current repository is a **walking skeleton**, not a product-feature implemen
 - NestJS API with `/api/v1/health`, database health and Swagger;
 - BullMQ worker connecting to Redis;
 - PostgreSQL/Drizzle package with foundational Identity/School/Class/Outbox/Audit schema;
-- Supabase Local configuration;
+- optional Supabase Local configuration (normal development now uses Supabase Cloud Development);
 - Redis Docker Compose;
 - deterministic `DEMO` seed;
 - machine-readable OpenAPI/question/event/PvP envelopes;
@@ -21,7 +21,7 @@ The current repository is a **walking skeleton**, not a product-feature implemen
 
 ## Explicitly not implemented yet
 
-- Google OAuth flow and NestJS JWT authorization;
+- complete product authorization and onboarding flows beyond the initial Google login/identity API;
 - complete domain schema for content/assessment/XP/PvP/IRT;
 - R2 integration;
 - transaction outbox processor;
@@ -40,10 +40,7 @@ A fresh developer machine should be able to run:
 corepack enable
 pnpm install
 cp .env.example .env
-pnpm supabase:start
 pnpm infra:up
-pnpm db:migrate
-pnpm db:seed
 pnpm dev
 ```
 
@@ -55,15 +52,15 @@ Then verify:
 4. API `/api/v1/health/database` is healthy.
 5. Swagger opens at `/api/docs`.
 6. Worker logs a completed startup probe.
-7. Supabase Studio shows foundational tables and DEMO rows.
+7. The Database team confirms that the shared Cloud Development project has the committed foundational migration; developers do not run migrations or DEMO seed during startup.
 
-If this only works on one person's laptop, the original bootstrap reproducibility goal is not met. Passing this check alone does not complete the current Sprint 2 Student flow.
+Fill `.env` with the team's Cloud Development configuration through a secure channel before running this check. If this only works on one person's laptop, the original bootstrap reproducibility goal is not met. Passing this check alone does not complete the current Sprint 2 Student flow.
 
 ## First team actions after cloning
 
 1. Run the acceptance test on at least two different team members' machines.
 2. Verify `pnpm install --frozen-lockfile` using the committed lockfile.
-3. Review and apply the committed first Drizzle migration.
+3. Have the Database team review and apply the committed first Drizzle migration once to Cloud Development.
 4. Confirm each account in `.github/CODEOWNERS` has repository write access.
 5. Enable protected `main` and required CI in GitHub.
 6. Refine Auth, Class, seeded content, and Assessment Engine work against the Sprint 2 Student vertical slice at the approved 80% mastery threshold; plan Admin School/token UI and Teacher verification/create-Class/progress UI for the online school prototype trial.

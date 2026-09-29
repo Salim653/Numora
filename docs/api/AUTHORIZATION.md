@@ -8,6 +8,8 @@ Authentication answers **who the user is**. Authorization answers **what this us
 - Admin: internally provisioned/seeder identity; no public Admin registration.
 - NestJS maps external auth identity to internal `users` record.
 
+**ENGINEERING DECISION (Cloud Development, 29 September 2026):** Next.js uses a Supabase Auth cookie session. It sends the Supabase access token as a Bearer token to NestJS. `GET /api/v1/identity/me` returns the internal profile or 404 until registration; `POST /api/v1/identity/me` accepts a one-time `STUDENT`/`TEACHER` role choice from a Google-authenticated account. Email and Auth user ID come only from the verified Supabase user. The API returns role, status, Teacher verification, and Student affiliation from PostgreSQL; no browser Data API access is part of this flow. Admin identity remains internally provisioned.
+
 ## Authorization dimensions
 
 Evaluate as needed:

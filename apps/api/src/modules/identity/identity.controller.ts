@@ -1,53 +1,43 @@
-import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Header, Post } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
-  ApiProperty,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsIn, IsString, MaxLength, MinLength } from 'class-validator';
+import { IdentityProfileDto, RegisterProfileDto } from './identity.dto';
 import { IdentityService } from './identity.service';
-
-class RegistrationDto {
-  @ApiProperty({ enum: ['STUDENT', 'TEACHER'] })
-  @IsIn(['STUDENT', 'TEACHER'])
-  role!: 'STUDENT' | 'TEACHER';
-
-  @ApiProperty({ minLength: 1, maxLength: 80 })
-  @IsString()
-  @MinLength(1)
-  @MaxLength(80)
-  displayName!: string;
-}
-
-class IdentityProfileDto {
-  @ApiProperty({ format: 'uuid' }) id!: string;
-  @ApiProperty({ enum: ['STUDENT', 'TEACHER'] }) role!: 'STUDENT' | 'TEACHER';
-  @ApiProperty() displayName!: string;
-  @ApiProperty() email!: string;
-  @ApiProperty({ enum: ['ACTIVE'] }) status!: 'ACTIVE';
-  @ApiProperty() teacherVerified!: boolean;
-}
 
 @ApiTags('identity')
 @ApiBearerAuth()
-@Controller('identity')
+@Controller('identity/me')
 export class IdentityController {
-  constructor(private readonly identity: IdentityService) {}
+  constructor(private readonly identityService: IdentityService) {}
 
-  @Get('me')
+  @Get()
+  @Header('Cache-Control', 'private, no-store')
   @ApiOkResponse({ type: IdentityProfileDto })
-  getMe(@Headers('authorization') authorization?: string) {
-    return this.identity.me(authorization);
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'Google account has no internal profile yet.' })
+  getProfile(@Headers('authorization') authorization?: string) {
+    return this.identityService.getProfile(authorization);
   }
 
-  @Post('registrations')
+  @Post()
+  @Header('Cache-Control', 'private, no-store')
   @ApiCreatedResponse({ type: IdentityProfileDto })
-  register(
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiConflictResponse({ description: 'Profile already exists or email is already in use.' })
+  registerProfile(
     @Headers('authorization') authorization: string | undefined,
-    @Body() body: RegistrationDto,
+    @Body() input: RegisterProfileDto,
   ) {
-    return this.identity.register(authorization, body.role, body.displayName);
+    return this.identityService.registerProfile(authorization, input);
   }
 }

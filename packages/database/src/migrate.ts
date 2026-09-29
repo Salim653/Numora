@@ -1,18 +1,22 @@
 import { resolve } from 'node:path';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { closeDatabaseConnection, getDatabase } from './client.js';
+import postgres from 'postgres';
 
 async function run() {
-  const { db } = getDatabase();
+  const url = process.env.DATABASE_MIGRATION_URL;
+  if (!url) throw new Error('DATABASE_MIGRATION_URL is required for controlled migrations.');
+  const client = postgres(url, { max: 1 });
   const migrationsFolder = resolve(process.cwd(), 'drizzle');
-
-  await migrate(db, { migrationsFolder });
-  console.log(`Applied migrations from ${migrationsFolder}`);
-  await closeDatabaseConnection();
+  try {
+    await migrate(drizzle(client), { migrationsFolder });
+    console.log(`Applied migrations from ${migrationsFolder}`);
+  } finally {
+    await client.end();
+  }
 }
 
-run().catch(async (error) => {
+run().catch((error) => {
   console.error(error);
-  await closeDatabaseConnection();
   process.exit(1);
 });

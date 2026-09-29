@@ -15,7 +15,7 @@ Use Supabase Auth/Google OAuth for identity. NestJS verifies identity and is aut
 ## Consequences
 
 Avoids building password/OAuth infrastructure and keeps authorization in one domain layer. Production should avoid swapping identity system without a migration plan.
-
+    
 ## Alternatives considered
 
 Direct custom OAuth/local password auth was rejected for MVP complexity. OPEN-14 remains product-level for any future local password.

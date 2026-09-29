@@ -2,6 +2,8 @@
 
 **Sources:** “Sprint 2 Goal.pdf” and the team-approved PRD v0.5, both supplied by the Software Engineering coordinator on 28 September 2026. The coordinator confirmed that PRD v0.5's 80% mastery rule applies to Sprint 2 and that the two-week prototype also needs Teacher UI for class creation and progress viewing. This file records scope and decisions, not implementation completion.
 
+**ENGINEERING UPDATE, 29 September 2026:** a shared Supabase Cloud Development project is prepared for the Google Auth/PostgreSQL integration. This does not remove the separate staging provisioning dependency for the school trial.
+
 ## Goal
 
 Complete one Student flow through real Frontend → API → PostgreSQL → domain scoring/progress → persisted result → updated UI. Curriculum has not supplied final Level-1 content yet, so Software and Curriculum will prepare 10 demo single-choice questions with four options `A`–`D` and text/simple inline LaTeX; Curriculum will review them before the trial, and the UI will label them as demo. A newly authenticated Student should join a Class, complete a seeded Level-1 Drill, see a stored score, and unlock Level 2 at **≥80%**.
