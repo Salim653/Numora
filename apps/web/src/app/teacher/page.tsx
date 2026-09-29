@@ -1,5 +1,5 @@
-import { RoleHomeScreen } from '@/features/onboarding/screens';
+import { MyClassesScreen } from '@/features/monitoring/screens';
 
 export default function Teacher() {
-  return <RoleHomeScreen page="/teacher" />;
+  return <MyClassesScreen />;
 }
