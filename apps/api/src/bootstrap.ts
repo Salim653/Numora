@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { SwaggerModule } from '@nestjs/swagger';
 import { createOpenApiDocument } from './openapi';
+import { ProblemFilter } from './problem.filter';
 
 export function configureApplication(app: INestApplication) {
   app.setGlobalPrefix('api/v1');
@@ -12,6 +13,7 @@ export function configureApplication(app: INestApplication) {
       forbidNonWhitelisted: true,
     }),
   );
+  app.useGlobalFilters(new ProblemFilter());
 
   const allowedOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
     .split(',')

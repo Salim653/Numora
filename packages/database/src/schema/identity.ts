@@ -1,13 +1,5 @@
 import { sql } from 'drizzle-orm';
-import {
-  index,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 export const userRole = pgEnum('user_role', ['STUDENT', 'TEACHER', 'ADMIN']);
 export const accountStatus = pgEnum('account_status', ['ACTIVE', 'DISABLED']);
@@ -33,7 +25,7 @@ export const users = pgTable(
     uniqueIndex('users_auth_user_id_uq').on(table.authUserId),
     uniqueIndex('users_email_uq').on(table.email),
   ],
-);
+).enableRLS();
 
 export const schools = pgTable(
   'schools',
@@ -45,7 +37,7 @@ export const schools = pgTable(
     ...timestamps,
   },
   (table) => [uniqueIndex('schools_code_uq').on(table.code)],
-);
+).enableRLS();
 
 export const teacherVerificationTokens = pgTable(
   'teacher_verification_tokens',
@@ -68,7 +60,7 @@ export const teacherVerificationTokens = pgTable(
     uniqueIndex('teacher_verification_tokens_hash_uq').on(table.tokenHash),
     index('teacher_verification_tokens_school_idx').on(table.schoolId),
   ],
-);
+).enableRLS();
 
 export const teacherSchoolMemberships = pgTable(
   'teacher_school_memberships',
@@ -93,4 +85,4 @@ export const teacherSchoolMemberships = pgTable(
       .where(sql`${table.endedAt} is null`),
     index('teacher_school_memberships_school_idx').on(table.schoolId),
   ],
-);
+).enableRLS();

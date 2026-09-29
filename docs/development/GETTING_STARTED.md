@@ -74,6 +74,8 @@ Bootstrap seed is deterministic and marked `DEMO`. It currently proves database 
 
 Google OAuth/Supabase Auth integration was not a blocker for the original walking skeleton. The current Sprint 2 Student flow includes Google login; environment credentials and callback configuration are therefore a delivery dependency for that flow. See `SPRINT_2_GOAL.md`.
 
+Onboarding now uses Google OAuth with PKCE. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_URL` for the same Supabase project. Configure Google as an Auth provider and allow `<web-origin>/auth/callback` in Supabase redirect URLs; configure the matching Google OAuth client in Google Cloud. Local `supabase/config.toml` has the callback URL but no Google credentials, so local Google login requires provider setup. Never put the Google client secret or Supabase service-role key in a `NEXT_PUBLIC_` variable. The NestJS API validates each bearer session with Supabase Auth and reads the internal role from PostgreSQL.
+
 ## Quality
 
 ```bash

@@ -8,6 +8,13 @@
       "when": 1790604821659,
       "tag": "0000_outgoing_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790653498990,
+      "tag": "0001_open_the_twelve",
+      "breakpoints": true
     }
   ]
 }
