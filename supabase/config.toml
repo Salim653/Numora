@@ -1,3 +1,4 @@
+# Optional isolated Supabase Local stack. Cloud project settings live in its dashboard.
 project_id = "numora-supabase"
 
 [api]

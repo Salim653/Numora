@@ -26,7 +26,7 @@ A full self-hosted fallback is possible if budget requires it, but needs a separ
 
 ## Environments
 
-Deployment must separate Development, Staging, and Production configuration/secrets.
+Deployment must separate Development, Staging, and Production Supabase projects, Google OAuth configuration, database connections, and secrets. Build Next.js with that environment's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `NEXT_PUBLIC_API_URL`; configure NestJS with the matching `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and private `DATABASE_URL`. Cloud Development is shared by developers; Staging and Production must not reuse it.
 
 ## Deployment flow target
 
@@ -42,7 +42,7 @@ merge to main
 
 ## Database migrations
 
-- run controlled migration before/with deployment;
+- run committed Drizzle migrations once per environment using a private direct `DATABASE_MIGRATION_URL`, under Database-team control; normal application processes use their separate `DATABASE_URL`;
 - avoid destructive incompatible changes without phased rollout;
 - back up before high-risk migrations;
 - verify rollback/forward-fix approach.
@@ -60,4 +60,4 @@ Application rollback must not blindly roll database schema backward if new write
 
 ## Domain/OAuth
 
-Stable staging/production domain is required to finalize OAuth redirect URIs and public routing but is not a development blocker.
+For each environment, configure the Google OAuth redirect URI to that Supabase project's `/auth/v1/callback`. Add the corresponding Next.js `/auth/callback` URL to Supabase Auth's redirect allowlist and set the Site URL. Stable staging/production domains are required to finalize these settings but are not a Development blocker. The Google Client Secret stays in the provider configuration, never in the application build.

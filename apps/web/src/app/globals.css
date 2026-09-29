@@ -4,6 +4,13 @@
   color-scheme: light;
   --background: #f7f8fa;
   --foreground: #111827;
+  --numora-primary: #722cce;
+  --numora-surface: #f3faf8;
+}
+
+:focus-visible {
+  outline: 3px solid var(--numora-primary);
+  outline-offset: 3px;
 }
 
 * {

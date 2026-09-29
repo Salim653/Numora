@@ -30,6 +30,93 @@
           "health"
         ]
       }
+    },
+    "/api/v1/identity/me": {
+      "get": {
+        "operationId": "IdentityController_getProfile",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityProfileDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "404": {
+            "description": "Google account has no internal profile yet."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "identity"
+        ]
+      },
+      "post": {
+        "operationId": "IdentityController_registerProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityProfileDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": ""
+          },
+          "403": {
+            "description": ""
+          },
+          "409": {
+            "description": "Profile already exists or email is already in use."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "identity"
+        ]
+      }
     }
   },
   "info": {
@@ -48,6 +135,73 @@
         "type": "http"
       }
     },
-    "schemas": {}
+    "schemas": {
+      "IdentityProfileDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "STUDENT",
+              "TEACHER",
+              "ADMIN"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "teacherVerified": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "studentAffiliation": {
+            "type": "string",
+            "enum": [
+              "MANDIRI",
+              "SCHOOL"
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "status",
+          "displayName",
+          "email",
+          "teacherVerified",
+          "studentAffiliation"
+        ]
+      },
+      "RegisterProfileDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "STUDENT",
+              "TEACHER"
+            ]
+          }
+        },
+        "required": [
+          "role"
+        ]
+      }
+    }
   }
 }

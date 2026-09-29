@@ -1,3 +1,3 @@
 # Docker infrastructure
 
-The root `docker-compose.yml` currently provisions only Redis. PostgreSQL/Auth are intentionally supplied by Supabase Local so local auth behavior can match the selected production identity provider.
+The root `docker-compose.yml` provisions only Redis. PostgreSQL and Auth come from the team's shared Supabase Cloud Development project during normal development. Supabase Local remains optional for isolated work.

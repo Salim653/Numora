@@ -1,4 +1,5 @@
 import { getApiHealth } from '@/lib/api';
+import { AuthPanel } from '@/features/onboarding/auth-panel';
 
 const stack = [
   ['Web', 'Next.js'],
@@ -40,6 +41,8 @@ export default async function Home() {
             </p>
           </div>
         </div>
+
+        <AuthPanel />
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {stack.map(([label, value]) => (

@@ -18,9 +18,11 @@
     "@nestjs/platform-socket.io": "12.1.0",
     "@nestjs/swagger": "12.0.2",
     "@nestjs/websockets": "12.1.0",
+    "@supabase/supabase-js": "2.117.1",
     "@tka/database": "workspace:*",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "drizzle-orm": "0.45.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "socket.io": "4.8.4"
