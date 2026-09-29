@@ -3,7 +3,13 @@ import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import {
   closeDatabaseConnection,
+  chapters,
+  drillAttempts,
+  drillPackages,
   getDatabase,
+  levelProgress,
+  levels,
+  subchapters,
   teacherVerificationTokens,
   users,
 } from '@tka/database';
@@ -88,9 +94,32 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
     await classes.join('student', firstClass.joinCode);
     await expect(classes.join('student', firstClass.joinCode)).resolves.toMatchObject({ joined: true });
     await expect(classes.join('student', otherClass.joinCode)).rejects.toMatchObject({ status: 409 });
+    const [chapter] = await db.insert(chapters).values({
+      title: `Bab ${suffix}`, sortOrder: parseInt(suffix, 16) % 2_000_000_000, publishedAt: new Date(),
+    }).returning({ id: chapters.id });
+    const [subchapter] = await db.insert(subchapters).values({
+      chapterId: chapter!.id, title: 'Subbab', sortOrder: 1, publishedAt: new Date(),
+    }).returning({ id: subchapters.id });
+    const [level] = await db.insert(levels).values({
+      subchapterId: subchapter!.id, title: 'Level 1', sortOrder: 1, publishedAt: new Date(),
+    }).returning({ id: levels.id });
+    const [drillPackage] = await db.insert(drillPackages).values({
+      levelId: level!.id, variantSet: 1, publishedAt: new Date(),
+    }).returning({ id: drillPackages.id });
+    const [attempt] = await db.insert(drillAttempts).values({
+      studentId: identities.student, levelId: level!.id, packageId: drillPackage!.id,
+      status: 'COMPLETED', completedAt: new Date(), score: 0,
+    }).returning({ id: drillAttempts.id });
+    await db.insert(levelProgress).values({
+      studentId: identities.student, levelId: level!.id, latestScore: 0,
+      bestScore: 0, latestAttemptId: attempt!.id,
+    });
     const progress = await monitoring.studentProgress(owner, firstClass.id, identities.student);
     expect(progress.student.displayName).toBe('student');
-    expect(progress.levels).toEqual([]);
+    expect(progress.latestDrillScore).toBe(0);
+    expect(progress.levels.find((item) => item.levelId === level!.id)).toMatchObject({
+      accessStatus: 'UNLOCKED', latestDrillScore: 0, bestDrillScore: 0,
+    });
     await expect(monitoring.studentProgress(outsider, firstClass.id, identities.student))
       .rejects.toMatchObject({ status: 403 });
     await schools.updateSchool('admin', school.id, { status: 'INACTIVE' });
