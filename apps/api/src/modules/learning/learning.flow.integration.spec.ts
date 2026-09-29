@@ -5,6 +5,7 @@ import {
   analyticsOutbox,
   chapters,
   closeDatabaseConnection,
+  competencies,
   drillPackageQuestions,
   drillPackages,
   getDatabase,
@@ -37,36 +38,46 @@ integration('Drill lifecycle against PostgreSQL', () => {
     }) } as unknown as IdentityService;
     const learning = new LearningService(identity);
     const [chapter] = await db.insert(chapters).values({
-      title: `Bab ${suffix}`, sortOrder: parseInt(suffix, 16) % 2_000_000_000,
-      publishedAt: new Date(),
+      code: `TEST-${suffix}`, name: `Bab ${suffix}`, displayOrder: parseInt(suffix, 16) % 2_000_000_000,
+      status: 'READY',
     }).returning({ id: chapters.id });
     const [subchapter] = await db.insert(subchapters).values({
-      chapterId: chapter!.id, title: 'Subbab', sortOrder: 1, publishedAt: new Date(),
+      chapterId: chapter!.id, code: `SUB-${suffix}`, name: 'Subbab', displayOrder: 1, status: 'READY',
     }).returning({ id: subchapters.id });
     const [firstLevel, nextLevel] = await db.insert(levels).values([1, 2].map((number) => ({
-      subchapterId: subchapter!.id, title: `Level ${number}`,
-      sortOrder: number, publishedAt: new Date(),
+      subchapterId: subchapter!.id, description: `Level ${number}`,
+      levelNumber: number, status: 'READY' as const,
     }))).returning({ id: levels.id });
+    const [competency] = await db.insert(competencies).values({
+      subchapterId: subchapter!.id, code: `COMP-${suffix}`, description: 'Fixture', status: 'READY',
+    }).returning({ id: competencies.id });
     const [firstPackage, secondPackage] = await db.insert(drillPackages).values([1, 2].map((number) => ({
       levelId: firstLevel!.id, variantSet: number, publishedAt: new Date(),
     }))).returning({ id: drillPackages.id });
 
     for (let number = 1; number <= 10; number++) {
       const [question] = await db.insert(questions).values({
-        levelId: firstLevel!.id, code: `TEST-${suffix}-${number}`,
+        primaryCompetencyId: competency!.id, sourceRef: `TEST-${suffix}-${number}`, status: 'READY',
       }).returning({ id: questions.id });
-      const [version] = await db.insert(questionVersions).values({
-        questionId: question!.id, version: 1,
-      }).returning({ id: questionVersions.id });
-      const variants = await db.insert(questionVariants).values([1, 2].map((variantNo) => ({
-        questionVersionId: version!.id, variantNo, stem: `Soal ${number}, varian ${variantNo}`,
-        options: [{ id: 'A', text: 'Benar' }, { id: 'B', text: 'Salah' }],
-        correctOptionId: 'A', explanation: 'Demo', isDemo: true,
-      }))).returning({ id: questionVariants.id, variantNo: questionVariants.variantNo });
-      await db.insert(drillPackageQuestions).values(variants.map((variant) => ({
-        packageId: variant.variantNo === 1 ? firstPackage!.id : secondPackage!.id,
-        questionVariantId: variant.id, sortOrder: number,
-      })));
+      const [original] = await db.insert(questionVariants).values({
+        questionId: question!.id, variantCode: `ORIG-${suffix}-${number}`, kind: 'ORIGINAL', origin: 'TEST',
+      }).returning({ id: questionVariants.id });
+      for (const variantNo of [1, 2]) {
+        const variant = variantNo === 1 ? original! : (await db.insert(questionVariants).values({
+          questionId: question!.id, originalVariantId: original!.id,
+          variantCode: `VAR-${suffix}-${number}`, kind: 'VARIANT', origin: 'TEST',
+        }).returning({ id: questionVariants.id }))[0]!;
+        const [version] = await db.insert(questionVersions).values({
+          variantId: variant.id, versionNumber: 1, questionType: 'SINGLE_CHOICE',
+          stem: { text: `Soal ${number}, varian ${variantNo}` },
+          optionsOrStatements: ['A', 'B', 'C', 'D'].map((id) => ({ id, content: { text: id === 'A' ? 'Benar' : 'Salah' } })),
+          answerKey: { optionId: 'A' }, explanation: { text: 'Demo' }, difficulty: 'EASY',
+        }).returning({ id: questionVersions.id });
+        await db.insert(drillPackageQuestions).values({
+          packageId: variantNo === 1 ? firstPackage!.id : secondPackage!.id,
+          questionVariantId: variant.id, questionVersionId: version!.id, sortOrder: number,
+        });
+      }
     }
 
     const attempt = await learning.start('student', firstLevel!.id);
