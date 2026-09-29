@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import katex from 'katex';
 import type { ReactNode } from 'react';
+import { destination, useAuth } from '@/features/onboarding/auth';
 import { LearningApiError } from './api';
 import { LearningProvider } from './provider';
-import { useStudentToken } from './session';
 
 export function LearningFrame({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -104,16 +106,30 @@ export function DataState({
 }
 
 export function StudentGate({ children }: { children: (token: string) => ReactNode }) {
-  const { loading, token, error } = useStudentToken();
-  if (loading) return <Status title="Memeriksa sesi">Mohon tunggu…</Status>;
-  if (error) return <Status title="Sesi belum siap">{error}</Status>;
-  if (!token)
+  const { state, refresh } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (state.status === 'signed_out') router.replace('/');
+    if (state.status === 'registration') router.replace('/onboarding');
+    if (state.status === 'ready' && state.profile.role !== 'STUDENT')
+      router.replace(destination(state.profile));
+  }, [router, state]);
+  if (state.status === 'ready' && state.profile.role === 'STUDENT') {
+    const token = state.session.access_token;
+    return <LearningProvider key={token}>{children(token)}</LearningProvider>;
+  }
+  if (state.status === 'error')
     return (
-      <Status title="Perlu masuk">
-        Masuk dengan akun Student melalui alur login untuk membuka materi.
+      <Status title="Sesi belum siap">
+        <p>{state.message}</p>
+        <button className="mt-3 underline" onClick={() => void refresh()}>
+          Periksa lagi
+        </button>
       </Status>
     );
-  return <LearningProvider key={token}>{children(token)}</LearningProvider>;
+  if (state.status === 'disabled')
+    return <Status title="Akun tidak aktif">Akses akun ini sedang tidak tersedia.</Status>;
+  return <Status title="Memeriksa akses">Mohon tunggu…</Status>;
 }
 
 export function MathText({ value }: { value: string }) {
