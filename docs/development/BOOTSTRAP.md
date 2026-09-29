@@ -2,7 +2,7 @@
 
 ## Goal
 
-The current repository is a **walking skeleton**, not a product-feature implementation. It proves that the three application processes and local infrastructure can be developed from one reproducible monorepo before feature teams branch into product modules.
+The current repository is a **walking skeleton**, not a product-feature implementation. It proves that the three application processes and cloud development dependencies can be used from one reproducible monorepo before feature teams branch into product modules.
 
 ## Implemented P0 bootstrap
 
@@ -11,8 +11,8 @@ The current repository is a **walking skeleton**, not a product-feature implemen
 - NestJS API with `/api/v1/health`, database health and Swagger;
 - BullMQ worker connecting to Redis;
 - PostgreSQL/Drizzle package with foundational Identity/School/Class/Outbox/Audit schema;
-- Supabase Local configuration;
-- Redis Docker Compose;
+- Supabase cloud development connection configuration;
+- Redis cloud connection and BullMQ prefix configuration;
 - deterministic `DEMO` seed;
 - machine-readable OpenAPI/question/event/PvP envelopes;
 - TypeScript strict baseline, ESLint, Prettier;
@@ -40,10 +40,6 @@ A fresh developer machine should be able to run:
 corepack enable
 pnpm install
 cp .env.example .env
-pnpm supabase:start
-pnpm infra:up
-pnpm db:migrate
-pnpm db:seed
 pnpm dev
 ```
 
@@ -54,8 +50,8 @@ Then verify:
 3. API `/api/v1/health` is healthy.
 4. API `/api/v1/health/database` is healthy.
 5. Swagger opens at `/api/docs`.
-6. Worker logs a completed startup probe.
-7. Supabase Studio shows foundational tables and DEMO rows.
+6. Worker logs a successful connection to development Redis, without adding a job on startup.
+7. The Supabase development branch has the reviewed Drizzle schema; optional `DEMO` rows exist only if seeded there deliberately.
 
 If this only works on one person's laptop, the original bootstrap reproducibility goal is not met. Passing this check alone does not complete the current Sprint 2 Student flow.
 
@@ -63,7 +59,7 @@ If this only works on one person's laptop, the original bootstrap reproducibilit
 
 1. Run the acceptance test on at least two different team members' machines.
 2. Verify `pnpm install --frozen-lockfile` using the committed lockfile.
-3. Review and apply the committed first Drizzle migration.
+3. Have a designated operator review and apply the committed Drizzle migration to the isolated development branch using a direct `DATABASE_MIGRATION_URL`.
 4. Confirm each account in `.github/CODEOWNERS` has repository write access.
 5. Enable protected `main` and required CI in GitHub.
 6. Refine Auth, Class, seeded content, and Assessment Engine work against the Sprint 2 Student vertical slice at the approved 80% mastery threshold; plan Admin School/token UI and Teacher verification/create-Class/progress UI for the online school prototype trial.

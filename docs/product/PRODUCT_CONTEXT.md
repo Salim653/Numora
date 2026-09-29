@@ -3,6 +3,8 @@
 **Product source:** team-approved PRD v0.5, 28 September 2026. The supplied PDF still labels itself a consolidated draft for review; the Software Engineering coordinator confirmed team approval on 28 September 2026. Explicit OPEN items remain unresolved.
 **Document purpose:** shared context for Software, Data/AI, QA, UI/UX, Research & Curriculum, and coding agents.
 
+**ENGINEERING UPDATE, 29 September 2026:** the Database team has prepared one shared Supabase Cloud Development project. This updates the Development environment setup only; the staging domain/project dependency and product rules below remain open as recorded.
+
 ## 1. Tujuan dan tahap produk
 
 Numora menyediakan latihan TKA Matematika bagi siswa kelas IX SMP/MTs melalui web responsif. Hipotesis masalahnya: latihan belum terarah, hasil kurang memberi tindak lanjut, guru sulit memantau progres, dan latihan dapat membosankan. Hipotesis ini perlu diuji dengan pengguna; daftar fitur bukan bukti validasi.

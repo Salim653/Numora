@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { closeDatabaseConnection, getDatabase } from './client.js';
 import { schools, users } from './schema/index.js';
+import { seedDemoLearning } from './demo-learning.js';
 
 const ids = {
   adminAuth: '00000000-0000-4000-8000-000000000001',
@@ -9,6 +10,9 @@ const ids = {
 };
 
 async function seed() {
+  if (process.env.NODE_ENV !== 'development' || process.env.ALLOW_DEMO_SEED !== 'true') {
+    throw new Error('Demo seed requires NODE_ENV=development and ALLOW_DEMO_SEED=true.');
+  }
   const { db } = getDatabase();
 
   await db
@@ -38,13 +42,18 @@ async function seed() {
   ];
 
   for (const user of demoUsers) {
-    const existing = await db.select({ id: users.id }).from(users).where(eq(users.authUserId, user.authUserId));
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.authUserId, user.authUserId));
     if (existing.length === 0) {
       await db.insert(users).values(user);
     }
   }
 
   console.log('Seeded deterministic DEMO identity fixtures.');
+  await seedDemoLearning();
+  console.log('Seeded DEMO Level 1 question variants and packages.');
   await closeDatabaseConnection();
 }
 

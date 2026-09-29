@@ -23,7 +23,7 @@ export const classes = pgTable(
     index('classes_teacher_idx').on(table.teacherUserId),
     index('classes_school_idx').on(table.schoolId),
   ],
-);
+).enableRLS();
 
 export const classMemberships = pgTable(
   'class_memberships',
@@ -44,4 +44,4 @@ export const classMemberships = pgTable(
       .where(sql`${table.leftAt} is null`),
     index('class_memberships_class_idx').on(table.classId),
   ],
-);
+).enableRLS();

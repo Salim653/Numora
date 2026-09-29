@@ -10,19 +10,18 @@ VPS application layer
   - Next.js
   - NestJS API/WebSocket
   - Worker/Scheduler
-  - Redis initially if operationally acceptable
       │
       ▼
-Managed PostgreSQL + Supabase Auth
+Supabase cloud PostgreSQL + Auth; Redis cloud
 
 Cloudflare R2 is used for owned object media.
 ```
 
-## Why managed PostgreSQL/Auth is preferred
+## Managed dependencies
 
-It reduces the team's responsibility for database backup/upgrade/failure handling and avoids changing the authentication architecture between development and production.
+Supabase and Redis cloud reduce local infrastructure work and keep the same service types across environments. Use an isolated development Supabase branch/project; staging contains real-user data. If Redis is shared, isolate BullMQ keys with distinct prefixes and credentials where available.
 
-A full self-hosted fallback is possible if budget requires it, but needs a separate operational review.
+A full self-hosted fallback needs a separate operational review. The choice of a deployment container is independent of the no-Docker development setup.
 
 ## Environments
 
@@ -43,6 +42,8 @@ merge to main
 ## Database migrations
 
 - run controlled migration before/with deployment;
+- use a direct `DATABASE_MIGRATION_URL` only in the designated migration runner, separate from runtime `DATABASE_URL`;
+- keep Drizzle migrations canonical; do not enable another automatic Supabase migration path without coordinating it;
 - avoid destructive incompatible changes without phased rollout;
 - back up before high-risk migrations;
 - verify rollback/forward-fix approach.
