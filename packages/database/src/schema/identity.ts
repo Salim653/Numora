@@ -11,7 +11,7 @@ import {
 
 export const userRole = pgEnum('user_role', ['STUDENT', 'TEACHER', 'ADMIN']);
 export const accountStatus = pgEnum('account_status', ['ACTIVE', 'DISABLED']);
-export const schoolStatus = pgEnum('school_status', ['ACTIVE', 'INACTIVE']);
+export const schoolStatus = pgEnum('school_status', ['ACTIVE', 'INACTIVE', 'ARCHIVED']);
 
 const timestamps = {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -41,6 +41,8 @@ export const schools = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     code: text('code').notNull(),
     name: text('name').notNull(),
+    city: text('city'),
+    province: text('province'),
     status: schoolStatus('status').notNull().default('ACTIVE'),
     ...timestamps,
   },

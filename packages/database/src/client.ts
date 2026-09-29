@@ -1,10 +1,13 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema/index.js';
 
+type Db = PostgresJsDatabase<typeof schema>;
+
 type DatabaseConnection = {
   client: ReturnType<typeof postgres>;
-  db: ReturnType<typeof drizzle>;
+  db: Db;
 };
 
 let connection: DatabaseConnection | undefined;
@@ -13,11 +16,21 @@ export function getDatabase(): DatabaseConnection {
   if (connection) return connection;
 
   const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
+  if (!databaseUrl || !/^[a-z][a-z0-9+.-]*:\/\//i.test(databaseUrl)) {
     throw new Error('DATABASE_URL is not configured.');
   }
 
-  const client = postgres(databaseUrl, {
+  // Parse URL here instead of passing the string straight to postgres(): some
+  // driver versions mishandle credentials from a connection string, while the
+  // option-object form always authenticates.
+  const { hostname, port, username, password, pathname } = new URL(databaseUrl);
+
+  const client = postgres({
+    host: hostname || '127.0.0.1',
+    port: Number(port || '5432'),
+    username: username || 'postgres',
+    password: password || '',
+    database: pathname.replace(/^\//, '') || 'postgres',
     max: Number(process.env.DB_POOL_MAX ?? 10),
     idle_timeout: 20,
   });

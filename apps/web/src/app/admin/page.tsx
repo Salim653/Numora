@@ -1,30 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './admin.css';
+import {
+  archiveQuestion,
+  createQuestion,
+  publishQuestion,
+  fetchQuestions,
+  updateQuestion,
+} from '@/lib/admin-api';
+import type { Question } from '@/lib/admin-api';
 
 type QuestionStatus = 'Ready' | 'Draft' | 'Archived';
 type QuestionType = 'PG' | 'PGK';
 
-type Question = {
-  id: string;
-  code: string;
-  title: string;
-  chapter: string;
-  subchapter: string;
-  type: QuestionType;
-  level: number;
-  updated: string;
-  status: QuestionStatus;
-};
-
-const initialQuestions: Question[] = [
-  { id: '1', code: 'NUM-0421', title: 'Operasi pecahan campuran', chapter: 'Bilangan', subchapter: 'Pecahan', type: 'PG', level: 2, updated: '28 Sep 2026', status: 'Ready' },
-  { id: '2', code: 'NUM-0420', title: 'Perbandingan senilai', chapter: 'Bilangan', subchapter: 'Perbandingan', type: 'PG', level: 1, updated: '27 Sep 2026', status: 'Draft' },
-  { id: '3', code: 'ALG-0318', title: 'Persamaan linear satu variabel', chapter: 'Aljabar', subchapter: 'Persamaan linear', type: 'PG', level: 3, updated: '26 Sep 2026', status: 'Ready' },
-  { id: '4', code: 'GEO-0206', title: 'Keliling dan luas segitiga', chapter: 'Geometri', subchapter: 'Bangun datar', type: 'PGK', level: 2, updated: '25 Sep 2026', status: 'Draft' },
-  { id: '5', code: 'DAT-0109', title: 'Membaca diagram batang', chapter: 'Data', subchapter: 'Penyajian data', type: 'PG', level: 1, updated: '24 Sep 2026', status: 'Archived' },
-];
 
 const navigation = [
   { label: 'Ringkasan', icon: '◫' },
@@ -38,7 +27,25 @@ const navigation = [
 
 export default function AdminPage() {
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [questions, setQuestions] = useState(initialQuestions);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    const result = await fetchQuestions();
+    if (result.error) {
+      setLoadError(result.error);
+    } else if (result.data) {
+      setQuestions(result.data);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [activeNav, setActiveNav] = useState('Bank soal');
@@ -52,37 +59,60 @@ export default function AdminPage() {
     return matchesQuery && (statusFilter === 'All' || question.status === statusFilter);
   });
 
-  function saveQuestion(event: React.FormEvent<HTMLFormElement>) {
+  async function saveQuestion(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editing) return;
     const form = new FormData(event.currentTarget);
-    const updatedQuestion: Question = {
-      ...editing,
-      title: String(form.get('title')).trim(),
-      chapter: String(form.get('chapter')).trim(),
-      subchapter: String(form.get('subchapter')).trim(),
-      type: form.get('type') === 'PGK' ? 'PGK' : 'PG',
-      level: Number(form.get('level')),
-      status: editing.status === 'Archived' ? 'Archived' : 'Draft',
-      updated: '28 Sep 2026',
-    };
-    if (!updatedQuestion.title || !updatedQuestion.chapter || !updatedQuestion.subchapter) return;
-    setQuestions((current) => {
-      if (editing.id === 'new') {
-        return [{ ...updatedQuestion, id: crypto.randomUUID(), code: `NUM-${String(current.length + 1).padStart(4, '0')}` }, ...current];
+    const title = String(form.get('title')).trim();
+    const chapter = String(form.get('chapter')).trim();
+    const subchapter = String(form.get('subchapter')).trim();
+    const type = form.get('type') === 'PGK' ? 'PGK' : 'PG';
+    if (!title || !chapter || !subchapter) return;
+
+    if (editing.id === 'new') {
+      const code = `NUM-${String(questions.length + 1).padStart(4, '0')}`;
+      const result = await createQuestion({ code, title, chapter, subchapter, type });
+      if (result.error) {
+        setNotice(result.error);
+        return;
       }
+      setQuestions((current) => [result.data as Question, ...current]);
+      setNotice('Soal disimpan sebagai draf.');
+    } else {
+      const result = await updateQuestion(editing.id, { title, chapter, subchapter, type });
+      if (result.error) {
+        setNotice(result.error);
+        return;
+      }
+      const updated: Question = {
+        ...editing,
+        title,
+        chapter,
+        subchapter,
+        type,
+        updated: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+      };
       if (editing.status === 'Ready') {
-        const nextVersion = current.filter((question) => question.code.startsWith(`${editing.code}-V`)).length + 2;
-        return [{ ...updatedQuestion, id: crypto.randomUUID(), code: `${editing.code}-V${nextVersion}` }, ...current];
+        const nextVersion = questions.filter((q) => q.code.startsWith(`${editing.code}-V`)).length + 2;
+        setQuestions((current) => [{ ...updated, id: crypto.randomUUID(), code: `${editing.code}-V${nextVersion}` } as Question, ...current]);
+        setNotice('Versi baru disimpan sebagai draf. Versi siap digunakan tetap utuh.');
+      } else {
+        setQuestions((current) => current.map((q) => (q.id === editing.id ? updated : q)).filter((q): q is Question => q !== null));
+        setNotice('Perubahan disimpan sebagai draf.');
       }
-      return current.map((question) => question.id === editing.id ? updatedQuestion : question);
-    });
-    setNotice(editing.id === 'new' ? 'Soal disimpan sebagai draf.' : editing.status === 'Ready' ? 'Versi baru disimpan sebagai draf. Versi siap digunakan tetap utuh.' : 'Perubahan disimpan sebagai draf.');
+    }
     setEditing(null);
   }
 
-  function setQuestionStatus(question: Question, status: QuestionStatus) {
-    setQuestions((current) => current.map((item) => item.id === question.id ? { ...item, status } : item));
+  async function setQuestionStatus(question: Question, status: 'Ready' | 'Draft' | 'Archived') {
+    if (status === 'Ready') {
+      const result = await publishQuestion(question.id);
+      if (result.error) { setNotice(result.error); return; }
+    } else {
+      const result = await archiveQuestion(question.id, status === 'Draft');
+      if (result.error) { setNotice(result.error); return; }
+    }
+    setQuestions((current) => current.map((item) => (item.id === question.id ? { ...item, status } : item)));
     setNotice(status === 'Archived' ? 'Soal diarsipkan. Riwayat versi tetap dipertahankan.' : 'Status soal diperbarui.');
   }
 
@@ -123,7 +153,7 @@ export default function AdminPage() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="system-status"><span className="status-dot" /><span><b>Mode prototipe</b><small>Data hanya di sesi ini</small></span></div>
+          <div className="system-status"><span className="status-dot" /><span><b>Mode prototipe</b><small>Terhubung ke API</small></span></div>
           <button className="admin-user" onClick={() => setIsSignedIn(false)}><span className="user-avatar">A</span><span><b>Admin NUMORA</b><small>Keluar dari panel</small></span><span className="user-menu">···</span></button>
         </div>
       </aside>
@@ -142,6 +172,8 @@ export default function AdminPage() {
 
           <section className="content-section" aria-labelledby="question-list-title">
             <div className="section-heading"><div><h2 id="question-list-title">Semua soal</h2><span>{visibleQuestions.length} item ditampilkan</span></div><button className="quiet-button" onClick={() => { setQuery(''); setStatusFilter('All'); }}>Reset filter <span aria-hidden="true">↺</span></button></div>
+            {loading && <div className="notice" role="status"><span>Memuat data dari server…</span></div>}
+            {loadError && <div className="notice" role="alert"><span>{loadError}</span><button aria-label="Tutup notifikasi" onClick={() => setLoadError('')}>×</button></div>}
             <div className="table-toolbar"><label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="Cari soal" placeholder="Cari judul, kode, atau materi..." value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>⌘ K</kbd></label><label className="filter-select"><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="All">Semua status</option><option value="Ready">Siap digunakan</option><option value="Draft">Draf</option><option value="Archived">Diarsipkan</option></select></label><button className="filter-button" aria-label="Filter lainnya" title="Filter lainnya">☷</button></div>
             {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label="Tutup notifikasi" onClick={() => setNotice('')}>×</button></div>}
             <div className="question-table-wrap"><table className="question-table"><thead><tr><th>SOAL</th><th>MATERI</th><th>TIPE</th><th>LEVEL</th><th>STATUS</th><th>DIUBAH</th><th><span className="sr-only">Aksi</span></th></tr></thead><tbody>
@@ -150,7 +182,7 @@ export default function AdminPage() {
             </tbody></table></div>
             <div className="table-footer"><span>Menampilkan <b>{visibleQuestions.length}</b> dari <b>{questions.length}</b> soal</span><div><button disabled aria-label="Halaman sebelumnya">←</button><span>1</span><button disabled aria-label="Halaman berikutnya">→</button></div></div>
           </section>
-          <p className="data-caption"><span aria-hidden="true">⌁</span> Data contoh hanya tersimpan selama halaman terbuka. Perubahan produksi memerlukan API dan audit trail.</p>
+          <p className="data-caption"><span aria-hidden="true">⌁</span> Data tersimpan persisten melalui API Numora. Setiap perubahan tercatat di audit trail.</p>
         </div>
       </section>
 

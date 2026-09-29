@@ -8,6 +8,13 @@
       "when": 1790604821659,
       "tag": "0000_outgoing_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790676963962,
+      "tag": "0001_lovely_rick_jones",
+      "breakpoints": true
     }
   ]
 }
