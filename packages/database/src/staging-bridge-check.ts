@@ -18,6 +18,9 @@ async function run() {
   const folder = await mkdtemp(join(tmpdir(), 'numora-staging-baseline-'));
   let client: ReturnType<typeof postgres> | undefined;
   try {
+    for (const role of ['anon', 'authenticated', 'service_role']) {
+      await admin.unsafe(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${role}') THEN CREATE ROLE ${role} NOLOGIN; END IF; END $$`);
+    }
     await admin.unsafe(`CREATE DATABASE "${name}"`);
     client = postgres(url.toString(), { max: 1 });
     const databaseRoot = process.cwd();
