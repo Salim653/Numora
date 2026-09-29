@@ -9,6 +9,9 @@ const ids = {
 };
 
 async function seed() {
+  if (process.env.NODE_ENV !== 'development' || process.env.ALLOW_DEMO_SEED !== 'true') {
+    throw new Error('Demo seed requires NODE_ENV=development and ALLOW_DEMO_SEED=true.');
+  }
   const { db } = getDatabase();
 
   await db
@@ -38,7 +41,10 @@ async function seed() {
   ];
 
   for (const user of demoUsers) {
-    const existing = await db.select({ id: users.id }).from(users).where(eq(users.authUserId, user.authUserId));
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.authUserId, user.authUserId));
     if (existing.length === 0) {
       await db.insert(users).values(user);
     }

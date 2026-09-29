@@ -14,6 +14,9 @@
 - [ ] `main` CI green.
 - [ ] OpenAPI/JSON/event contracts current.
 - [ ] Migrations reviewed and rehearsed.
+- [ ] Runtime and migration database credentials point to the intended environment; migration uses the approved direct connection.
+- [ ] Development data/Auth is isolated from real-user staging; BullMQ prefixes differ by environment/developer.
+- [ ] DEMO seed has not run against staging or production.
 - [ ] Feature flags/config correct for environment.
 - [ ] No debug endpoints or secrets.
 

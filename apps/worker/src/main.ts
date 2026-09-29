@@ -1,7 +1,12 @@
-import { Queue, Worker } from 'bullmq';
+import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 
-const redisUrl = process.env.REDIS_URL ?? 'redis://127.0.0.1:6379';
+const redisUrl = process.env.REDIS_URL;
+const prefix = process.env.BULLMQ_PREFIX;
+if (!redisUrl) throw new Error('REDIS_URL is required.');
+if (!redisUrl.startsWith('rediss://')) throw new Error('REDIS_URL must use TLS (rediss://).');
+if (!prefix || prefix.includes('<'))
+  throw new Error('BULLMQ_PREFIX must identify this environment.');
 const connection = new Redis(redisUrl, { maxRetriesPerRequest: null });
 const queueName = 'bootstrap';
 
@@ -11,7 +16,7 @@ const worker = new Worker(
     processedAt: new Date().toISOString(),
     jobName: job.name,
   }),
-  { connection },
+  { connection, prefix },
 );
 
 worker.on('completed', (job) => {
@@ -25,18 +30,6 @@ worker.on('failed', (job, error) => {
 async function bootstrap() {
   await connection.ping();
   console.log('[worker] Redis connected');
-
-  const queue = new Queue(queueName, { connection });
-  await queue.add(
-    'startup-probe',
-    { source: 'tka-worker' },
-    {
-      jobId: `startup-${Date.now()}`,
-      removeOnComplete: 10,
-      removeOnFail: 10,
-    },
-  );
-  await queue.close();
 }
 
 async function shutdown(signal: string) {

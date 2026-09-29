@@ -9,6 +9,14 @@ type DatabaseConnection = {
 
 let connection: DatabaseConnection | undefined;
 
+export function requireTlsDatabaseUrl(url: string) {
+  const sslMode = new URL(url).searchParams.get('sslmode');
+  if (sslMode !== 'require' && sslMode !== 'verify-full') {
+    throw new Error('PostgreSQL URL must set sslmode=require or sslmode=verify-full.');
+  }
+  return url;
+}
+
 export function getDatabase(): DatabaseConnection {
   if (connection) return connection;
 
@@ -17,7 +25,7 @@ export function getDatabase(): DatabaseConnection {
     throw new Error('DATABASE_URL is not configured.');
   }
 
-  const client = postgres(databaseUrl, {
+  const client = postgres(requireTlsDatabaseUrl(databaseUrl), {
     max: Number(process.env.DB_POOL_MAX ?? 10),
     idle_timeout: 20,
   });

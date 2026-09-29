@@ -8,7 +8,7 @@ let client: SupabaseClient | null = null;
 function getAuthClient() {
   if (client) return client;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key || key === 'replace-me') return null;
   client = createClient(url, key);
   return client;
@@ -23,8 +23,8 @@ export function useStudentToken() {
     loading: false,
     token: null,
     error:
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === 'replace-me' ||
-      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY === 'replace-me' ||
+      !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
         ? 'Konfigurasi Google login belum tersedia.'
         : null,
   });
