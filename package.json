@@ -18,6 +18,7 @@
     "ci": "pnpm contracts:validate && pnpm contracts:types:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "db:generate": "pnpm --filter @tka/database db:generate",
     "db:migrate": "dotenv -e .env -- pnpm --filter @tka/database db:migrate",
+    "db:cloud:check": "dotenv -e .env.cloud.local -- pnpm --filter @tka/database db:cloud:check",
     "db:seed": "dotenv -e .env -- pnpm --filter @tka/database db:seed",
     "db:studio": "dotenv -e .env -- pnpm --filter @tka/database db:studio",
     "worker:probe": "dotenv -e .env -- pnpm --filter @tka/worker worker:probe",

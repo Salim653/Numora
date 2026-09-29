@@ -17,6 +17,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
     "db:upgrade-check": "tsx src/upgrade-check.ts",
+    "db:cloud:check": "tsx src/cloud-check.ts",
     "db:seed": "tsx src/seed.ts",
     "db:studio": "drizzle-kit studio"
   },
