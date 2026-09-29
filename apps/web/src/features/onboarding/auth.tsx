@@ -17,7 +17,7 @@ type AuthState =
 type AuthContextValue = {
   state: AuthState;
   refresh: () => Promise<void>;
-  register: (role: 'STUDENT' | 'TEACHER', displayName: string) => Promise<void>;
+  register: (role: 'STUDENT' | 'TEACHER') => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -89,10 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     setRevision((value) => value + 1);
   }, []);
-  const register = useCallback(async (role: 'STUDENT' | 'TEACHER', displayName: string) => {
+  const register = useCallback(async (role: 'STUDENT' | 'TEACHER') => {
     const { data } = await getSupabase().auth.getSession();
     if (!data.session) throw new Error('Sesi berakhir. Login kembali.');
-    await registerIdentity(data.session.access_token, role, displayName);
+    await registerIdentity(data.session.access_token, role);
     setRevision((value) => value + 1);
   }, []);
   const logout = useCallback(async () => {

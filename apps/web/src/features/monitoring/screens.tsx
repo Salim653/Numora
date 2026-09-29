@@ -1,16 +1,19 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@tka/ui';
 import { destination, useAuth } from '@/features/onboarding/auth';
 import {
   ApiProblem,
+  createTeacherClass,
   getClassStudents,
   getTeacherClasses,
+  getTeacherStudentProgress,
   type ClassStudentsResponse,
   type ClassesResponse,
+  type TeacherStudentProgress,
 } from '@/lib/api';
 
 function TeacherGate({
@@ -171,6 +174,26 @@ function MyClassesContent({ token, teacherName }: { token: string; teacherName: 
   const [revision, setRevision] = useState(0);
   const [data, setData] = useState<ClassesResponse | null>(null);
   const [error, setError] = useState<ApiProblem | null>(null);
+  const [name, setName] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [createdCode, setCreatedCode] = useState('');
+  async function create(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!name.trim()) return;
+    setCreating(true);
+    setCreateError('');
+    try {
+      const result = await createTeacherClass(token, name.trim());
+      setCreatedCode(result.joinCode);
+      setName('');
+      setRevision((value) => value + 1);
+    } catch (cause) {
+      setCreateError(cause instanceof Error ? cause.message : 'Class belum dapat dibuat.');
+    } finally {
+      setCreating(false);
+    }
+  }
   useEffect(() => {
     let active = true;
     getTeacherClasses(token).then(
@@ -194,6 +217,26 @@ function MyClassesContent({ token, teacherName }: { token: string; teacherName: 
       description="Pilih Class untuk melihat daftar Student."
       teacherName={teacherName}
     >
+      <form className="monitoring-notice monitoring-create" onSubmit={(event) => void create(event)}>
+        <h2>Buat Class</h2>
+        <label htmlFor="class-name">Nama Class</label>
+        <input
+          className="text-input"
+          id="class-name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          maxLength={80}
+          required
+          placeholder="Contoh: IX A"
+        />
+        {createError && <p className="form-error" role="alert">{createError}</p>}
+        <Button className="primary-button" type="submit" disabled={creating}>
+          {creating ? 'Membuat…' : 'Buat Class'}
+        </Button>
+      </form>
+      {createdCode && <p className="monitoring-notice" role="status">
+        Class dibuat. Kode bergabung: <strong>{createdCode}</strong>. Bagikan kode ini kepada siswa.
+      </p>}
       {data ? (
         data.items.length ? (
           <ul className="monitoring-list">
@@ -203,6 +246,7 @@ function MyClassesContent({ token, teacherName }: { token: string; teacherName: 
                   <span>
                     <strong>{item.name}</strong>
                     <small>Buka daftar Student</small>
+                    {item.joinCode && <small>Kode bergabung: {item.joinCode}</small>}
                   </span>
                   <span aria-hidden="true">→</span>
                 </Link>
@@ -385,11 +429,10 @@ function StudentDetailContent({
   classId: string;
   studentId: string;
 }) {
-  const { data, error, retry } = useClassStudents(token, classId);
-  const student = data?.items.find((item) => item.id === studentId);
+  const { data, error, retry } = useTeacherStudentProgress(token, classId, studentId);
   return (
     <TeacherFrame
-      title={student?.displayName ?? 'Detail Student'}
+      title={data?.student.displayName ?? 'Detail Student'}
       description={data?.class.name ?? 'Progress belajar Student'}
       teacherName={teacherName}
     >
@@ -397,15 +440,22 @@ function StudentDetailContent({
         ← Kembali ke daftar Student
       </Link>
       {data ? (
-        student ? (
-          <section className="monitoring-notice" role="status">
-            <h2>Detail progres sedang disiapkan</h2>
-            <p>Status Level serta nilai Drill terakhir dan terbaik belum tersedia saat ini.</p>
-          </section>
+        data.levels.length ? (
+          <div className="monitoring-list">
+            {data.levels.map((level) => (
+              <section className="monitoring-notice" key={level.levelId}>
+                <h2>{level.chapterLabel} · {level.subchapterLabel} · {level.levelLabel}</h2>
+                <p>Status: {level.accessStatus === 'UNLOCKED' ? 'Terbuka' : 'Terkunci'}
+                  {level.inProgress ? ' · Sedang dikerjakan' : ''}</p>
+                <p>Nilai Drill terakhir: {level.latestDrillScore ?? 'Belum ada'}</p>
+                <p>Nilai Drill terbaik: {level.bestDrillScore ?? 'Belum ada'}</p>
+              </section>
+            ))}
+          </div>
         ) : (
           <section className="monitoring-notice" role="alert">
-            <h2>Student tidak ditemukan</h2>
-            <p>Student ini bukan anggota aktif Class tersebut.</p>
+            <h2>Belum ada Level terbit</h2>
+            <p>Progress akan tampil setelah materi demo diterbitkan.</p>
           </section>
         )
       ) : (
@@ -413,6 +463,31 @@ function StudentDetailContent({
       )}
     </TeacherFrame>
   );
+}
+
+function useTeacherStudentProgress(token: string, classId: string, studentId: string) {
+  const { refresh } = useAuth();
+  const [revision, setRevision] = useState(0);
+  const [data, setData] = useState<TeacherStudentProgress | null>(null);
+  const [error, setError] = useState<ApiProblem | null>(null);
+  useEffect(() => {
+    let active = true;
+    getTeacherStudentProgress(token, classId, studentId).then(
+      (result) => { if (active) setData(result); },
+      (cause: unknown) => {
+        if (active)
+          setError(cause instanceof ApiProblem ? cause : new ApiProblem(0, 'API_ERROR', 'Permintaan gagal.'));
+      },
+    );
+    return () => { active = false; };
+  }, [token, classId, studentId, revision]);
+  return {
+    data,
+    error,
+    retry: error?.status === 401
+      ? () => void refresh()
+      : () => { setError(null); setRevision((value) => value + 1); },
+  };
 }
 
 export function StudentDetailScreen({

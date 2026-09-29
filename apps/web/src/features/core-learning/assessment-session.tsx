@@ -51,7 +51,7 @@ export function AssessmentSession({
   const emptyCount = questions.filter((item) => !answers[item.questionInstanceId]).length;
 
   async function choose(questionId: string, optionId: string | null) {
-    if (saving.current) return;
+    if (saving.current || (unsaved && unsaved.questionId !== questionId)) return;
     saving.current = true;
     setAnswers((previous) => ({ ...previous, [questionId]: optionId }));
     setUnsaved({ questionId, optionId });
@@ -93,7 +93,10 @@ export function AssessmentSession({
         <h2 className="text-lg font-bold">
           <MathText value={question.stem} />
         </h2>
-        <fieldset disabled={save.isPending || submit.isPending} className="mt-6 space-y-3">
+        <fieldset
+          disabled={save.isPending || submit.isPending || (!!unsaved && unsaved.questionId !== question.questionInstanceId)}
+          className="mt-6 space-y-3"
+        >
           <legend className="sr-only">Pilihan jawaban</legend>
           {question.options.map((option) => (
             <label
@@ -114,7 +117,7 @@ export function AssessmentSession({
         {answers[question.questionInstanceId] && (
           <button
             className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"
-            disabled={save.isPending}
+            disabled={save.isPending || (!!unsaved && unsaved.questionId !== question.questionInstanceId)}
             onClick={() => void choose(question.questionInstanceId, null)}
           >
             Kosongkan jawaban

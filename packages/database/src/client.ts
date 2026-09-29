@@ -10,7 +10,13 @@ type DatabaseConnection = {
 let connection: DatabaseConnection | undefined;
 
 export function requireTlsDatabaseUrl(url: string) {
-  const sslMode = new URL(url).searchParams.get('sslmode');
+  const parsed = new URL(url);
+  const sslMode = parsed.searchParams.get('sslmode');
+  if (
+    process.env.NODE_ENV === 'test' &&
+    ['localhost', '127.0.0.1'].includes(parsed.hostname) &&
+    sslMode === 'disable'
+  ) return url;
   if (sslMode !== 'require' && sslMode !== 'verify-full') {
     throw new Error('PostgreSQL URL must set sslmode=require or sslmode=verify-full.');
   }

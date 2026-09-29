@@ -430,6 +430,32 @@ button:disabled {
   color: var(--color-text);
   text-decoration: none;
 }
+button.monitoring-row {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.monitoring-create,
+.monitoring-admin-detail,
+.monitoring-admin-detail form {
+  display: grid;
+  gap: 12px;
+}
+.monitoring-create .primary-button,
+.monitoring-admin-detail .primary-button,
+.monitoring-admin-detail .secondary-button {
+  justify-self: start;
+}
+.monitoring-token code {
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.monitoring-token-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .monitoring-row strong,
 .monitoring-row small {
   display: block;
