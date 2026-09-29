@@ -427,8 +427,10 @@ ALTER TABLE "chapters" RENAME COLUMN "title" TO "name";--> statement-breakpoint
 ALTER TABLE "chapters" RENAME COLUMN "sort_order" TO "display_order";--> statement-breakpoint
 ALTER TABLE "levels" RENAME COLUMN "sort_order" TO "level_number";--> statement-breakpoint
 ALTER TABLE "levels" RENAME COLUMN "title" TO "description";--> statement-breakpoint
+ALTER TABLE "levels" ALTER COLUMN "description" DROP NOT NULL;--> statement-breakpoint
 ALTER TABLE "question_versions" RENAME COLUMN "version" TO "version_number";--> statement-breakpoint
 ALTER TABLE "questions" RENAME COLUMN "code" TO "source_ref";--> statement-breakpoint
+ALTER TABLE "questions" ALTER COLUMN "source_ref" DROP NOT NULL;--> statement-breakpoint
 ALTER TABLE "subchapters" RENAME COLUMN "title" TO "name";--> statement-breakpoint
 ALTER TABLE "subchapters" RENAME COLUMN "sort_order" TO "display_order";--> statement-breakpoint
 ALTER TABLE "level_progress" DROP CONSTRAINT "level_progress_latest_attempt_id_drill_attempts_id_fk";
