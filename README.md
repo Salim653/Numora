@@ -43,6 +43,10 @@ Fill `.env` with the development cloud values before `pnpm dev`; `.env` is ignor
 - Swagger UI: http://localhost:3001/api/docs
 - Supabase dashboard and Redis endpoints: use the development cloud resources supplied by the cloud team.
 
+### Prototype halaman Siswa
+
+Jalankan `corepack pnpm --filter @tka/web dev`, lalu buka `/demo/student`, `/demo/pvp`, atau `/demo/leaderboards` pada Web lokal. Halaman ini memakai identitas dan hasil fiktif tanpa login, API, Redis, atau database; PvP dan peringkatnya tidak menyimpan hasil nyata.
+
 ## Normal development
 
 ```bash
@@ -83,7 +87,7 @@ pnpm openapi:generate
 
 ## Bootstrap status
 
-This repository intentionally implements only the P0 walking skeleton:
+This repository includes the P0 walking skeleton and separate Student/PvP/leaderboard UI previews:
 
 - monorepo/workspace;
 - web/API/worker processes;
