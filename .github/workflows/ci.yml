@@ -59,6 +59,7 @@ jobs:
         run: |
           pnpm --filter @tka/database db:migrate
           pnpm test
+          pnpm --filter @tka/database db:upgrade-check
 
       - name: Build
         run: pnpm build
