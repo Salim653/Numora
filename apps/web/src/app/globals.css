@@ -17,6 +17,8 @@
   --color-danger: #b83a45;
   --radius-md: 14px;
   --radius-xl: 24px;
+  --background: var(--numora-ivory);
+  --foreground: #111827;
 }
 
 * {
@@ -25,6 +27,11 @@
 html,
 body {
   min-height: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid var(--numora-purple);
+  outline-offset: 3px;
 }
 body {
   margin: 0;

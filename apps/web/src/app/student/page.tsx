@@ -1,5 +1,5 @@
-import { RoleHomeScreen } from '@/features/onboarding/screens';
+import { DashboardScreen } from '@/features/core-learning/catalog';
 
-export default function Student() {
-  return <RoleHomeScreen page="/student" />;
+export default function Page() {
+  return <DashboardScreen />;
 }

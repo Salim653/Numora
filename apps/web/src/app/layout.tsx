@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/features/onboarding/auth';
+import 'katex/dist/katex.min.css';
 
 export const metadata: Metadata = {
   title: 'NUMORA',
