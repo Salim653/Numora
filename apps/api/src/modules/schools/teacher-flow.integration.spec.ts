@@ -58,7 +58,7 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
 
     const expired = await schools.issueToken('admin', school.id);
     await db.update(teacherVerificationTokens)
-      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .set({ createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), expiresAt: new Date(Date.now() - 1000) })
       .where(eq(teacherVerificationTokens.id, expired.id));
     await expect(schools.verifyTeacher('teacherA', school.id, expired.token)).rejects.toMatchObject({ status: 403 });
 
@@ -95,24 +95,24 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
     await expect(classes.join('student', firstClass.joinCode)).resolves.toMatchObject({ joined: true });
     await expect(classes.join('student', otherClass.joinCode)).rejects.toMatchObject({ status: 409 });
     const [chapter] = await db.insert(chapters).values({
-      title: `Bab ${suffix}`, sortOrder: parseInt(suffix, 16) % 2_000_000_000, publishedAt: new Date(),
+      code: `TEST-${suffix}`, name: `Bab ${suffix}`, displayOrder: parseInt(suffix, 16) % 2_000_000_000, status: 'READY',
     }).returning({ id: chapters.id });
     const [subchapter] = await db.insert(subchapters).values({
-      chapterId: chapter!.id, title: 'Subbab', sortOrder: 1, publishedAt: new Date(),
+      chapterId: chapter!.id, code: `SUB-${suffix}`, name: 'Subbab', displayOrder: 1, status: 'READY',
     }).returning({ id: subchapters.id });
     const [level] = await db.insert(levels).values({
-      subchapterId: subchapter!.id, title: 'Level 1', sortOrder: 1, publishedAt: new Date(),
+      subchapterId: subchapter!.id, description: 'Level 1', levelNumber: 1, status: 'READY',
     }).returning({ id: levels.id });
     const [drillPackage] = await db.insert(drillPackages).values({
       levelId: level!.id, variantSet: 1, publishedAt: new Date(),
     }).returning({ id: drillPackages.id });
-    const [attempt] = await db.insert(drillAttempts).values({
+    await db.insert(drillAttempts).values({
       studentId: identities.student, levelId: level!.id, packageId: drillPackage!.id,
       status: 'COMPLETED', completedAt: new Date(), score: 0,
-    }).returning({ id: drillAttempts.id });
+    });
     await db.insert(levelProgress).values({
-      studentId: identities.student, levelId: level!.id, latestScore: 0,
-      bestScore: 0, latestAttemptId: attempt!.id,
+      studentId: identities.student, levelId: level!.id, unlockedAt: new Date(), latestScore: 0,
+      bestScore: 0,
     });
     const progress = await monitoring.studentProgress(owner, firstClass.id, identities.student);
     expect(progress.student.displayName).toBe('student');

@@ -16,6 +16,12 @@
     "test": "vitest run --passWithNoTests",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
+    "db:upgrade-check": "tsx src/upgrade-check.ts",
+    "db:cloud:check": "tsx src/cloud-check.ts",
+    "db:check": "tsx src/schema-check.ts",
+    "db:staging:check": "tsx src/staging-bridge.ts check",
+    "db:staging:apply": "tsx src/staging-bridge.ts apply",
+    "db:staging:bridge-check": "tsx src/staging-bridge-check.ts",
     "db:seed": "tsx src/seed.ts",
     "db:studio": "drizzle-kit studio"
   },

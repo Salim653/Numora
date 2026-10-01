@@ -8,8 +8,9 @@
     "pnpm": ">=12 <13"
   },
   "scripts": {
-    "dev": "pnpm env:check && dotenv -e .env -- pnpm --filter @tka/database build && dotenv -e .env -- turbo run dev --env-mode=loose --filter=@tka/web --filter=@tka/api --filter=@tka/worker",
+    "dev": "pnpm env:check && dotenv -e .env -- pnpm --filter @tka/database build && pnpm db:check && dotenv -e .env -- turbo run dev --env-mode=loose --filter=@tka/web --filter=@tka/api --filter=@tka/worker",
     "env:check": "dotenv -e .env -- node scripts/check-dev-env.mjs",
+    "db:check": "dotenv -e .env -- pnpm --filter @tka/database db:check",
     "build": "turbo run build",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "turbo run typecheck",
@@ -19,6 +20,7 @@
     "ci": "pnpm contracts:validate && pnpm contracts:types:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "db:generate": "pnpm --filter @tka/database db:generate",
     "db:migrate": "dotenv -e .env -- pnpm --filter @tka/database db:migrate",
+    "db:cloud:check": "dotenv -e .env.cloud.local -- pnpm --filter @tka/database db:cloud:check",
     "db:seed": "dotenv -e .env -- pnpm --filter @tka/database db:seed",
     "db:studio": "dotenv -e .env -- pnpm --filter @tka/database db:studio",
     "worker:probe": "dotenv -e .env -- pnpm --filter @tka/worker worker:probe",
