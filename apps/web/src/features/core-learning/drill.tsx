@@ -180,8 +180,9 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
             </p>
             <ReportForm
               label={`Laporkan soal ${index + 1}`}
-              submit={(category, details) =>
+              submit={(category, details, clientRequestId) =>
                 learningApi.reportQuestion(token, {
+                  clientRequestId,
                   attemptItemId: q.questionInstanceId,
                   category,
                   details,

@@ -4497,6 +4497,10 @@
       "StudentQuestionReportDto": {
         "type": "object",
         "properties": {
+          "clientRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "category": {
             "type": "string"
           },
@@ -4516,6 +4520,10 @@
       "StudentVideoReportDto": {
         "type": "object",
         "properties": {
+          "clientRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "category": {
             "type": "string"
           },

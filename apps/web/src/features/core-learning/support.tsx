@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useRef, useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { learningApi } from './api';
 import { DataState, Panel, PrimaryButton } from './ui';
@@ -9,7 +9,7 @@ export function ReportForm({
   submit,
   label,
 }: {
-  submit: (category: string, details: string) => Promise<unknown>;
+  submit: (category: string, details: string, clientRequestId: string) => Promise<unknown>;
   label: string;
 }) {
   const id = useId();
@@ -18,16 +18,24 @@ export function ReportForm({
   const [details, setDetails] = useState('');
   const [state, setState] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [error, setError] = useState('');
+  const sending = useRef(false);
+  const request = useRef<{ payload: string; id: string } | null>(null);
   async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (state === 'saving' || !category.trim()) return;
+    if (sending.current || !category.trim()) return;
+    sending.current = true;
     setState('saving');
     try {
-      await submit(category.trim(), details.trim());
+      const payload = JSON.stringify([category.trim(), details.trim()]);
+      if (request.current?.payload !== payload)
+        request.current = { payload, id: crypto.randomUUID() };
+      await submit(category.trim(), details.trim(), request.current.id);
       setState('success');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Laporan belum terkirim.');
       setState('error');
+    } finally {
+      sending.current = false;
     }
   }
   if (state === 'success')
@@ -130,8 +138,9 @@ export function RecommendedVideos({ token, attemptId }: { token: string; attempt
           <p className="text-sm text-slate-600">Sumber: {video.source}</p>
           <ReportForm
             label={`Laporkan video ${video.title}`}
-            submit={(category, details) =>
+            submit={(category, details, clientRequestId) =>
               learningApi.reportVideo(token, {
+                clientRequestId,
                 attemptId,
                 mappingId: video.mappingId,
                 category,
