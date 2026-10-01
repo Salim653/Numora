@@ -28,4 +28,5 @@ supabase/.branches/
 *.log
 
 # generated
+apps/web/next-env.d.ts
 __pycache__/
