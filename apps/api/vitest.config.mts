@@ -1,0 +1,27 @@
+import { defineConfig } from 'vitest/config';
+import ts from 'typescript';
+
+export default defineConfig({
+  plugins: [
+    {
+      name: 'nestjs-test-metadata',
+      enforce: 'pre',
+      transform(code, id) {
+        if (!id.endsWith('.ts') || id.includes('node_modules')) return;
+        // Nest's ValidationPipe must see the same DTO/DI metadata as the production tsc build.
+        // Otherwise HTTP tests can pass while silently skipping body validation.
+        return ts.transpileModule(code, {
+          compilerOptions: {
+            target: ts.ScriptTarget.ES2022,
+            module: ts.ModuleKind.ESNext,
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+            esModuleInterop: true,
+            sourceMap: true,
+          },
+          fileName: id,
+        }).outputText;
+      },
+    },
+  ],
+});

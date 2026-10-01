@@ -7,7 +7,7 @@ import {
   levels,
   subchapters,
 } from '@tka/database';
-import { and, asc, desc, eq, isNotNull } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import { ClassesService } from '../classes/classes.service';
 
 @Injectable()
@@ -26,24 +26,24 @@ export class MonitoringService {
     const published = await db
       .select({
         levelId: levels.id,
-        levelLabel: levels.title,
-        levelOrder: levels.sortOrder,
-        subchapterLabel: subchapters.title,
-        subchapterOrder: subchapters.sortOrder,
-        chapterLabel: chapters.title,
-        chapterOrder: chapters.sortOrder,
+        levelLabel: levels.description,
+        levelOrder: levels.levelNumber,
+        subchapterLabel: subchapters.name,
+        subchapterOrder: subchapters.displayOrder,
+        chapterLabel: chapters.name,
+        chapterOrder: chapters.displayOrder,
       })
       .from(levels)
       .innerJoin(subchapters, eq(subchapters.id, levels.subchapterId))
       .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
       .where(
         and(
-          isNotNull(levels.publishedAt),
-          isNotNull(subchapters.publishedAt),
-          isNotNull(chapters.publishedAt),
+          eq(levels.status, 'READY'),
+          eq(subchapters.status, 'READY'),
+          eq(chapters.status, 'READY'),
         ),
       )
-      .orderBy(asc(chapters.sortOrder), asc(subchapters.sortOrder), asc(levels.sortOrder));
+      .orderBy(asc(chapters.displayOrder), asc(subchapters.displayOrder), asc(levels.levelNumber));
     const states = await db
       .select()
       .from(levelProgress)
@@ -70,8 +70,8 @@ export class MonitoringService {
           levelId: level.levelId,
           chapterLabel: level.chapterLabel,
           subchapterLabel: level.subchapterLabel,
-          levelLabel: level.levelLabel,
-          accessStatus: state || level.levelOrder === 1 ? 'UNLOCKED' : 'LOCKED',
+          levelLabel: level.levelLabel ?? `Level ${level.levelOrder}`,
+          accessStatus: state?.unlockedAt || level.levelOrder === 1 ? 'UNLOCKED' : 'LOCKED',
           inProgress: activeLevelIds.has(level.levelId),
           latestDrillScore: state?.latestScore ?? null,
           bestDrillScore: state?.bestScore ?? null,
