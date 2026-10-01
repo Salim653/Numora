@@ -6,7 +6,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { isUUID } from 'class-validator';
+import { isISO8601, isUUID } from 'class-validator';
 import { and, asc, eq, isNotNull, lte, sql } from 'drizzle-orm';
 import {
   assessmentAttempts,
@@ -55,7 +55,14 @@ function validateOutput(output: IrtBatchOutput, input: IrtBatchInput) {
       item.sampleSize < 0 ||
       item.sampleSize > count ||
       !['SUFFICIENT', 'NOT_ENOUGH_DATA'].includes(item.dataStatus) ||
-      values.some((v) => v !== null && (typeof v !== 'number' || !Number.isFinite(v))) ||
+      // numeric(12,6) is a persistence bound, not a statistical model policy.
+      values.some(
+        (v) =>
+          v !== null &&
+          (typeof v !== 'number' ||
+            !Number.isFinite(v) ||
+            Math.abs(Number(v.toFixed(6))) >= 1_000_000),
+      ) ||
       (item.scaleId !== null && (typeof item.scaleId !== 'string' || item.scaleId.length > 160))
     )
       throw new BadRequestException('Nilai atau sample size output IRT tidak valid.');
@@ -88,6 +95,8 @@ export class IrtIntegrationService {
       !input.modelVersion.trim() ||
       input.modelVersion.length > 160 ||
       typeof input.cutoffAt !== 'string' ||
+      !isISO8601(input.cutoffAt, { strict: true, strictSeparator: true }) ||
+      !/(Z|[+-]\d{2}:\d{2})$/.test(input.cutoffAt) ||
       !Number.isFinite(Date.parse(input.cutoffAt)) ||
       Date.parse(input.cutoffAt) > Date.now() ||
       (input.batchKind === 'TRYOUT' && !input.packageId)
@@ -134,6 +143,7 @@ export class IrtIntegrationService {
             isNotNull(assessmentAttempts.finishedAt),
             lte(assessmentAttempts.finishedAt, new Date(input.cutoffAt)),
             isNotNull(attemptAnswers.gradedAt),
+            lte(attemptAnswers.gradedAt, new Date(input.cutoffAt)),
             isNotNull(attemptAnswers.awardedPoints),
             input.packageId ? eq(assessmentAttempts.packageId, input.packageId) : undefined,
           ),
@@ -158,16 +168,14 @@ export class IrtIntegrationService {
           correct: Number(answer.awardedPoints) === Number(item.maxPoints),
         })),
       };
-      await tx
-        .insert(irtBatches)
-        .values({
-          id: input.batchId,
-          packageId: input.packageId,
-          batchKind: input.batchKind,
-          modelVersion: input.modelVersion,
-          status: 'PENDING',
-          inputSnapshot: snapshot,
-        });
+      await tx.insert(irtBatches).values({
+        id: input.batchId,
+        packageId: input.packageId,
+        batchKind: input.batchKind,
+        modelVersion: input.modelVersion,
+        status: 'PENDING',
+        inputSnapshot: snapshot,
+      });
       return snapshot;
     });
   }
@@ -203,20 +211,18 @@ export class IrtIntegrationService {
         return { id: batch.id };
       }
       if (items.length)
-        await tx
-          .insert(irtItemResults)
-          .values(
-            items.map((i) => ({
-              batchId: batch.id,
-              questionVersionId: i.questionVersionId,
-              sampleSize: i.sampleSize,
-              dataStatus: i.dataStatus,
-              difficultyB: i.difficultyB?.toString() ?? null,
-              discriminationA: i.discriminationA?.toString() ?? null,
-              guessingC: i.guessingC?.toString() ?? null,
-              scaleId: i.scaleId,
-            })),
-          );
+        await tx.insert(irtItemResults).values(
+          items.map((i) => ({
+            batchId: batch.id,
+            questionVersionId: i.questionVersionId,
+            sampleSize: i.sampleSize,
+            dataStatus: i.dataStatus,
+            difficultyB: i.difficultyB?.toString() ?? null,
+            discriminationA: i.discriminationA?.toString() ?? null,
+            guessingC: i.guessingC?.toString() ?? null,
+            scaleId: i.scaleId,
+          })),
+        );
       await tx
         .update(irtBatches)
         .set({
@@ -235,7 +241,7 @@ export class IrtIntegrationService {
       throw new BadRequestException('Kode kegagalan IRT tidak valid.');
     return getDatabase().db.transaction(async (tx) => {
       const [batch] = await tx
-        .select()
+        .select({ id: irtBatches.id, status: irtBatches.status })
         .from(irtBatches)
         .where(eq(irtBatches.id, batchId))
         .for('update');
@@ -249,8 +255,9 @@ export class IrtIntegrationService {
     });
   }
   async readiness(batchId: string) {
+    if (!isUUID(batchId)) throw new BadRequestException('Batch ID tidak valid.');
     const [batch] = await getDatabase()
-      .db.select()
+      .db.select({ status: irtBatches.status })
       .from(irtBatches)
       .where(eq(irtBatches.id, batchId));
     if (!batch) throw new NotFoundException('Batch IRT tidak ditemukan.');

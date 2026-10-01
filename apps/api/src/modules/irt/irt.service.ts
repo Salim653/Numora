@@ -8,7 +8,17 @@ import type { AdminIrtDto } from './irt.controller';
 export class IrtService {
   async batches(page: ContentPageDto) {
     const rows = await getDatabase()
-      .db.select()
+      .db.select({
+        id: irtBatches.id,
+        packageId: irtBatches.packageId,
+        batchKind: irtBatches.batchKind,
+        modelVersion: irtBatches.modelVersion,
+        status: irtBatches.status,
+        startedAt: irtBatches.startedAt,
+        finishedAt: irtBatches.finishedAt,
+        resultReleasedAt: irtBatches.resultReleasedAt,
+        failureCode: irtBatches.failureCode,
+      })
       .from(irtBatches)
       .orderBy(desc(irtBatches.startedAt), desc(irtBatches.id))
       .limit(page.limit)
@@ -53,10 +63,23 @@ export class IrtService {
         sampleSize: item.sampleSize,
         dataStatus: item.dataStatus,
         difficultyB:
-          item.sampleSize >= 30 && batch.status === 'SUCCEEDED' ? item.difficultyB : null,
+          item.sampleSize >= 30 &&
+          item.dataStatus !== 'NOT_ENOUGH_DATA' &&
+          batch.status === 'SUCCEEDED'
+            ? item.difficultyB
+            : null,
         discriminationA:
-          item.sampleSize >= 30 && batch.status === 'SUCCEEDED' ? item.discriminationA : null,
-        guessingC: item.sampleSize >= 30 && batch.status === 'SUCCEEDED' ? item.guessingC : null,
+          item.sampleSize >= 30 &&
+          item.dataStatus !== 'NOT_ENOUGH_DATA' &&
+          batch.status === 'SUCCEEDED'
+            ? item.discriminationA
+            : null,
+        guessingC:
+          item.sampleSize >= 30 &&
+          item.dataStatus !== 'NOT_ENOUGH_DATA' &&
+          batch.status === 'SUCCEEDED'
+            ? item.guessingC
+            : null,
       })),
     };
   }

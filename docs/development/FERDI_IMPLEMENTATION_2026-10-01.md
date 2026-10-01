@@ -19,12 +19,14 @@ Kontrak lengkap dan acceptance ada di [FERDI_CONTENT_SUPPORT](../api/FERDI_CONTE
 
 Suite baru menjalankan HTTP NestJS dengan PostgreSQL nyata dan Auth provider fixture. Suite web memeriksa kegagalan/retry laporan, duplicate submit saat pending, rekomendasi dari server, dan ketergantungan hasil/unlock pada API.
 
-- `pnpm run ci` **lulus** di worktree terpisah dengan PostgreSQL nyata: 63 tes (3 root, 2 database, 34 API, 24 web), validasi kontrak, generated types, lint, typecheck, dan production build. Bukti lokal tersimpan di `D:\numora-ferdi-tests-20261001\ci-final.log`; ini verifikasi gabungan tiga branch, sedangkan CI setiap PR tetap menjadi gate review tersendiri.
+- Audit ulang: `pnpm run ci` **lulus** di worktree terpisah dengan PostgreSQL nyata: 74 tes (3 root, 2 database, 40 API, 29 web), validasi kontrak, generated types, lint, typecheck, dan production build. Bukti lokal tersimpan di `D:\numora-ferdi-tests-20261001\audit-ci-final.log`; ini verifikasi gabungan tiga branch, sedangkan CI setiap PR tetap menjadi gate review tersendiri. Verifikasi awal 63 tes dipertahankan pada log `ci-final.log`.
 - Database kosong dimigrasi sampai 0004; upgrade dengan hasil Drill lama dan rehearsal fixture bridge diikuti migrasi terbaru lulus. Jumlah migrasi pada pemeriksa bridge mengikuti jurnal canonical.
 - Worker Vitest API/web dibatasi dua per package untuk menghindari overload proses pada regresi paralel Windows. Dua tes lama sempat mencapai timeout 5 detik saat semua worker berjalan; pengujian terpisah dan regresi dengan batas worker lulus.
 - `pnpm openapi:generate` dan `pnpm contracts:types:check` **lulus**; hasil regenerasi OpenAPI identik dengan kontrak yang dikomit. Generated types pada dua branch awal juga diperiksa terhadap kontrak masing-masing. Bukti ini bukan OAuth Google atau acceptance staging sekolah.
 
 Migrasi 0004 hanya di-rehearsal pada database lokal khusus pengujian. Penerapan cloud dilakukan operator Database; layanan development pengguna yang aktif tidak dihentikan oleh pekerjaan ini.
+
+Temuan, perbaikan, dan batas bukti audit ulang tercatat di [FERDI_AUDIT_2026-10-01](FERDI_AUDIT_2026-10-01.md). Automation browser lingkungan belum dapat dibuka; pemeriksaan HTTP/React bukan pengganti E2E login Google dan acceptance lintas peran oleh QA.
 
 ## Batas kesiapan
 

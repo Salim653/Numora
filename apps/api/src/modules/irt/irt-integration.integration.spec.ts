@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { assessmentAttempts, getDatabase, irtBatches, irtItemResults } from '@tka/database';
+import {
+  assessmentAttempts,
+  attemptAnswers,
+  getDatabase,
+  irtBatches,
+  irtItemResults,
+} from '@tka/database';
 import { databaseSuite, installFerdiFixture } from '../content/ferdi-content.fixture';
 import { IrtIntegrationService } from './irt-integration.service';
 databaseSuite('IRT integration through HTTP/PostgreSQL', () => {
@@ -122,5 +128,95 @@ databaseSuite('IRT integration through HTTP/PostgreSQL', () => {
     expect(batches.status).toBe(200);
     expect(JSON.stringify(await batches.json())).not.toContain('respondentId');
     expect((await request('admin/irt/batches', 'GET', undefined, 'student')).status).toBe(403);
+  });
+  it('rejects unrepresentable parameters without changing batch state', async () => {
+    const integration = new IrtIntegrationService();
+    await expect(integration.readiness('not-a-uuid')).rejects.toMatchObject({ status: 400 });
+    const input = await integration.prepare({
+      batchId: randomUUID(),
+      batchKind: 'DAILY',
+      modelVersion: 'TEST-storage',
+      packageId: fixture.canonicalPackage,
+      cutoffAt: new Date().toISOString(),
+    });
+    const output = {
+      contractVersion: '1' as const,
+      batchId: input.batchId,
+      modelVersion: input.modelVersion,
+      items: [
+        {
+          questionVersionId: fixture.versionIds[0]!,
+          sampleSize: 30,
+          dataStatus: 'SUFFICIENT' as const,
+          difficultyB: 1_000_000,
+          discriminationA: 1,
+          guessingC: null,
+          scaleId: null,
+        },
+      ],
+    };
+    await expect(integration.complete(output)).rejects.toMatchObject({ status: 400 });
+    expect(
+      (await getDatabase().db.select().from(irtBatches).where(eq(irtBatches.id, input.batchId)))[0]!
+        .status,
+    ).toBe('PENDING');
+  });
+  it('freezes only responses graded before an explicit-timezone cutoff', async () => {
+    const integration = new IrtIntegrationService();
+    const { db } = getDatabase();
+    const [answer] = await db
+      .select()
+      .from(attemptAnswers)
+      .where(eq(attemptAnswers.attemptItemId, fixture.itemId));
+    await db
+      .update(attemptAnswers)
+      .set({ gradedAt: new Date(Date.now() + 60_000) })
+      .where(eq(attemptAnswers.id, answer!.id));
+    try {
+      const prepare = {
+        batchId: randomUUID(),
+        batchKind: 'DAILY' as const,
+        modelVersion: 'TEST-cutoff',
+        packageId: fixture.canonicalPackage,
+        cutoffAt: new Date().toISOString(),
+      };
+      const input = await integration.prepare(prepare);
+      expect(input.responses).toHaveLength(29);
+      expect(input.responses.some((r) => r.attemptItemId === fixture.itemId)).toBe(false);
+      await db
+        .update(attemptAnswers)
+        .set({ gradedAt: answer!.gradedAt })
+        .where(eq(attemptAnswers.id, answer!.id));
+      expect(await integration.prepare(prepare)).toEqual(input);
+      await expect(
+        integration.prepare({ ...prepare, batchId: randomUUID(), cutoffAt: '2020-01-01T00:00:00' }),
+      ).rejects.toMatchObject({ status: 400 });
+    } finally {
+      await db
+        .update(attemptAnswers)
+        .set({ gradedAt: answer!.gradedAt })
+        .where(eq(attemptAnswers.id, answer!.id));
+    }
+  });
+  it('hides legacy parameters flagged as insufficient even with thirty samples', async () => {
+    const { db } = getDatabase();
+    const [batch] = await db
+      .insert(irtBatches)
+      .values({ batchKind: 'DAILY', modelVersion: 'TEST-legacy', status: 'SUCCEEDED' })
+      .returning();
+    await db
+      .insert(irtItemResults)
+      .values({
+        batchId: batch!.id,
+        questionVersionId: fixture.versionIds[0]!,
+        sampleSize: 30,
+        dataStatus: 'NOT_ENOUGH_DATA',
+        difficultyB: '1',
+      });
+    const response = await fixture.request('admin/irt');
+    const body = (await response.json()) as {
+      items: { batchId: string; difficultyB: string | null }[];
+    };
+    expect(body.items.find((i) => i.batchId === batch!.id)).toMatchObject({ difficultyB: null });
   });
 });
