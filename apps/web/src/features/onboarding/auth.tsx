@@ -17,7 +17,7 @@ type AuthState =
 type AuthContextValue = {
   state: AuthState;
   refresh: () => Promise<void>;
-  register: (role: 'STUDENT' | 'TEACHER', displayName: string) => Promise<void>;
+  register: (role: 'STUDENT' | 'TEACHER') => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -32,6 +32,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     let sequence = 0;
+    let lastAccessToken: string | null | undefined;
+    let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+    const clearPending = () => clearTimeout(pendingTimer);
+    const failIfPending = (current: number) => {
+      clearPending();
+      pendingTimer = setTimeout(() => {
+        if (!active || current !== sequence) return;
+        sequence++;
+        setState({
+          status: 'error',
+          message: 'Pemeriksaan sesi terlalu lama. Periksa koneksi lalu coba lagi.',
+        });
+      }, 10_000);
+    };
     let client: ReturnType<typeof getSupabase>;
     try {
       client = getSupabase();
@@ -41,17 +55,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const resolve = async (session: Session | null) => {
+      const accessToken = session?.access_token ?? null;
+      if (lastAccessToken === accessToken) return;
+      lastAccessToken = accessToken;
       const current = ++sequence;
+      clearPending();
       if (!session) {
         setState({ status: 'signed_out' });
         return;
       }
       setState({ status: 'loading', session });
+      failIfPending(current);
       try {
         const profile = await getIdentity(session.access_token);
-        if (active && current === sequence) setState({ status: 'ready', session, profile });
+        if (!active || current !== sequence) return;
+        clearPending();
+        setState({ status: 'ready', session, profile });
       } catch (error) {
         if (!active || current !== sequence) return;
+        clearPending();
         if (error instanceof ApiProblem && error.code === 'ACCOUNT_NOT_REGISTERED') {
           setState({ status: 'registration', session });
         } else if (error instanceof ApiProblem && error.code === 'ACCOUNT_DISABLED') {
@@ -76,12 +98,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (active) void resolve(session);
       });
     });
-    void client.auth.getSession().then(({ data }) => {
-      if (active) void resolve(data.session);
-    });
+    // Supabase emits INITIAL_SESSION for this subscription, including a null session.
+    failIfPending(sequence);
     return () => {
       active = false;
       sequence++;
+      clearPending();
       subscription.unsubscribe();
     };
   }, [revision]);
@@ -89,10 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     setRevision((value) => value + 1);
   }, []);
-  const register = useCallback(async (role: 'STUDENT' | 'TEACHER', displayName: string) => {
+  const register = useCallback(async (role: 'STUDENT' | 'TEACHER') => {
     const { data } = await getSupabase().auth.getSession();
     if (!data.session) throw new Error('Sesi berakhir. Login kembali.');
-    await registerIdentity(data.session.access_token, role, displayName);
+    await registerIdentity(data.session.access_token, role);
     setRevision((value) => value + 1);
   }, []);
   const logout = useCallback(async () => {

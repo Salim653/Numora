@@ -15,6 +15,20 @@
       "when": 1790653498990,
       "tag": "0001_open_the_twelve",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790684025974,
+      "tag": "0002_amusing_ravenous",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790709229920,
+      "tag": "0003_unusual_manta",
+      "breakpoints": true
     }
   ]
 }

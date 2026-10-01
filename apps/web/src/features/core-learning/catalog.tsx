@@ -2,8 +2,11 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { learningApi } from './api';
+import { joinClass } from '@/lib/api';
+import { useAuth } from '@/features/onboarding/auth';
 import { DataState, LearningFrame, Panel, PrimaryButton, Status, StudentGate } from './ui';
 
 function sortByOrder<T extends { order: number }>(items: T[]) {
@@ -11,6 +14,10 @@ function sortByOrder<T extends { order: number }>(items: T[]) {
 }
 
 export function DashboardScreen() {
+  return <StudentGate>{(token) => <DashboardContent token={token} />}</StudentGate>;
+}
+
+function DashboardContent({ token }: { token: string }) {
   const areas = [
     {
       number: '01',
@@ -51,6 +58,7 @@ export function DashboardScreen() {
           sudah diproses.
         </p>
       </section>
+      <StudentGate>{(token) => <JoinClassPanel token={token} />}</StudentGate>
       <div className="grid gap-4 md:grid-cols-3">
         {areas.map((area) => (
           <Link
@@ -71,9 +79,51 @@ export function DashboardScreen() {
       </div>
       <section className="mt-8" aria-label="Ringkasan progres">
         <h2 className="mb-4 text-xl font-bold">Progresmu</h2>
-        <StudentGate>{(token) => <DashboardData token={token} />}</StudentGate>
+        <DashboardData token={token} />
       </section>
     </LearningFrame>
+  );
+}
+
+function JoinClassPanel({ token }: { token: string }) {
+  const { state, refresh } = useAuth();
+  const [joinCode, setJoinCode] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (state.status !== 'ready' || state.profile.studentAffiliation === 'SCHOOL') return null;
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!joinCode.trim()) return;
+    setBusy(true);
+    setError('');
+    try {
+      await joinClass(token, joinCode.trim());
+      setJoinCode('');
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Belum dapat bergabung.');
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <form className="mb-6 rounded-2xl border border-slate-200 bg-white p-6" onSubmit={(event) => void submit(event)}>
+      <h2 className="text-xl font-bold">Gabung Class</h2>
+      <p className="mt-2 text-sm text-slate-700">Masukkan kode dari Guru untuk terafiliasi dengan sekolah.</p>
+      <label className="mt-4 block text-sm font-semibold" htmlFor="student-join-code">Kode Class</label>
+      <input
+        id="student-join-code"
+        className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-4 sm:max-w-sm"
+        value={joinCode}
+        onChange={(event) => setJoinCode(event.target.value)}
+        maxLength={32}
+        required
+      />
+      {error && <p className="mt-2 text-red-700" role="alert">{error}</p>}
+      <div className="mt-4">
+        <PrimaryButton type="submit" disabled={busy}>{busy ? 'Bergabung…' : 'Gabung Class'}</PrimaryButton>
+      </div>
+    </form>
   );
 }
 

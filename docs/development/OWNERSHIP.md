@@ -34,6 +34,6 @@ As of 28 September 2026, the coordinator expects DevOps to handle the staging do
 
 ## CODEOWNERS
 
-The active reviewer mapping is [`.github/CODEOWNERS`](../../.github/CODEOWNERS). It currently uses accounts with repository write access; the job-list ownership above remains the intended feature assignment. Restore more specific Backend/QA reviewer rules after the repository admin grants their write access. A planned path does not mean its feature already exists. Use [PROJECT_STRUCTURE](PROJECT_STRUCTURE.md) for code placement.
+**ENGINEERING DECISION — requested by the coordinator on 1 October 2026:** [`.github/CODEOWNERS`](../../.github/CODEOWNERS) assigns all repository paths exclusively to `@splakplutoy` and `@ayiinee`. The job-list ownership above remains the feature coordination assignment. Granting write access to another contributor does not add them as a code owner. A planned path does not mean its feature already exists. Use [PROJECT_STRUCTURE](PROJECT_STRUCTURE.md) for code placement.
 
 CODEOWNERS requests reviews; it does not reserve files for specific contributors or grant repository access. When a rule lists multiple accounts, GitHub accepts approval from any one listed code owner if code-owner review is required. Request additional Frontend, Backend, or QA reviewers manually when a change needs cross-discipline review. Confirm each listed account has repository write access and configure the `main` branch review rule before relying on automatic requests.

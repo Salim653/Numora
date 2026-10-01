@@ -42,8 +42,13 @@ export class IdentityService {
       .from(users)
       .where(eq(users.authUserId, authUser.id))
       .limit(1);
-    if (!profile) throw new NotFoundException('Profile has not been created.');
-    if (profile.status !== 'ACTIVE') throw new ForbiddenException('Account is disabled.');
+    if (!profile)
+      throw new NotFoundException({
+        code: 'ACCOUNT_NOT_REGISTERED',
+        detail: 'Lengkapi profil untuk melanjutkan.',
+      });
+    if (profile.status !== 'ACTIVE')
+      throw new ForbiddenException({ code: 'ACCOUNT_DISABLED', detail: 'Akun ini tidak aktif.' });
 
     let teacherVerified: boolean | null = null;
     let studentAffiliation: 'MANDIRI' | 'SCHOOL' | null = null;
