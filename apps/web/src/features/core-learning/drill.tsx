@@ -7,7 +7,16 @@ import { useEffect, useState } from 'react';
 import { learningApi } from './api';
 import type { DrillAttempt, DrillResult } from './types';
 import { AssessmentSession } from './assessment-session';
-import { DataState, LearningFrame, MathText, Panel, Status, StudentGate } from './ui';
+import {
+  DataState,
+  LearningFrame,
+  MathText,
+  Panel,
+  PrimaryButton,
+  Status,
+  StudentGate,
+} from './ui';
+import { RecommendedVideos, ReportForm } from './support';
 
 export function DrillScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -134,6 +143,8 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
         </p>
       )}
       <ResultSummary result={result} />
+      {result.unlockedLevelId && <ContinueDrill token={token} levelId={result.unlockedLevelId} />}
+      <RecommendedVideos token={token} attemptId={attemptId} />
       <h2 className="text-xl font-bold">Pembahasan</h2>
       {result.explanationState === 'expired' ? (
         <Status title="Pembahasan tidak tersedia">
@@ -167,10 +178,55 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
             <p className="mt-3 text-slate-700">
               <MathText value={q.explanation} />
             </p>
+            <ReportForm
+              label={`Laporkan soal ${index + 1}`}
+              submit={(category, details) =>
+                learningApi.reportQuestion(token, {
+                  attemptItemId: q.questionInstanceId,
+                  category,
+                  details,
+                })
+              }
+            />
           </Panel>
         ))
       )}
     </div>
+  );
+}
+
+function ContinueDrill({ token, levelId }: { token: string; levelId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function start() {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const attempt = await learningApi.start(token, levelId);
+      router.push(`/student/drill/${attempt.id}`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Level berikutnya belum dapat dimulai.');
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Panel>
+      <h2 className="font-bold">Lanjutkan level berikutnya</h2>
+      <p className="my-3 text-sm text-slate-700">
+        Level berikutnya sudah terbuka. Mulai latihan saat paket soal tersedia.
+      </p>
+      <PrimaryButton disabled={busy} onClick={() => void start()}>
+        {busy ? 'Menyiapkan Drill…' : 'Mulai level berikutnya'}
+      </PrimaryButton>
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+    </Panel>
   );
 }
 

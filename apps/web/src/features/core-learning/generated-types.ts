@@ -26,3 +26,11 @@ export type SavedAnswerDto = { "questionInstanceId": string; "selectedOptionId":
 export type ReviewedQuestionDto = { "questionInstanceId": string; "stem": string; "options": OptionDto[]; "selectedOptionId": string | null; "correctOptionId": string; "explanation": string; };
 
 export type DrillResultDto = { "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": ReviewedQuestionDto[]; };
+
+export type StudentVideoDto = { "mappingId": string; "title": string; "url": string; "source": string; };
+
+export type StudentVideosDto = { "items": StudentVideoDto[]; };
+
+export type StudentQuestionReportDto = { "category": string; "details"?: string; "attemptItemId": string; };
+
+export type StudentVideoReportDto = { "category": string; "details"?: string; "attemptId": string; "mappingId": string; };

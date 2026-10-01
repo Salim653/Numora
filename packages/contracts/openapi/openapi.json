@@ -2321,6 +2321,113 @@
         ]
       }
     },
+    "/api/v1/students/me/drill-attempts/{attemptId}/videos": {
+      "get": {
+        "operationId": "StudentSupportController_videos",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentVideosDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "student-support"
+        ]
+      }
+    },
+    "/api/v1/students/me/question-reports": {
+      "post": {
+        "operationId": "StudentSupportController_question",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudentQuestionReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "student-support"
+        ]
+      }
+    },
+    "/api/v1/students/me/video-reports": {
+      "post": {
+        "operationId": "StudentSupportController_video",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudentVideoReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "student-support"
+        ]
+      }
+    },
     "/api/v1/admin/irt": {
       "get": {
         "operationId": "IrtController_list",
@@ -4346,6 +4453,86 @@
         "required": [
           "status",
           "followUp"
+        ]
+      },
+      "StudentVideoDto": {
+        "type": "object",
+        "properties": {
+          "mappingId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mappingId",
+          "title",
+          "url",
+          "source"
+        ]
+      },
+      "StudentVideosDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentVideoDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "StudentQuestionReportDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "attemptItemId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "category",
+          "attemptItemId"
+        ]
+      },
+      "StudentVideoReportDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mappingId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "category",
+          "attemptId",
+          "mappingId"
         ]
       },
       "AdminIrtItemDto": {

@@ -1,0 +1,146 @@
+'use client';
+
+import { useId, useState, type FormEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { learningApi } from './api';
+import { DataState, Panel, PrimaryButton } from './ui';
+
+export function ReportForm({
+  submit,
+  label,
+}: {
+  submit: (category: string, details: string) => Promise<unknown>;
+  label: string;
+}) {
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const [category, setCategory] = useState('');
+  const [details, setDetails] = useState('');
+  const [state, setState] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [error, setError] = useState('');
+  async function send(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (state === 'saving' || !category.trim()) return;
+    setState('saving');
+    try {
+      await submit(category.trim(), details.trim());
+      setState('success');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Laporan belum terkirim.');
+      setState('error');
+    }
+  }
+  if (state === 'success')
+    return (
+      <p className="mt-4 text-sm" role="status">
+        Laporan terkirim untuk ditinjau Admin.
+      </p>
+    );
+  if (!open)
+    return (
+      <button
+        type="button"
+        className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"
+        onClick={() => setOpen(true)}
+      >
+        {label}
+      </button>
+    );
+  return (
+    <form onSubmit={(event) => void send(event)} className="mt-4 space-y-3" aria-label={label}>
+      <label className="block text-sm font-semibold" htmlFor={`${id}-category`}>
+        Jenis masalah
+      </label>
+      <input
+        id={`${id}-category`}
+        className="min-h-11 w-full rounded-xl border border-slate-300 px-3"
+        required
+        maxLength={80}
+        value={category}
+        onChange={(event) => setCategory(event.target.value)}
+        disabled={state === 'saving'}
+      />
+      <label className="block text-sm font-semibold" htmlFor={`${id}-details`}>
+        Keterangan tambahan (opsional)
+      </label>
+      <textarea
+        id={`${id}-details`}
+        className="min-h-24 w-full rounded-xl border border-slate-300 p-3"
+        maxLength={2000}
+        value={details}
+        onChange={(event) => setDetails(event.target.value)}
+        disabled={state === 'saving'}
+      />
+      <p className="text-xs text-slate-600">Hindari memasukkan data pribadi dalam laporan.</p>
+      {state === 'error' && (
+        <p role="alert" className="text-sm text-red-700">
+          {error}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-4">
+        <PrimaryButton type="submit" disabled={state === 'saving' || !category.trim()}>
+          {state === 'saving'
+            ? 'Mengirim…'
+            : state === 'error'
+              ? 'Kirim ulang laporan'
+              : 'Kirim laporan'}
+        </PrimaryButton>
+        <button
+          type="button"
+          className="min-h-11 underline"
+          disabled={state === 'saving'}
+          onClick={() => setOpen(false)}
+        >
+          Batal
+        </button>
+      </div>
+    </form>
+  );
+}
+
+export function RecommendedVideos({ token, attemptId }: { token: string; attemptId: string }) {
+  const query = useQuery({
+    queryKey: ['drill-videos', attemptId],
+    queryFn: () => learningApi.videos(token, attemptId),
+  });
+  if (query.isPending || query.isError)
+    return (
+      <section aria-label="Rekomendasi video">
+        <DataState
+          pending={query.isPending}
+          error={query.error}
+          retry={() => void query.refetch()}
+        />
+      </section>
+    );
+  if (!query.data.items.length) return null;
+  return (
+    <section aria-label="Rekomendasi video" className="space-y-3">
+      <h2 className="text-xl font-bold">Video untuk melanjutkan belajar</h2>
+      {query.data.items.map((video) => (
+        <Panel key={video.mappingId}>
+          <a
+            href={video.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center font-semibold text-[var(--numora-purple)] underline"
+          >
+            {video.title} <span className="sr-only">(membuka tab baru)</span>
+          </a>
+          <p className="text-sm text-slate-600">Sumber: {video.source}</p>
+          <ReportForm
+            label={`Laporkan video ${video.title}`}
+            submit={(category, details) =>
+              learningApi.reportVideo(token, {
+                attemptId,
+                mappingId: video.mappingId,
+                category,
+                details,
+              })
+            }
+          />
+        </Panel>
+      ))}
+    </section>
+  );
+}

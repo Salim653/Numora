@@ -18,6 +18,7 @@ export function DashboardScreen() {
 }
 
 function DashboardContent({ token }: { token: string }) {
+  const { state } = useAuth();
   const areas = [
     {
       number: '01',
@@ -58,7 +59,24 @@ function DashboardContent({ token }: { token: string }) {
           sudah diproses.
         </p>
       </section>
-      <StudentGate>{(token) => <JoinClassPanel token={token} />}</StudentGate>
+      {state.status === 'ready' && (
+        <Panel className="mb-6">
+          <h2 className="font-bold">
+            Status akun:{' '}
+            {state.profile.studentAffiliation === 'SCHOOL' ? 'Student Sekolah' : 'Student Mandiri'}
+          </h2>
+          <p className="mt-2 text-sm text-slate-700">
+            {state.profile.studentAffiliation === 'SCHOOL'
+              ? 'Fitur kelas mengikuti akses dan paket yang tersedia di server.'
+              : 'Drill tersedia untuk belajar mandiri. Pretest, TryOut, dan leaderboard kelas memerlukan kelas.'}
+          </p>
+          <p className="mt-2 text-sm text-slate-700">
+            Nilai menunjukkan hasil latihan. XP menunjukkan keaktifan belajar. Ringkasan XP belum
+            tersedia.
+          </p>
+        </Panel>
+      )}
+      <JoinClassPanel token={token} />
       <div className="grid gap-4 md:grid-cols-3">
         {areas.map((area) => (
           <Link
@@ -107,10 +125,17 @@ function JoinClassPanel({ token }: { token: string }) {
     }
   }
   return (
-    <form className="mb-6 rounded-2xl border border-slate-200 bg-white p-6" onSubmit={(event) => void submit(event)}>
+    <form
+      className="mb-6 rounded-2xl border border-slate-200 bg-white p-6"
+      onSubmit={(event) => void submit(event)}
+    >
       <h2 className="text-xl font-bold">Gabung Class</h2>
-      <p className="mt-2 text-sm text-slate-700">Masukkan kode dari Guru untuk terafiliasi dengan sekolah.</p>
-      <label className="mt-4 block text-sm font-semibold" htmlFor="student-join-code">Kode Class</label>
+      <p className="mt-2 text-sm text-slate-700">
+        Masukkan kode dari Guru untuk terafiliasi dengan sekolah.
+      </p>
+      <label className="mt-4 block text-sm font-semibold" htmlFor="student-join-code">
+        Kode Class
+      </label>
       <input
         id="student-join-code"
         className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-4 sm:max-w-sm"
@@ -119,9 +144,15 @@ function JoinClassPanel({ token }: { token: string }) {
         maxLength={32}
         required
       />
-      {error && <p className="mt-2 text-red-700" role="alert">{error}</p>}
+      {error && (
+        <p className="mt-2 text-red-700" role="alert">
+          {error}
+        </p>
+      )}
       <div className="mt-4">
-        <PrimaryButton type="submit" disabled={busy}>{busy ? 'Bergabung…' : 'Gabung Class'}</PrimaryButton>
+        <PrimaryButton type="submit" disabled={busy}>
+          {busy ? 'Bergabung…' : 'Gabung Class'}
+        </PrimaryButton>
       </div>
     </form>
   );

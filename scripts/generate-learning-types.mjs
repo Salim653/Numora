@@ -16,6 +16,10 @@ const names = [
   'SavedAnswerDto',
   'ReviewedQuestionDto',
   'DrillResultDto',
+  'StudentVideoDto',
+  'StudentVideosDto',
+  'StudentQuestionReportDto',
+  'StudentVideoReportDto',
 ];
 const groups = [
   { target: 'apps/web/src/features/core-learning/generated-types.ts', names },
