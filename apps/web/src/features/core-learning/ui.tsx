@@ -1,41 +1,42 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import katex from 'katex';
 import type { ReactNode } from 'react';
+import { Brand } from '@tka/ui';
 import { destination, useAuth } from '@/features/onboarding/auth';
 import { LearningApiError } from './api';
 import { LearningProvider } from './provider';
 
 export function LearningFrame({ title, children }: { title: string; children: ReactNode }) {
+  const pathname = usePathname();
+  const links = [
+    { href: '/student', label: 'Beranda' },
+    { href: '/student/learn', label: 'Latihan' },
+    { href: '/student/assessment', label: 'Progres' },
+    { href: '/student/tryout', label: 'TryOut' },
+  ];
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-4 py-6 sm:px-8 sm:py-10">
-      <header className="mb-7 flex flex-wrap items-center justify-between gap-3">
-        <Link className="text-lg font-extrabold text-[var(--numora-purple)]" href="/student">
-          NUMORA
-        </Link>
-        <nav
-          aria-label="Navigasi Student"
-          className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold"
-        >
-          <Link className="hover:underline" href="/student">
-            Beranda
-          </Link>
-          <Link className="hover:underline" href="/student/learn">
-            Practice & Drill
-          </Link>
-          <Link className="hover:underline" href="/student/tryout">
-            TryOut
-          </Link>
-          <Link className="hover:underline" href="/student/assessment">
-            Penilaian
-          </Link>
+    <main className="learning-shell">
+      <header className="learning-header">
+        <Link href="/student" aria-label="NUMORA, ke beranda"><Brand /></Link>
+        <span className="learning-xp" title="XP belum tersedia">✦ XP —</span>
+        <nav aria-label="Navigasi Siswa" className="learning-nav">
+          {links.map((link) => (
+            <Link key={link.href} href={link.href}
+              aria-current={pathname === link.href || (link.href !== '/student' && pathname.startsWith(`${link.href}/`)) ? 'page' : undefined}>
+              {link.label}
+            </Link>
+          ))}
         </nav>
       </header>
-      <h1 className="mb-6 text-2xl font-extrabold sm:text-3xl">{title}</h1>
-      {children}
+      <div className="learning-content">
+        <h1 className="learning-title">{title}</h1>
+        {children}
+      </div>
     </main>
   );
 }
@@ -43,7 +44,7 @@ export function LearningFrame({ title, children }: { title: string; children: Re
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <section
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ${className}`}
+      className={`learning-panel ${className}`}
     >
       {children}
     </section>
@@ -56,7 +57,7 @@ export function PrimaryButton({
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className="min-h-11 rounded-xl bg-[var(--numora-purple)] px-5 py-3 font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+      className="learning-primary-button"
       {...props}
     >
       {children}

@@ -21,11 +21,10 @@ function DashboardContent({ token }: { token: string }) {
   const areas = [
     {
       number: '01',
-      title: 'Practice & Drill',
+      title: 'Latihan',
       description: 'Pilih bab, subbab, dan level. Kerjakan latihan dan lanjutkan progresmu.',
       href: '/student/learn',
       action: 'Jelajahi latihan',
-      background: 'bg-[var(--numora-pearl)]',
     },
     {
       number: '02',
@@ -33,7 +32,6 @@ function DashboardContent({ token }: { token: string }) {
       description: 'Lihat paket mingguan dan kerjakan simulasi saat tersedia untuk kelasmu.',
       href: '/student/tryout',
       action: 'Lihat TryOut',
-      background: 'bg-white',
     },
     {
       number: '03',
@@ -41,30 +39,20 @@ function DashboardContent({ token }: { token: string }) {
       description: 'Buka hasil Drill tersimpan dan status penilaian TryOut setelah proses IRT.',
       href: '/student/assessment',
       action: 'Lihat hasil',
-      background: 'bg-white',
     },
   ];
   return (
-    <LearningFrame title="Beranda belajar">
-      <section className="mb-6 overflow-hidden rounded-3xl bg-[var(--numora-purple)] px-6 py-8 text-white sm:px-10 sm:py-10">
-        <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--numora-ivory)]">
-          Ruang belajar siswa
-        </p>
-        <h2 className="mt-3 max-w-xl text-3xl font-extrabold leading-tight sm:text-4xl">
-          Belajar bertahap, lihat kemajuanmu.
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-white/90 sm:text-base">
-          Mulai dari latihan per level, ikuti TryOut saat paket tersedia, lalu lihat hasil yang
-          sudah diproses.
-        </p>
-      </section>
-      <StudentGate>{(token) => <JoinClassPanel token={token} />}</StudentGate>
-      <div className="grid gap-4 md:grid-cols-3">
+    <LearningFrame title="Beranda">
+      <DashboardData token={token} />
+      <JoinClassPanel token={token} />
+      <section className="mt-7" aria-labelledby="student-next-heading">
+        <h2 id="student-next-heading" className="mb-4 text-xl font-extrabold">Langkah berikutnya</h2>
+        <div className="grid gap-4 md:grid-cols-3">
         {areas.map((area) => (
           <Link
             key={area.number}
             href={area.href}
-            className={`group flex min-h-64 flex-col rounded-2xl border border-slate-200 p-6 shadow-sm transition hover:-translate-y-1 hover:border-[var(--numora-purple)] hover:shadow-md ${area.background}`}
+            className="student-action-card group flex flex-col transition hover:border-[var(--numora-purple)]"
           >
             <span className="text-sm font-extrabold text-[var(--numora-purple)]">
               {area.number}
@@ -76,10 +64,7 @@ function DashboardContent({ token }: { token: string }) {
             </span>
           </Link>
         ))}
-      </div>
-      <section className="mt-8" aria-label="Ringkasan progres">
-        <h2 className="mb-4 text-xl font-bold">Progresmu</h2>
-        <DashboardData token={token} />
+        </div>
       </section>
     </LearningFrame>
   );
@@ -137,22 +122,32 @@ function DashboardData({ token }: { token: string }) {
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   return (
-    <Panel>
-      <p className="text-sm font-semibold text-[var(--numora-purple)]">Progres belajar</p>
-      <h2 className="mt-2 text-xl font-bold">Lanjutkan belajar matematika</h2>
-      <p className="mt-2 text-slate-700">
-        {query.data.completedLevels} dari {query.data.totalLevels} level selesai.
-      </p>
-      {query.data.latestScore !== null && (
-        <p className="mt-1 text-slate-700">Nilai Drill terakhir: {query.data.latestScore}</p>
-      )}
-      <Link
-        className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[var(--numora-purple)] px-5 font-semibold text-white"
-        href="/student/learn"
-      >
-        Lihat materi
-      </Link>
-    </Panel>
+    <div className="student-progress-grid">
+      <Panel className="student-progress-card">
+        <p className="student-kicker">Progress Latihan</p>
+        <h2>Belajar matematika, satu level demi satu level.</h2>
+        <p>{query.data.completedLevels} dari {query.data.totalLevels} level selesai</p>
+        <div className="student-progress-track" role="progressbar" aria-label="Level selesai"
+          aria-valuenow={query.data.completedLevels} aria-valuemin={0}
+          aria-valuemax={Math.max(1, query.data.totalLevels)}>
+          <span style={{ width: `${query.data.totalLevels ? Math.min(100, Math.round(query.data.completedLevels / query.data.totalLevels * 100)) : 0}%` }} />
+        </div>
+        <Link className="student-progress-link" href="/student/learn">Lanjutkan latihan <span aria-hidden="true">→</span></Link>
+      </Panel>
+      <div className="student-metrics" aria-label="Ringkasan belajar">
+        <Panel><img src="/figma/medal-source.png" width="34" height="34" alt="" /><strong>—</strong><span>XP belum tersedia</span></Panel>
+        <Panel><img src="/figma/fire.png" width="34" height="34" alt="" /><strong>—</strong><span>Streak belum tersedia</span></Panel>
+        <Panel><img src="/figma/star.png" width="40" height="40" alt="" /><strong>{query.data.completedLevels}</strong><span>Level selesai</span></Panel>
+      </div>
+      <Panel className="student-continue-card">
+        <p className="student-kicker">Lanjutkan Latihan</p>
+        <div><img src="/figma/target-source.png" width="44" height="44" alt="" /><span>
+          <strong>Materi berikutnya menunggumu</strong>
+          <small>{query.data.latestScore === null ? 'Mulai Drill pertamamu' : `Nilai Drill terakhir: ${query.data.latestScore}`}</small>
+        </span></div>
+        <Link href="/student/learn">Lanjutkan Latihan <span aria-hidden="true">→</span></Link>
+      </Panel>
+    </div>
   );
 }
 

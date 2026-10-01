@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { Brand } from '@tka/ui';
 import './demo.css';
 
 const navigation = [
@@ -18,11 +19,9 @@ export default function DemoLayout({ children }: { children: ReactNode }) {
     <div className="demo-app">
       <aside className="demo-sidebar" aria-label="Navigasi prototype">
         <Link className="demo-brand" href="/demo/student">
-          <span className="demo-brand-mark" aria-hidden="true">
-            N
-          </span>
+          <Brand />
           <span>
-            NUMORA<span className="demo-brand-subtitle">Ruang belajar matematika</span>
+            <span className="demo-brand-subtitle">Ruang belajar matematika</span>
           </span>
         </Link>
         <div className="demo-sidebar-label">JELAJAHI</div>
@@ -54,10 +53,7 @@ export default function DemoLayout({ children }: { children: ReactNode }) {
             href="/demo/student"
             aria-label="NUMORA, ke beranda demo"
           >
-            <span className="demo-brand-mark" aria-hidden="true">
-              N
-            </span>
-            <strong>NUMORA</strong>
+            <Brand />
           </Link>
           <span className="demo-topbar-caption">Prototype interaktif</span>
           <span className="demo-pill">DATA FIKTIF</span>

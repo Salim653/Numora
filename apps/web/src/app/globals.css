@@ -19,22 +19,11 @@
   --radius-xl: 24px;
   --background: var(--numora-ivory);
   --foreground: #111827;
-  --numora-primary: #722cce;
-  --numora-surface: #f3faf8;
-  --numora-purple: #722cce;
-  --numora-purple-soft: #b88ac9;
-  --numora-peach: #fa9a71;
-  --numora-gold: #f8d080;
-  --numora-ivory: #f6efcd;
-  --numora-pearl: #f3faf8;
+  --numora-primary: var(--numora-purple);
+  --numora-surface: var(--numora-pearl);
   --demo-text: #2f213d;
   --demo-muted: #675b72;
   --demo-border: #e4ddcf;
-}
-
-:focus-visible {
-  outline: 3px solid var(--numora-primary);
-  outline-offset: 3px;
 }
 
 * {
@@ -45,15 +34,11 @@ body {
   min-height: 100%;
 }
 
-:focus-visible {
-  outline: 3px solid var(--numora-purple);
-  outline-offset: 3px;
-}
 body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: 'Nunito Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
 }
 button,
 input,

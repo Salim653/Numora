@@ -176,7 +176,7 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
 
 export function ResultSummary({ result }: { result: DrillResult }) {
   return (
-    <Panel>
+    <Panel className="drill-result-summary">
       <p className="text-sm font-semibold text-[var(--numora-purple)]">{result.levelTitle}</p>
       <p className="mt-2 text-5xl font-extrabold">{result.score}</p>
       <p className="mt-1 text-slate-700">

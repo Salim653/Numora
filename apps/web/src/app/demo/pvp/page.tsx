@@ -12,6 +12,9 @@ import {
 } from '@/features/pvp/demo-match';
 
 const choices: Difficulty[] = ['easy', 'medium', 'hard'];
+const difficultyArt: Record<Difficulty, string> = {
+  easy: '/figma/pvp-easy.png', medium: '/figma/pvp-medium.png', hard: '/figma/pvp-hard.png',
+};
 const letters = ['A', 'B', 'C', 'D'];
 
 export default function PvpDemoPage() {
@@ -74,6 +77,7 @@ export default function PvpDemoPage() {
                     checked={match.difficulty === difficulty}
                     onChange={() => dispatch({ type: 'chooseDifficulty', difficulty })}
                   />
+                  <img src={difficultyArt[difficulty]} alt="" width="43" height="43" />
                   <span>
                     <strong>{difficultyLabels[difficulty]}</strong>
                     <small>{durations[difficulty]} detik per soal</small>

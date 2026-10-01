@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Button } from '@tka/ui';
+import { Brand, Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
 import {
@@ -28,6 +28,7 @@ import type {
   AdminVersionDto,
   QuestionContentDto,
 } from './generated-types';
+import { AdminNav } from './nav';
 
 type Workbench = Awaited<ReturnType<typeof loadAdminWorkbench>>;
 type View = 'curriculum' | 'questions' | 'videos' | 'packages' | 'reports' | 'irt' | 'audit';
@@ -156,8 +157,8 @@ export function AdminContentScreen() {
     <main className="monitoring-shell">
       <div className="monitoring-frame admin-content">
         <header className="monitoring-header">
-          <strong className="brand">NUMORA · Admin</strong>
-          <Link href="/admin/schools">Sekolah dan token Guru</Link>
+          <Link className="brand" href="/admin"><Brand /></Link>
+          <AdminNav />
         </header>
         <h1>Konten dan operasional</h1>
         <p>

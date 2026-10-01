@@ -52,12 +52,13 @@ export default function StudentDemoPage() {
 
       <section className="demo-hero" aria-label="Aksi belajar berikutnya">
         <div className="demo-hero-copy">
-          <span className="demo-hero-kicker">LANGKAH BERIKUTNYA</span>
-          <h2>Siap mengasah logika?</h2>
+          <span className="demo-hero-kicker">PROGRES LATIHAN · DEMO</span>
+          <h2>Belajar matematika, satu level demi satu level.</h2>
           <p>
-            Latihan singkat untuk menjaga ritme belajar. Halaman ini hanya menampilkan contoh
-            progres.
+            3 dari 5 level Aljabar selesai. Ini contoh progres fiktif.
           </p>
+          <div className="demo-progress" role="progressbar" aria-label="Progres Aljabar demo"
+            aria-valuenow={3} aria-valuemin={0} aria-valuemax={5}><span style={{ width: '60%' }} /></div>
           <div className="flex flex-wrap gap-3">
             <Link className="demo-button demo-button-inverse" href="/demo/pvp">
               Jelajahi PvP <span aria-hidden="true">↗</span>
@@ -71,11 +72,11 @@ export default function StudentDemoPage() {
             <span>π</span>
             <span>×</span>
           </div>
-          <div className="demo-art-center">N</div>
+          <img className="demo-art-center" src="/figma/numora-owl-source.png" alt="" />
         </div>
       </section>
 
-      <div className="demo-grid-three">
+      <div className="demo-grid-three demo-student-metrics">
         <article className="demo-card demo-card-pad">
           <span className="demo-metric-icon purple" aria-hidden="true">
             ◎

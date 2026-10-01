@@ -78,9 +78,9 @@ export function AssessmentSession({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="assessment-session space-y-5">
       {notice}
-      <Panel className="flex flex-wrap items-center justify-between gap-3 text-sm">
+      <Panel className="assessment-meta flex flex-wrap items-center justify-between gap-3 text-sm">
         <span className="font-semibold">
           {title} · Soal {index + 1} dari {questions.length}
         </span>
@@ -89,7 +89,7 @@ export function AssessmentSession({
           {save.isPending ? 'Menyimpan…' : saveError ? 'Belum tersimpan' : 'Tersimpan'}
         </span>
       </Panel>
-      <Panel>
+      <Panel className="assessment-question">
         <h2 className="text-lg font-bold">
           <MathText value={question.stem} />
         </h2>
@@ -101,7 +101,7 @@ export function AssessmentSession({
           {question.options.map((option) => (
             <label
               key={option.id}
-              className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3 ${answers[question.questionInstanceId] === option.id ? 'border-[var(--numora-purple)] bg-purple-50' : 'border-slate-300'}`}
+              className={`assessment-option flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3 ${answers[question.questionInstanceId] === option.id ? 'border-[var(--numora-purple)] bg-purple-50' : 'border-slate-300'}`}
             >
               <input
                 type="radio"
@@ -135,7 +135,7 @@ export function AssessmentSession({
           </button>
         </Status>
       )}
-      <nav aria-label="Navigasi soal" className="flex flex-wrap gap-2">
+      <nav aria-label="Navigasi soal" className="assessment-question-nav flex flex-wrap gap-2">
         {questions.map((item, position) => (
           <button
             key={item.questionInstanceId}

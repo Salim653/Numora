@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Brand } from '@tka/ui';
 import './preview.css';
 
 type QuestionStatus = 'Ready' | 'Draft' | 'Archived';
@@ -92,7 +93,7 @@ export default function AdminPage() {
   if (!isSignedIn) {
     return (
       <main className="admin-preview admin-login-shell">
-        <div className="login-brand"><span className="brand-mark">n.</span><span>NUMORA <i>/ ADMIN</i></span></div>
+        <div className="login-brand"><Brand /><i>/ ADMIN</i></div>
         <section className="login-panel" aria-labelledby="login-title">
           <div className="login-ornament" aria-hidden="true"><span>01</span><span>∑</span><span>π</span></div>
           <p className="eyebrow">RUANG PENGELOLA</p>
@@ -109,7 +110,7 @@ export default function AdminPage() {
   return (
     <main className="admin-preview admin-app">
       <aside className="admin-sidebar">
-        <Link className="sidebar-brand" href="/admin" aria-label="NUMORA Admin beranda"><span className="brand-mark">n.</span><span>NUMORA <i>ADMIN</i></span></Link>
+        <Link className="sidebar-brand" href="/admin" aria-label="NUMORA Admin beranda"><Brand /><i>ADMIN</i></Link>
         <div className="workspace-label">WORKSPACE</div>
         <nav className="admin-nav" aria-label="Navigasi admin">
           {navigation.map((item) => (
