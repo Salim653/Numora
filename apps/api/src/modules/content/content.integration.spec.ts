@@ -218,17 +218,21 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
       .where(eq(auditLogs.entityId, chapter));
     expect(logs).toHaveLength(1);
     expect(logs[0]!.actorUserId).toBe(admin);
-    const before = await getDatabase().db.select({ id: chapters.id }).from(chapters);
+    const rollbackCode = `ROLLBACK-${suffix}`;
     await expect(
       new ContentService().createChapter(randomUUID(), {
-        code: `ROLLBACK-${suffix}`,
+        code: rollbackCode,
         name: 'TEST rollback',
         displayOrder: body.displayOrder + 1,
       }),
     ).rejects.toMatchObject({ status: 400 });
-    expect(await getDatabase().db.select({ id: chapters.id }).from(chapters)).toHaveLength(
-      before.length,
-    );
+    // Other integration suites can create chapters concurrently in the same test database.
+    expect(
+      await getDatabase()
+        .db.select({ id: chapters.id })
+        .from(chapters)
+        .where(eq(chapters.code, rollbackCode)),
+    ).toEqual([]);
   });
   it('publishes only reviewed PG with READY ancestry and preserves old content during concurrent revisions', async () => {
     const invalid = {
