@@ -27,7 +27,7 @@ export class ApiProblem extends Error {
   }
 }
 
-async function apiRequest<T>(path: string, token: string, options?: RequestInit): Promise<T> {
+export async function apiRequest<T>(path: string, token: string, options?: RequestInit): Promise<T> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? fallbackBaseUrl;
   let response: Response;
   try {
