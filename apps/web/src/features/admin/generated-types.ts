@@ -66,3 +66,11 @@ export type UpdateTryoutDraftDto = { "name": string; "questionVersionIds": strin
 export type AdminTryoutDraftDto = { "id": string; "familyCode": string; "packageVersion": number; "name": string; "status": string; "questionVersionIds": string[]; };
 
 export type AdminTryoutDraftsDto = { "items": AdminTryoutDraftDto[]; };
+
+export type CreateDrillPackageDto = { "familyCode": string; "packageVersion": number; "name": string; "levelId": string; "variantIndex": number; "scoringPolicyVersionId": string; "questionVersionIds": string[]; };
+
+export type UpdateDrillPackageDto = { "name": string; "scoringPolicyVersionId": string; "questionVersionIds": string[]; };
+
+export type AdminDrillPackageDto = { "id": string; "familyCode": string; "packageVersion": number; "name": string; "levelId": string; "variantIndex": number; "scoringPolicyVersionId": string; "status": "DRAFT" | "PUBLISHED" | "CLOSED" | "ARCHIVED"; "releaseAt": string | null; "questionVersionIds": string[]; };
+
+export type AdminDrillPackagesDto = { "items": AdminDrillPackageDto[]; };

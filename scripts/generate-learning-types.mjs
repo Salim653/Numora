@@ -55,6 +55,10 @@ const groups = [
       'UpdateTryoutDraftDto',
       'AdminTryoutDraftDto',
       'AdminTryoutDraftsDto',
+      'CreateDrillPackageDto',
+      'UpdateDrillPackageDto',
+      'AdminDrillPackageDto',
+      'AdminDrillPackagesDto',
     ],
   },
 ];
