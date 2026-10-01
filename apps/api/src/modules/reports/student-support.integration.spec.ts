@@ -211,6 +211,18 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
       expect(
         await db.select().from(videoReports).where(eq(videoReports.id, videoBody.clientRequestId)),
       ).toHaveLength(1);
+      // More requests than the default pool capacity must not acquire a second connection inside a transaction.
+      const burst = await Promise.all(
+        Array.from({ length: 12 }, () =>
+          fixture.request(
+            'students/me/video-reports',
+            'POST',
+            { ...videoBody, clientRequestId: randomUUID() },
+            'student',
+          ),
+        ),
+      );
+      expect(burst.map((response) => response.status)).toEqual(Array(12).fill(201));
       await db
         .update(videoSubchapterMappings)
         .set({ status: 'ARCHIVED' })
