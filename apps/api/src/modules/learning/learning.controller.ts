@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { LearningService } from './learning.service';
 import {
   CatalogDto,
+  AssessmentHistoryDto,
+  CurrentTryoutDto,
   ChapterDetailDto,
   DrillAttemptDto,
   DrillResultDto,
@@ -47,6 +49,22 @@ export class LearningController {
   @ApiOkResponse({ type: StudentProgressDto })
   progress(@Headers('authorization') authorization?: string) {
     return this.learning.progress(authorization);
+  }
+
+  @Get('students/me/assessment-results')
+  @ApiQuery({ name: 'cursor', required: false })
+  @ApiOkResponse({ type: AssessmentHistoryDto })
+  history(
+    @Headers('authorization') authorization?: string,
+    @Query('cursor') cursor?: string,
+  ) {
+    return this.learning.history(authorization, cursor);
+  }
+
+  @Get('tryout/packages/current')
+  @ApiOkResponse({ type: CurrentTryoutDto })
+  currentTryout(@Headers('authorization') authorization?: string) {
+    return this.learning.currentTryout(authorization);
   }
 
   @Post('assessments/drill/attempts')

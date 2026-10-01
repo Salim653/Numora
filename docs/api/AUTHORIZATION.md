@@ -48,6 +48,8 @@ Evaluate as needed:
 
 Do not rely on hidden menus. All sensitive endpoints and WebSocket actions must enforce policy server-side.
 
+**ENGINEERING DECISION:** creating a Class and joining an existing Class both require an active School and an active Teacher-School membership for that Class's Teacher at the time of the database transaction. A standalone foreign key from `classes` to `users` cannot prove this cross-table condition. Identity reports a Teacher as verified only while a membership in an active School exists.
+
 Example Teacher check:
 
 ```text

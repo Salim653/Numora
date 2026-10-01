@@ -26,3 +26,9 @@ export type SavedAnswerDto = { "questionInstanceId": string; "selectedOptionId":
 export type ReviewedQuestionDto = { "questionInstanceId": string; "stem": string; "options": OptionDto[]; "selectedOptionId": string | null; "correctOptionId": string; "explanation": string; };
 
 export type DrillResultDto = { "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": ReviewedQuestionDto[]; };
+
+export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "tryout"; "title": string; "submittedAt": string; "resultState": "ready" | "waitingIrt"; "score": number | null; "isDemo": boolean; };
+
+export type AssessmentHistoryDto = { "records": AssessmentRecordDto[]; "nextCursor": string | null; };
+
+export type CurrentTryoutDto = { "state": "unavailable"; "eligible": boolean; };

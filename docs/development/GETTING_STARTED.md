@@ -75,6 +75,8 @@ The guarded seed now includes a deterministic `DEMO` school/users plus one Chapt
 
 For real Google-authenticated testing, prefer `pnpm db:seed:learning` with `NODE_ENV=development` and `ALLOW_DEMO_SEED=true`. This mode creates only the learning fixtures in one transaction; it does not create placeholder Admin/Teacher/Student profiles. Student and Teacher profiles come from Google login and API registration; an operator provisions the real Admin separately. Never treat the full `db:seed` identity fixtures as login-ready accounts.
 
+For the dedicated six-actor Google QA workflow, use the guarded [QA seed runbook](../testing/QA_SEED.md). `pnpm db:seed:qa` is separate from `db:seed`, requires a recent verified backup and an ignored UUID manifest, and refuses projects other than the temporary Development sandbox. Do not use existing school-trial accounts as QA actors.
+
 ## Authentication
 
 Google OAuth/Supabase Auth integration was not a blocker for the original walking skeleton. The current Sprint 2 Student flow includes Google login; environment credentials and callback configuration are therefore a delivery dependency for that flow. See `SPRINT_2_GOAL.md`.

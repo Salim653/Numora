@@ -2,295 +2,421 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { learningApi } from './api';
-import { joinClass } from '@/lib/api';
 import { useAuth } from '@/features/onboarding/auth';
-import { DataState, LearningFrame, Panel, PrimaryButton, Status, StudentGate } from './ui';
+import { LearningProvider } from './provider';
+import { StudentLayout } from '@/components/shell';
 
-function sortByOrder<T extends { order: number }>(items: T[]) {
-  return [...items].sort((a, b) => a.order - b.order);
-}
+/* ============================================
+ * SHARED GATE COMPONENT
+ * ============================================ */
 
-export function DashboardScreen() {
-  return <StudentGate>{(token) => <DashboardContent token={token} />}</StudentGate>;
-}
-
-function DashboardContent({ token }: { token: string }) {
-  const areas = [
-    {
-      number: '01',
-      title: 'Latihan',
-      description: 'Pilih bab, subbab, dan level. Kerjakan latihan dan lanjutkan progresmu.',
-      href: '/student/learn',
-      action: 'Jelajahi latihan',
-    },
-    {
-      number: '02',
-      title: 'TryOut',
-      description: 'Lihat paket mingguan dan kerjakan simulasi saat tersedia untuk kelasmu.',
-      href: '/student/tryout',
-      action: 'Lihat TryOut',
-    },
-    {
-      number: '03',
-      title: 'Penilaian',
-      description: 'Buka hasil Drill tersimpan dan status penilaian TryOut setelah proses IRT.',
-      href: '/student/assessment',
-      action: 'Lihat hasil',
-    },
-  ];
-  return (
-    <LearningFrame title="Beranda">
-      <DashboardData token={token} />
-      <JoinClassPanel token={token} />
-      <section className="mt-7" aria-labelledby="student-next-heading">
-        <h2 id="student-next-heading" className="mb-4 text-xl font-extrabold">Langkah berikutnya</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-        {areas.map((area) => (
-          <Link
-            key={area.number}
-            href={area.href}
-            className="student-action-card group flex flex-col transition hover:border-[var(--numora-purple)]"
-          >
-            <span className="text-sm font-extrabold text-[var(--numora-purple)]">
-              {area.number}
-            </span>
-            <h2 className="mt-5 text-xl font-extrabold">{area.title}</h2>
-            <p className="mt-3 flex-1 text-sm leading-6 text-slate-700">{area.description}</p>
-            <span className="mt-5 font-semibold text-[var(--numora-purple)] group-hover:underline">
-              {area.action} <span aria-hidden="true">→</span>
-            </span>
-          </Link>
-        ))}
-        </div>
-      </section>
-    </LearningFrame>
-  );
-}
-
-function JoinClassPanel({ token }: { token: string }) {
+function StudentGate({ children }: { children: (token: string) => React.ReactNode }) {
   const { state, refresh } = useAuth();
-  const [joinCode, setJoinCode] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  if (state.status !== 'ready' || state.profile.studentAffiliation === 'SCHOOL') return null;
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!joinCode.trim()) return;
-    setBusy(true);
-    setError('');
-    try {
-      await joinClass(token, joinCode.trim());
-      setJoinCode('');
-      await refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Belum dapat bergabung.');
-    } finally {
-      setBusy(false);
-    }
+
+  if (state.status === 'loading') {
+    return (
+      <StudentLayout title="Memuat...">
+        <div style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--color-text-muted)' }}>
+          Memuat...
+        </div>
+      </StudentLayout>
+    );
   }
-  return (
-    <form className="mb-6 rounded-2xl border border-slate-200 bg-white p-6" onSubmit={(event) => void submit(event)}>
-      <h2 className="text-xl font-bold">Gabung Class</h2>
-      <p className="mt-2 text-sm text-slate-700">Masukkan kode dari Guru untuk terafiliasi dengan sekolah.</p>
-      <label className="mt-4 block text-sm font-semibold" htmlFor="student-join-code">Kode Class</label>
-      <input
-        id="student-join-code"
-        className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-4 sm:max-w-sm"
-        value={joinCode}
-        onChange={(event) => setJoinCode(event.target.value)}
-        maxLength={32}
-        required
-      />
-      {error && <p className="mt-2 text-red-700" role="alert">{error}</p>}
-      <div className="mt-4">
-        <PrimaryButton type="submit" disabled={busy}>{busy ? 'Bergabung…' : 'Gabung Class'}</PrimaryButton>
-      </div>
-    </form>
-  );
+
+  if (state.status === 'error') {
+    return (
+      <StudentLayout title="Error">
+        <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
+          <p style={{ color: 'var(--color-danger)' }}>{state.message}</p>
+          <button onClick={() => void refresh()} style={{ marginTop: 'var(--space-4)' }}>
+            Coba Lagi
+          </button>
+        </div>
+      </StudentLayout>
+    );
+  }
+
+  if (state.status === 'ready' && state.profile.role === 'STUDENT') {
+    return <LearningProvider key={state.session.access_token}>{children(state.session.access_token)}</LearningProvider>;
+  }
+
+  return null;
 }
 
-function DashboardData({ token }: { token: string }) {
-  const query = useQuery({
-    queryKey: ['student-progress'],
-    queryFn: () => learningApi.progress(token),
-  });
-  if (query.isPending || query.isError)
-    return (
-      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
-    );
-  return (
-    <div className="student-progress-grid">
-      <Panel className="student-progress-card">
-        <p className="student-kicker">Progress Latihan</p>
-        <h2>Belajar matematika, satu level demi satu level.</h2>
-        <p>{query.data.completedLevels} dari {query.data.totalLevels} level selesai</p>
-        <div className="student-progress-track" role="progressbar" aria-label="Level selesai"
-          aria-valuenow={query.data.completedLevels} aria-valuemin={0}
-          aria-valuemax={Math.max(1, query.data.totalLevels)}>
-          <span style={{ width: `${query.data.totalLevels ? Math.min(100, Math.round(query.data.completedLevels / query.data.totalLevels * 100)) : 0}%` }} />
-        </div>
-        <Link className="student-progress-link" href="/student/learn">Lanjutkan latihan <span aria-hidden="true">→</span></Link>
-      </Panel>
-      <div className="student-metrics" aria-label="Ringkasan belajar">
-        <Panel><img src="/figma/medal-source.png" width="34" height="34" alt="" /><strong>—</strong><span>XP belum tersedia</span></Panel>
-        <Panel><img src="/figma/fire.png" width="34" height="34" alt="" /><strong>—</strong><span>Streak belum tersedia</span></Panel>
-        <Panel><img src="/figma/star.png" width="40" height="40" alt="" /><strong>{query.data.completedLevels}</strong><span>Level selesai</span></Panel>
-      </div>
-      <Panel className="student-continue-card">
-        <p className="student-kicker">Lanjutkan Latihan</p>
-        <div><img src="/figma/target-source.png" width="44" height="44" alt="" /><span>
-          <strong>Materi berikutnya menunggumu</strong>
-          <small>{query.data.latestScore === null ? 'Mulai Drill pertamamu' : `Nilai Drill terakhir: ${query.data.latestScore}`}</small>
-        </span></div>
-        <Link href="/student/learn">Lanjutkan Latihan <span aria-hidden="true">→</span></Link>
-      </Panel>
-    </div>
-  );
-}
+/* ============================================
+ * CATALOG SCREEN - Chapter listing page
+ * ============================================ */
 
 export function CatalogScreen() {
   return (
-    <LearningFrame title="Pilih Bab">
-      <StudentGate>{(token) => <CatalogData token={token} />}</StudentGate>
-    </LearningFrame>
+    <StudentGate>
+      {(token) => (
+        <StudentLayout title="Pilih Bab">
+          <CatalogContent token={token} />
+        </StudentLayout>
+      )}
+    </StudentGate>
   );
 }
 
-function CatalogData({ token }: { token: string }) {
-  const query = useQuery({ queryKey: ['chapters'], queryFn: () => learningApi.catalog(token) });
-  if (query.isPending || query.isError)
+function CatalogContent({ token }: { token: string }) {
+  const query = useQuery({
+    queryKey: ['chapters'],
+    queryFn: () => learningApi.catalog(token),
+  });
+
+  if (query.isPending) {
     return (
-      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            style={{
+              height: 80,
+              background: 'var(--color-surface-raised)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--color-border)',
+            }}
+          />
+        ))}
+      </div>
     );
-  if (!query.data.chapters.length)
-    return <Status title="Materi belum tersedia">Bab belum diterbitkan.</Status>;
+  }
+
+  if (query.isError) {
+    return (
+      <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
+        <p style={{ color: 'var(--color-danger)', marginBottom: 'var(--space-4)' }}>Gagal memuat data</p>
+        <button
+          onClick={() => void query.refetch()}
+          style={{
+            padding: 'var(--space-2) var(--space-4)',
+            background: 'var(--color-primary)',
+            color: 'white',
+            border: 'none',
+            borderRadius: 'var(--radius-md)',
+            cursor: 'pointer',
+            fontWeight: 600,
+          }}
+        >
+          Coba Lagi
+        </button>
+      </div>
+    );
+  }
+
+  if (!query.data.chapters.length) {
+    return (
+      <div style={{
+        textAlign: 'center',
+        padding: 'var(--space-12)',
+        background: 'var(--color-surface-raised)',
+        borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--color-border)',
+      }}>
+        <span style={{ fontSize: 48, display: 'block', marginBottom: 'var(--space-4)' }}>📚</span>
+        <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', margin: '0 0 var(--space-2) 0' }}>
+          Materi Belum Tersedia
+        </h3>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: 0 }}>
+          Bab belum diterbitkan. Cek kembali nanti.
+        </p>
+      </div>
+    );
+  }
+
+  const sortedChapters = [...query.data.chapters].sort((a, b) => a.order - b.order);
+
   return (
-    <div className="grid gap-3">
-      {sortByOrder(query.data.chapters).map((chapter) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      {sortedChapters.map((chapter) => (
         <Link
           key={chapter.id}
-          className="flex min-h-16 items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 font-semibold shadow-sm hover:border-[var(--numora-purple)]"
           href={`/student/learn/${chapter.id}`}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 'var(--space-4)',
+            background: 'var(--color-surface-raised)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-lg)',
+            textDecoration: 'none',
+            transition: 'all var(--transition-fast)',
+          }}
         >
-          <span>{chapter.title}</span>
-          <span aria-hidden="true">→</span>
+          <h3 style={{
+            fontSize: 'var(--text-base)',
+            fontWeight: 700,
+            color: 'var(--color-text)',
+            margin: 0,
+          }}>
+            {chapter.title}
+          </h3>
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--color-text-muted)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
         </Link>
       ))}
     </div>
   );
 }
 
+/* ============================================
+ * CHAPTER SCREEN - Subchapter listing
+ * ============================================ */
+
 export function ChapterScreen() {
   const { chapterId } = useParams<{ chapterId: string }>();
+
   return (
-    <LearningFrame title="Pilih Subbab">
-      <StudentGate>{(token) => <ChapterData token={token} chapterId={chapterId} />}</StudentGate>
-    </LearningFrame>
+    <StudentGate>
+      {(token) => (
+        <StudentLayout
+          title="Pilih Subbab"
+          backHref="/student/learn"
+        >
+          <ChapterContent token={token} chapterId={chapterId} />
+        </StudentLayout>
+      )}
+    </StudentGate>
   );
 }
 
-function ChapterData({ token, chapterId }: { token: string; chapterId: string }) {
+function ChapterContent({ token, chapterId }: { token: string; chapterId: string }) {
   const query = useQuery({
     queryKey: ['chapter', chapterId],
     queryFn: () => learningApi.chapter(token, chapterId),
   });
-  if (query.isPending || query.isError)
+
+  if (query.isPending) {
     return (
-      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        {[1, 2, 3].map((i) => (
+          <div key={i} style={{ height: 72, background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }} />
+        ))}
+      </div>
     );
+  }
+
+  if (query.isError) {
+    return (
+      <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
+        <p style={{ color: 'var(--color-danger)', marginBottom: 'var(--space-4)' }}>Gagal memuat data</p>
+        <button onClick={() => void query.refetch()}>Coba Lagi</button>
+      </div>
+    );
+  }
+
+  if (!query.data.subchapters.length) {
+    return (
+      <div style={{ textAlign: 'center', padding: 'var(--space-12)', background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-lg)' }}>
+        <span style={{ fontSize: 48, display: 'block', marginBottom: 'var(--space-4)' }}>📖</span>
+        <p>Belum ada subbab pada bab ini.</p>
+      </div>
+    );
+  }
+
+  const sortedSubchapters = [...query.data.subchapters].sort((a, b) => a.order - b.order);
+
   return (
-    <div>
-      <p className="mb-5 text-slate-700">{query.data.chapter.title}</p>
-      {!query.data.subchapters.length ? (
-        <Status title="Subbab belum tersedia">Belum ada subbab pada bab ini.</Status>
-      ) : (
-        <div className="grid gap-3">
-          {sortByOrder(query.data.subchapters).map((subchapter) => (
-            <Link
-              key={subchapter.id}
-              className="flex min-h-16 items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 font-semibold shadow-sm hover:border-[var(--numora-purple)]"
-              href={`/student/learn/${chapterId}/${subchapter.id}`}
-            >
-              <span>{subchapter.title}</span>
-              <span aria-hidden="true">→</span>
-            </Link>
-          ))}
-        </div>
-      )}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      {sortedSubchapters.map((subchapter) => (
+        <Link
+          key={subchapter.id}
+          href={`/student/learn/${chapterId}/${subchapter.id}`}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 'var(--space-4)',
+            background: 'var(--color-surface-raised)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-lg)',
+            textDecoration: 'none',
+          }}
+        >
+          <div>
+            <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>
+              {subchapter.title}
+            </h3>
+          </div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+      ))}
     </div>
   );
 }
 
+/* ============================================
+ * SUBCHAPTER SCREEN - Level selection
+ * ============================================ */
+
 export function SubchapterScreen() {
-  const { subchapterId } = useParams<{ subchapterId: string }>();
+  const { chapterId, subchapterId } = useParams<{ chapterId: string; subchapterId: string }>();
+  const router = useRouter();
+
   return (
-    <LearningFrame title="Pilih Level">
-      <StudentGate>
-        {(token) => <SubchapterData token={token} subchapterId={subchapterId} />}
-      </StudentGate>
-    </LearningFrame>
+    <StudentGate>
+      {(token) => (
+        <StudentLayout
+          title="Pilih Level"
+          backHref={`/student/learn/${chapterId}`}
+        >
+          <SubchapterContent token={token} subchapterId={subchapterId} router={router} />
+        </StudentLayout>
+      )}
+    </StudentGate>
   );
 }
 
-function SubchapterData({ token, subchapterId }: { token: string; subchapterId: string }) {
-  const router = useRouter();
+function SubchapterContent({ token, subchapterId, router }: { token: string; subchapterId: string; router: ReturnType<typeof useRouter> }) {
   const query = useQuery({
     queryKey: ['subchapter', subchapterId],
     queryFn: () => learningApi.subchapter(token, subchapterId),
   });
-  const start = useMutation({
+
+  const startMutation = useMutation({
     mutationFn: (levelId: string) => learningApi.start(token, levelId),
     onSuccess: (attempt) => router.push(`/student/drill/${attempt.id}`),
   });
-  if (query.isPending || query.isError)
+
+  if (query.isPending) {
     return (
-      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 'var(--space-3)' }}>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} style={{ height: 120, background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }} />
+        ))}
+      </div>
     );
+  }
+
+  if (query.isError) {
+    return (
+      <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
+        <p style={{ color: 'var(--color-danger)' }}>Gagal memuat data</p>
+        <button onClick={() => void query.refetch()}>Coba Lagi</button>
+      </div>
+    );
+  }
+
+  if (!query.data.levels.length) {
+    return (
+      <div style={{ textAlign: 'center', padding: 'var(--space-12)', background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-lg)' }}>
+        <span style={{ fontSize: 48, display: 'block', marginBottom: 'var(--space-4)' }}>🎯</span>
+        <p>Belum ada level pada subbab ini.</p>
+      </div>
+    );
+  }
+
+  const sortedLevels = [...query.data.levels].sort((a, b) => a.order - b.order);
+
   return (
     <div>
-      <p className="mb-5 text-slate-700">{query.data.subchapter.title}</p>
-      {!query.data.levels.length ? (
-        <Status title="Level belum tersedia">Belum ada level pada subbab ini.</Status>
-      ) : (
-        <div className="grid gap-3">
-          {sortByOrder(query.data.levels).map((level) => (
-            <Panel key={level.id} className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="font-bold">{level.title}</h2>
-                <p className="mt-1 text-sm text-slate-700">
-                  {level.status === 'locked'
-                    ? 'Terkunci'
-                    : level.status === 'inProgress'
-                      ? 'Sedang dikerjakan'
-                      : level.status === 'completed'
-                        ? 'Selesai'
-                        : 'Terbuka'}
-                </p>
-                {level.latestScore !== null && (
-                  <p className="text-sm text-slate-700">
-                    Terakhir {level.latestScore} · Terbaik {level.bestScore ?? level.latestScore}
-                  </p>
-                )}
+      {/* Subchapter Title */}
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-4)' }}>
+        {query.data.subchapter.title}
+      </p>
+
+      {/* Level Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 'var(--space-3)' }}>
+        {sortedLevels.map((level, index) => {
+          const isLocked = level.status === 'locked';
+          const isCompleted = level.status === 'completed';
+          const isInProgress = level.status === 'inProgress';
+
+          return (
+            <div
+              key={level.id}
+              style={{
+                padding: 'var(--space-4)',
+                background: isLocked ? 'var(--color-surface)' : 'var(--color-surface-raised)',
+                border: `1px solid ${isLocked ? 'var(--color-border-light)' : 'var(--color-border)'}`,
+                borderRadius: 'var(--radius-lg)',
+                textAlign: 'center',
+                opacity: isLocked ? 0.6 : 1,
+              }}
+            >
+              {/* Level Number */}
+              <div style={{
+                width: 48,
+                height: 48,
+                margin: '0 auto var(--space-3)',
+                display: 'grid',
+                placeItems: 'center',
+                background: isLocked ? 'var(--color-border-light)' : isCompleted ? 'var(--color-success-light)' : 'var(--color-primary-light)',
+                borderRadius: '50%',
+                fontSize: 20,
+                fontWeight: 800,
+                color: isLocked ? 'var(--color-text-muted)' : isCompleted ? 'var(--color-success)' : 'var(--color-primary)',
+              }}>
+                {isLocked ? '🔒' : index + 1}
               </div>
-              {level.status === 'locked' ? (
-                <span className="text-sm font-semibold text-slate-600">
-                  Selesaikan level sebelumnya
-                </span>
-              ) : (
-                <PrimaryButton disabled={start.isPending} onClick={() => start.mutate(level.id)}>
-                  {level.status === 'inProgress' ? 'Lanjutkan Drill' : 'Mulai Drill'}
-                </PrimaryButton>
+
+              {/* Level Title */}
+              <p style={{
+                fontSize: 'var(--text-sm)',
+                fontWeight: 700,
+                color: 'var(--color-text)',
+                margin: '0 0 var(--space-1)',
+              }}>
+                {level.title}
+              </p>
+
+              {/* Score if available */}
+              {level.latestScore !== null && (
+                <p style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--color-text-muted)',
+                  margin: 0,
+                }}>
+                  Nilai: {level.latestScore}
+                </p>
               )}
-            </Panel>
-          ))}
-        </div>
-      )}
-      {start.isError && (
-        <p role="alert" className="mt-4 text-sm text-red-700">
-          {start.error.message}
+
+              {/* Action Button */}
+              {!isLocked && (
+                <button
+                  onClick={() => startMutation.mutate(level.id)}
+                  disabled={startMutation.isPending}
+                  style={{
+                    marginTop: 'var(--space-3)',
+                    width: '100%',
+                    padding: 'var(--space-2)',
+                    background: isInProgress ? 'var(--color-info)' : 'var(--color-primary)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: 'var(--text-xs)',
+                    fontWeight: 700,
+                    cursor: startMutation.isPending ? 'not-allowed' : 'pointer',
+                    opacity: startMutation.isPending ? 0.7 : 1,
+                  }}
+                >
+                  {isInProgress ? 'Lanjutkan' : isCompleted ? 'Ulangi' : 'Mulai'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {startMutation.isError && (
+        <p style={{ color: 'var(--color-danger)', marginTop: 'var(--space-4)', textAlign: 'center' }}>
+          {startMutation.error.message}
         </p>
       )}
     </div>

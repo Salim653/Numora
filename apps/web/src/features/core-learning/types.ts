@@ -1,5 +1,8 @@
 import type {
   CatalogDto,
+  AssessmentHistoryDto,
+  AssessmentRecordDto,
+  CurrentTryoutDto,
   ChapterDto,
   ChapterDetailDto,
   DrillAttemptDto,
@@ -24,7 +27,7 @@ export type DrillResult = DrillResultDto;
 
 // PROPOSED until the Backend publishes its generated OpenAPI contract.
 export type TryoutPackage =
-  | { state: 'unavailable' }
+  | CurrentTryoutDto
   | {
       id: string;
       title: string;
@@ -60,13 +63,5 @@ export type TryoutResult = {
   }[];
 };
 
-export type AssessmentRecord = {
-  attemptId: string;
-  activity: 'drill' | 'tryout';
-  title: string;
-  submittedAt: string;
-  resultState: 'ready' | 'waitingIrt';
-  score: number | null;
-};
-
-export type AssessmentHistory = { records: AssessmentRecord[]; nextCursor: string | null };
+export type AssessmentRecord = AssessmentRecordDto;
+export type AssessmentHistory = AssessmentHistoryDto;

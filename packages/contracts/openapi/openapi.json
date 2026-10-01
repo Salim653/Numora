@@ -399,6 +399,84 @@
         ]
       }
     },
+    "/api/v1/students/me/assessment-results": {
+      "get": {
+        "operationId": "LearningController_history",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentHistoryDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/tryout/packages/current": {
+      "get": {
+        "operationId": "LearningController_currentTryout",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentTryoutDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
     "/api/v1/assessments/drill/attempts": {
       "post": {
         "operationId": "LearningController_start",
@@ -2503,6 +2581,89 @@
           "completedLevels",
           "totalLevels",
           "latestScore"
+        ]
+      },
+      "AssessmentRecordDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "activity": {
+            "type": "string",
+            "enum": [
+              "drill",
+              "tryout"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resultState": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "waitingIrt"
+            ]
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "isDemo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "attemptId",
+          "activity",
+          "title",
+          "submittedAt",
+          "resultState",
+          "score",
+          "isDemo"
+        ]
+      },
+      "AssessmentHistoryDto": {
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentRecordDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "records",
+          "nextCursor"
+        ]
+      },
+      "CurrentTryoutDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "unavailable"
+            ]
+          },
+          "eligible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "state",
+          "eligible"
         ]
       },
       "StartDrillDto": {

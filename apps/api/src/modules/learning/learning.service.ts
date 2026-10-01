@@ -21,7 +21,7 @@ import {
   questionVersions,
   subchapters,
 } from '@tka/database';
-import { and, asc, desc, eq, isNotNull, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, lt, lte, or, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 
 const problem = (code: string, detail: string) => ({ code, detail });
@@ -243,6 +243,71 @@ export class LearningService {
       totalLevels: published.length,
       latestScore: latest?.score ?? null,
     };
+  }
+
+  async history(authorization?: string, cursor?: string) {
+    const studentId = await this.student(authorization);
+    let after: { completedAt: Date; id: string } | undefined;
+    if (cursor !== undefined) {
+      try {
+        if (typeof cursor !== 'string' || cursor.length > 256) throw new Error();
+        const parsed: unknown = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+        if (!parsed || typeof parsed !== 'object' || !('at' in parsed) || !('id' in parsed) ||
+          typeof parsed.at !== 'string' || typeof parsed.id !== 'string' ||
+          !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(parsed.id)) throw new Error();
+        const completedAt = new Date(parsed.at);
+        if (Number.isNaN(completedAt.getTime())) throw new Error();
+        after = { completedAt, id: parsed.id };
+      } catch {
+        throw new BadRequestException(problem('CURSOR_INVALID', 'Cursor riwayat tidak valid.'));
+      }
+    }
+    const { db } = getDatabase();
+    const rows = await db
+      .select({
+        id: drillAttempts.id,
+        completedAt: drillAttempts.completedAt,
+        title: sql<string>`coalesce(${levels.description}, 'Level ' || ${levels.levelNumber})`,
+        score: drillAttempts.score,
+        isDemo: drillAttempts.isDemo,
+      })
+      .from(drillAttempts)
+      .innerJoin(levels, eq(levels.id, drillAttempts.levelId))
+      .where(and(
+        eq(drillAttempts.studentId, studentId),
+        eq(drillAttempts.status, 'COMPLETED'),
+        isNotNull(drillAttempts.completedAt),
+        after ? or(
+          lt(drillAttempts.completedAt, after.completedAt),
+          and(eq(drillAttempts.completedAt, after.completedAt), lt(drillAttempts.id, after.id)),
+        ) : undefined,
+      ))
+      .orderBy(desc(drillAttempts.completedAt), desc(drillAttempts.id))
+      .limit(21);
+    const page = rows.slice(0, 20);
+    const last = page.at(-1);
+    return {
+      records: page.map((row) => ({
+        attemptId: row.id,
+        activity: 'drill' as const,
+        title: row.title,
+        submittedAt: row.completedAt!.toISOString(),
+        resultState: 'ready' as const,
+        score: row.score,
+        isDemo: row.isDemo,
+      })),
+      nextCursor: rows.length > 20 && last
+        ? Buffer.from(JSON.stringify({ at: last.completedAt!.toISOString(), id: last.id })).toString('base64url')
+        : null,
+    };
+  }
+
+  async currentTryout(authorization?: string) {
+    const profile = await this.identity.me(authorization);
+    if (profile.role !== 'STUDENT')
+      throw new ForbiddenException(problem('STUDENT_REQUIRED', 'Akses Student diperlukan.'));
+    // OPEN-05: publication is blocked until the approved Tryout policy exists.
+    return { state: 'unavailable' as const, eligible: profile.studentAffiliation === 'SCHOOL' };
   }
 
   async start(authorization: string | undefined, levelId: string) {

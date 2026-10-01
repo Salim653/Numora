@@ -98,3 +98,23 @@ export class DrillResultDto {
   @ApiProperty({ enum: ['available', 'expired'] }) explanationState!: string;
   @ApiProperty({ type: [ReviewedQuestionDto] }) questions!: ReviewedQuestionDto[];
 }
+
+export class AssessmentRecordDto {
+  @ApiProperty({ format: 'uuid' }) attemptId!: string;
+  @ApiProperty({ enum: ['drill', 'tryout'] }) activity!: 'drill' | 'tryout';
+  @ApiProperty() title!: string;
+  @ApiProperty({ format: 'date-time' }) submittedAt!: string;
+  @ApiProperty({ enum: ['ready', 'waitingIrt'] }) resultState!: 'ready' | 'waitingIrt';
+  @ApiProperty({ type: Number, nullable: true }) score!: number | null;
+  @ApiProperty() isDemo!: boolean;
+}
+
+export class AssessmentHistoryDto {
+  @ApiProperty({ type: [AssessmentRecordDto] }) records!: AssessmentRecordDto[];
+  @ApiProperty({ type: String, nullable: true }) nextCursor!: string | null;
+}
+
+export class CurrentTryoutDto {
+  @ApiProperty({ enum: ['unavailable'] }) state!: 'unavailable';
+  @ApiProperty() eligible!: boolean;
+}

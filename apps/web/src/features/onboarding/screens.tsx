@@ -183,9 +183,14 @@ export function LoginScreen() {
               Jelajahi demo Siswa, PvP, dan peringkat
             </Link>
             {process.env.NODE_ENV === 'development' && (
-              <Link className="demo-entry-admin" href="/admin/preview">
-                Lihat pratinjau Admin (development)
-              </Link>
+              <>
+                <Link className="demo-entry-admin" href="/admin/preview">
+                  Lihat pratinjau Admin (development)
+                </Link>
+                {process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://pkamenfnwmoeisccnrnk.supabase.co' && (
+                  <Link className="demo-entry-admin" href="/qa/login">Masuk dengan akun QA Development</Link>
+                )}
+              </>
             )}
           </div>
           <p className="helper">Role dipilih sekali setelah login pertama.</p>
