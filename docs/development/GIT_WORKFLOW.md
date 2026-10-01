@@ -22,16 +22,28 @@ Avoid permanent `frontend`, `backend`, `develop`, or sprint branches.
 
 ## Main branch rules
 
-Recommended GitHub protection:
+**ENGINEERING DECISION — requested by the coordinator on 1 October 2026:** Only `@splakplutoy` and `@ayiinee` are repository-wide code owners. Other contributors need approval from either account before merging into `main`. These two maintainers may merge through a PR without another person's approval once the review bypass is configured. CODEOWNERS alone does not grant that bypass.
+
+Required target configuration:
 
 - no direct push;
 - Pull Request required;
-- minimum one reviewer;
+- minimum one approving review from either code owner for other contributors;
 - required status checks;
-- CODEOWNERS review for sensitive paths where configured;
+- CODEOWNERS review for all paths;
+- review bypass only for `@splakplutoy` and `@ayiinee`, with the bypass mode **For pull requests only**;
 - branch must be up to date before merge when practical.
 
-**PROPOSED — pending repository admin setup:** In GitHub repository Settings → Branches, protect `main` by requiring a pull request, one approving review, code-owner review, and the `quality` status check. Disable force pushes and deletion. The active `.github/CODEOWNERS` lists only accounts with write access; the full job-list ownership remains in [OWNERSHIP](OWNERSHIP.md). When an admin grants write access to the remaining Backend/QA owners, restore their feature-specific CODEOWNERS entries. Verify the rule on a test PR before relying on it.
+**Live audit — 1 October 2026:** `main` is protected by three active repository rulesets. `main` (`24155025`) requires one approval and code-owner review; `main-1` (`24294660`) prevents deletion and force pushes; `main-2` (`24294661`) also requires one approval but does not require code-owner review. Both status-check rules currently have an empty required-check list. `@splakplutoy` has write access and can bypass `main`, but cannot bypass `main-2`; `@ayiinee` is the repository admin. The API does not expose the full bypass lists to this write-only account, so their membership has not been verified.
+
+**Pending repository admin setup — approved policy, not yet verified live:** Aini must configure [Settings → Rules → Rulesets](https://github.com/ayiinee/Numora/settings/rules):
+
+1. In both review rulesets, [main](https://github.com/ayiinee/Numora/rules/24155025) and [main-2](https://github.com/ayiinee/Numora/rules/24294661), require a pull request, one approving review, and **Require review from Code Owners**. All active rulesets apply together; changing only one leaves the other approval requirement active.
+2. In each review ruleset, set the bypass list to only the individual users `splakplutoy` and `ayiinee`, with **For pull requests only**. Remove any other bypass actors from those review rulesets. Keep deletion/force-push protection in `main-1` without adding a maintainer bypass.
+3. Keep the `quality` required status check in a separate ruleset without a maintainer bypass, so skipping approval does not skip CI. Preserve any other existing required checks when configuring it.
+4. Merge the CODEOWNERS update into `main`, then verify that a contributor PR is blocked until either maintainer approves, each maintainer can merge a passing PR without another approval, and failing CI still blocks both maintainers. Do not treat this policy as fully active before those checks pass.
+
+The full feature coordination list remains in [OWNERSHIP](OWNERSHIP.md). GitHub supports individual-user ruleset bypass; an Organization transfer is not required for this configuration. See [GitHub's user bypass announcement](https://github.blog/changelog/2026-05-07-repository-rulesets-user-bypass-and-branch-renaming/) and [code-owner review documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
 
 ## Required CI on PR
 
