@@ -16,10 +16,12 @@ import {
   getDatabase,
   levelProgress,
   levels,
+  questions,
   questionVariants,
+  questionVersions,
   subchapters,
 } from '@tka/database';
-import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, lte, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 
 const problem = (code: string, detail: string) => ({ code, detail });
@@ -62,6 +64,39 @@ export function presentActiveQuestion(question: {
   };
 }
 
+function decodeSingleChoiceVersion(row: {
+  questionType: string;
+  stem: unknown;
+  optionsOrStatements: unknown;
+  answerKey: unknown;
+  explanation: unknown;
+}) {
+  const textOf = (value: unknown) =>
+    value && typeof value === 'object' && 'text' in value && typeof value.text === 'string'
+      ? value.text
+      : null;
+  const stem = textOf(row.stem);
+  const explanation = textOf(row.explanation);
+  const answer = row.answerKey && typeof row.answerKey === 'object' && 'optionId' in row.answerKey
+    ? row.answerKey.optionId
+    : null;
+  const options = Array.isArray(row.optionsOrStatements)
+    ? row.optionsOrStatements.map((item: unknown) => {
+        if (!item || typeof item !== 'object' || !('id' in item) || !('content' in item)) return null;
+        const content = textOf(item.content);
+        return typeof item.id === 'string' && content ? { id: item.id, text: content } : null;
+      })
+    : [];
+  const ids = options.map((item) => item?.id).sort();
+  if (row.questionType !== 'SINGLE_CHOICE' || !stem || !explanation ||
+      typeof answer !== 'string' || !['A', 'B', 'C', 'D'].includes(answer) ||
+      options.length !== 4 || options.some((item) => item === null) ||
+      ids.join(',') !== 'A,B,C,D') {
+    throw new ServiceUnavailableException(problem('DRILL_CONTENT_INVALID', 'Konten Drill tidak valid.'));
+  }
+  return { stem, options: options as { id: string; text: string }[], correctOptionId: answer, explanation };
+}
+
 @Injectable()
 export class LearningService {
   constructor(private readonly identity: IdentityService) {}
@@ -79,10 +114,10 @@ export class LearningService {
     const rows = await db
       .select()
       .from(chapters)
-      .where(isNotNull(chapters.publishedAt))
-      .orderBy(asc(chapters.sortOrder));
+      .where(eq(chapters.status, 'READY'))
+      .orderBy(asc(chapters.displayOrder));
     return {
-      chapters: rows.map((row) => ({ id: row.id, title: row.title, order: row.sortOrder })),
+      chapters: rows.map((row) => ({ id: row.id, title: row.name, order: row.displayOrder })),
     };
   }
 
@@ -92,21 +127,21 @@ export class LearningService {
     const [chapter] = await db
       .select()
       .from(chapters)
-      .where(and(eq(chapters.id, chapterId), isNotNull(chapters.publishedAt)))
+      .where(and(eq(chapters.id, chapterId), eq(chapters.status, 'READY')))
       .limit(1);
     if (!chapter) throw new NotFoundException(problem('CHAPTER_NOT_FOUND', 'Bab tidak ditemukan.'));
     const children = await db
       .select()
       .from(subchapters)
-      .where(and(eq(subchapters.chapterId, chapterId), isNotNull(subchapters.publishedAt)))
-      .orderBy(asc(subchapters.sortOrder));
+      .where(and(eq(subchapters.chapterId, chapterId), eq(subchapters.status, 'READY')))
+      .orderBy(asc(subchapters.displayOrder));
     return {
-      chapter: { id: chapter.id, title: chapter.title, order: chapter.sortOrder },
+      chapter: { id: chapter.id, title: chapter.name, order: chapter.displayOrder },
       subchapters: children.map((row) => ({
         id: row.id,
         chapterId: row.chapterId,
-        title: row.title,
-        order: row.sortOrder,
+        title: row.name,
+        order: row.displayOrder,
       })),
     };
   }
@@ -118,16 +153,16 @@ export class LearningService {
       .select({
         id: subchapters.id,
         chapterId: subchapters.chapterId,
-        title: subchapters.title,
-        sortOrder: subchapters.sortOrder,
+        title: subchapters.name,
+        sortOrder: subchapters.displayOrder,
       })
       .from(subchapters)
       .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
       .where(
         and(
           eq(subchapters.id, subchapterId),
-          isNotNull(subchapters.publishedAt),
-          isNotNull(chapters.publishedAt),
+          eq(subchapters.status, 'READY'),
+          eq(chapters.status, 'READY'),
         ),
       )
       .limit(1);
@@ -136,8 +171,8 @@ export class LearningService {
     const rows = await db
       .select()
       .from(levels)
-      .where(and(eq(levels.subchapterId, subchapterId), isNotNull(levels.publishedAt)))
-      .orderBy(asc(levels.sortOrder));
+      .where(and(eq(levels.subchapterId, subchapterId), eq(levels.status, 'READY')))
+      .orderBy(asc(levels.levelNumber));
     const progress = await db
       .select()
       .from(levelProgress)
@@ -157,17 +192,18 @@ export class LearningService {
       },
       levels: rows.map((row) => {
         const state = byLevel.get(row.id);
-        const status = state?.completedAt
-          ? 'completed'
-          : active.has(row.id)
-            ? 'inProgress'
-            : state || row.sortOrder === 1
-              ? 'open'
-              : 'locked';
+        const unlocked = state?.unlockedAt || row.levelNumber === 1;
+        const status = !unlocked
+          ? 'locked'
+          : state?.completedAt
+            ? 'completed'
+            : active.has(row.id)
+              ? 'inProgress'
+              : 'open';
         return {
           id: row.id,
-          title: row.title,
-          order: row.sortOrder,
+          title: row.description ?? `Level ${row.levelNumber}`,
+          order: row.levelNumber,
           status,
           latestScore: state?.latestScore ?? null,
           bestScore: state?.bestScore ?? null,
@@ -186,9 +222,9 @@ export class LearningService {
       .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
       .where(
         and(
-          isNotNull(levels.publishedAt),
-          isNotNull(subchapters.publishedAt),
-          isNotNull(chapters.publishedAt),
+          eq(levels.status, 'READY'),
+          eq(subchapters.status, 'READY'),
+          eq(chapters.status, 'READY'),
         ),
       );
     const done = await db
@@ -217,20 +253,28 @@ export class LearningService {
         sql`select pg_advisory_xact_lock(hashtext(${studentId}), hashtext(${levelId}))`,
       );
       const [level] = await tx
-        .select({ id: levels.id, sortOrder: levels.sortOrder })
+        .select({ id: levels.id, levelNumber: levels.levelNumber })
         .from(levels)
         .innerJoin(subchapters, eq(subchapters.id, levels.subchapterId))
         .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
         .where(
           and(
             eq(levels.id, levelId),
-            isNotNull(levels.publishedAt),
-            isNotNull(subchapters.publishedAt),
-            isNotNull(chapters.publishedAt),
+            eq(levels.status, 'READY'),
+            eq(subchapters.status, 'READY'),
+            eq(chapters.status, 'READY'),
           ),
         )
         .limit(1);
       if (!level) throw new NotFoundException(problem('LEVEL_NOT_FOUND', 'Level tidak ditemukan.'));
+      if (level.levelNumber !== 1) {
+        const [access] = await tx
+          .select({ id: levelProgress.id })
+          .from(levelProgress)
+          .where(and(eq(levelProgress.studentId, studentId), eq(levelProgress.levelId, levelId), isNotNull(levelProgress.unlockedAt)))
+          .limit(1);
+        if (!access) throw new ForbiddenException(problem('LEVEL_LOCKED', 'Level masih terkunci.'));
+      }
       const [existing] = await tx
         .select({ id: drillAttempts.id })
         .from(drillAttempts)
@@ -243,18 +287,10 @@ export class LearningService {
         )
         .limit(1);
       if (existing) return existing.id;
-      if (level.sortOrder !== 1) {
-        const [access] = await tx
-          .select({ id: levelProgress.id })
-          .from(levelProgress)
-          .where(and(eq(levelProgress.studentId, studentId), eq(levelProgress.levelId, levelId)))
-          .limit(1);
-        if (!access) throw new ForbiddenException(problem('LEVEL_LOCKED', 'Level masih terkunci.'));
-      }
       const packages = await tx
         .select()
         .from(drillPackages)
-        .where(and(eq(drillPackages.levelId, levelId), isNotNull(drillPackages.publishedAt)))
+        .where(and(eq(drillPackages.levelId, levelId), lte(drillPackages.publishedAt, new Date())))
         .orderBy(asc(drillPackages.variantSet));
       if (!packages.length)
         throw new ServiceUnavailableException(
@@ -282,22 +318,36 @@ export class LearningService {
         .select({
           sortOrder: drillPackageQuestions.sortOrder,
           questionVariantId: questionVariants.id,
-          stem: questionVariants.stem,
-          options: questionVariants.options,
-          correctOptionId: questionVariants.correctOptionId,
-          explanation: questionVariants.explanation,
+          questionVersionId: questionVersions.id,
+          questionType: questionVersions.questionType,
+          contentStatus: questionVersions.contentStatus,
+          questionStatus: questions.status,
+          stem: questionVersions.stem,
+          optionsOrStatements: questionVersions.optionsOrStatements,
+          answerKey: questionVersions.answerKey,
+          explanation: questionVersions.explanation,
         })
         .from(drillPackageQuestions)
         .innerJoin(
           questionVariants,
           eq(questionVariants.id, drillPackageQuestions.questionVariantId),
         )
+        .innerJoin(questionVersions, eq(questionVersions.id, drillPackageQuestions.questionVersionId))
+        .innerJoin(questions, eq(questions.id, questionVariants.questionId))
         .where(eq(drillPackageQuestions.packageId, selected.id))
         .orderBy(asc(drillPackageQuestions.sortOrder));
       if (items.length !== 10)
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill demo harus berisi 10 soal.'),
         );
+      if (items.some((item) =>
+        item.contentStatus === 'ARCHIVED' || item.questionStatus === 'ARCHIVED' ||
+        (!selected.isDemo && (item.contentStatus !== 'READY' || item.questionStatus !== 'READY')),
+      )) {
+        throw new ServiceUnavailableException(
+          problem('DRILL_CONTENT_NOT_READY', 'Konten Drill belum disetujui atau telah diarsipkan.'),
+        );
+      }
       const [attempt] = await tx
         .insert(drillAttempts)
         .values({ studentId, levelId, packageId: selected.id, isDemo: selected.isDemo })
@@ -305,7 +355,13 @@ export class LearningService {
       if (!attempt) throw new Error('Attempt creation failed.');
       await tx
         .insert(drillAttemptQuestions)
-        .values(items.map((item) => ({ attemptId: attempt.id, ...item })));
+        .values(items.map((item) => ({
+          attemptId: attempt.id,
+          sortOrder: item.sortOrder,
+          questionVariantId: item.questionVariantId,
+          questionVersionId: item.questionVersionId,
+          ...decodeSingleChoiceVersion(item),
+        })));
       return attempt.id;
     });
     return this.attemptForStudent(studentId, attemptId);
@@ -318,7 +374,7 @@ export class LearningService {
         id: drillAttempts.id,
         studentId: drillAttempts.studentId,
         levelId: drillAttempts.levelId,
-        levelTitle: levels.title,
+        levelTitle: sql<string>`coalesce(${levels.description}, 'Level ' || ${levels.levelNumber})`,
         status: drillAttempts.status,
         startedAt: drillAttempts.startedAt,
         isDemo: drillAttempts.isDemo,
@@ -430,8 +486,8 @@ export class LearningService {
             .where(
               and(
                 eq(levels.subchapterId, level.subchapterId),
-                eq(levels.sortOrder, level.sortOrder + 1),
-                isNotNull(levels.publishedAt),
+                eq(levels.levelNumber, level.levelNumber + 1),
+                eq(levels.status, 'READY'),
               ),
             )
             .limit(1)
@@ -456,25 +512,33 @@ export class LearningService {
         .values({
           studentId,
           levelId: attempt.levelId,
+          unlockedAt: now,
           latestScore: scored.score,
           bestScore: scored.score,
-          latestAttemptId: attemptId,
+          bestStars: scored.stars,
           completedAt: scored.mastered ? now : null,
         })
         .onConflictDoUpdate({
           target: [levelProgress.studentId, levelProgress.levelId],
           set: {
+            unlockedAt: sql`coalesce(${levelProgress.unlockedAt}, ${now.toISOString()}::timestamptz)`,
             latestScore: scored.score,
-            latestAttemptId: attemptId,
             bestScore: sql`greatest(coalesce(${levelProgress.bestScore}, 0), ${scored.score})`,
+            bestStars: sql`greatest(${levelProgress.bestStars}, ${scored.stars}::integer)`,
             completedAt: scored.mastered ? now : sql`${levelProgress.completedAt}`,
           },
         });
       if (next)
         await tx
           .insert(levelProgress)
-          .values({ studentId, levelId: next.id })
-          .onConflictDoNothing();
+          .values({ studentId, levelId: next.id, unlockedAt: now, unlockSource: 'DRILL' })
+          .onConflictDoUpdate({
+            target: [levelProgress.studentId, levelProgress.levelId],
+            set: {
+              unlockedAt: sql`coalesce(${levelProgress.unlockedAt}, ${now.toISOString()}::timestamptz)`,
+              unlockSource: sql`case when ${levelProgress.unlockedAt} is null then 'DRILL' else ${levelProgress.unlockSource} end`,
+            },
+          });
       await tx
         .insert(analyticsOutbox)
         .values({
@@ -495,7 +559,7 @@ export class LearningService {
         id: drillAttempts.id,
         studentId: drillAttempts.studentId,
         levelId: drillAttempts.levelId,
-        levelTitle: levels.title,
+        levelTitle: sql<string>`coalesce(${levels.description}, 'Level ' || ${levels.levelNumber})`,
         status: drillAttempts.status,
         completedAt: drillAttempts.completedAt,
         score: drillAttempts.score,

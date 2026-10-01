@@ -14,6 +14,12 @@ async function seed() {
     throw new Error('Demo seed requires NODE_ENV=development and ALLOW_DEMO_SEED=true.');
   }
   const { db } = getDatabase();
+  if (process.argv.includes('--learning-only')) {
+    await db.transaction(async (tx) => seedDemoLearning(tx));
+    console.log('Seeded DEMO learning content only; no identity fixtures created.');
+    await closeDatabaseConnection();
+    return;
+  }
 
   await db
     .insert(schools)

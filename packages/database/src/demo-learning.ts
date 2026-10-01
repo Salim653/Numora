@@ -4,6 +4,7 @@ import {
   chapters,
   subchapters,
   levels,
+  competencies,
   questions,
   questionVersions,
   questionVariants,
@@ -16,22 +17,23 @@ const chapterId = uuid(100);
 const subchapterId = uuid(101);
 const levelOneId = uuid(102);
 const levelTwoId = uuid(103);
+const competencyId = uuid(104);
 
 // DEMO fixtures only. Curriculum must review every stem, key, and explanation before a school trial.
-export async function seedDemoLearning() {
-  const { db } = getDatabase();
+export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['db'], 'insert' | 'select'> = getDatabase().db) {
   await db
     .insert(chapters)
-    .values({ id: chapterId, title: 'Bab Demo: Bilangan', sortOrder: 1, publishedAt: new Date() })
+    .values({ id: chapterId, code: 'DEMO-BILANGAN', name: 'Bab Demo: Bilangan', displayOrder: 1, status: 'READY' })
     .onConflictDoNothing();
   await db
     .insert(subchapters)
     .values({
       id: subchapterId,
       chapterId,
-      title: 'Subbab Demo: Operasi Bilangan',
-      sortOrder: 1,
-      publishedAt: new Date(),
+      code: 'DEMO-OPERASI',
+      name: 'Subbab Demo: Operasi Bilangan',
+      displayOrder: 1,
+      status: 'READY',
     })
     .onConflictDoNothing();
   await db
@@ -40,56 +42,61 @@ export async function seedDemoLearning() {
       {
         id: levelOneId,
         subchapterId,
-        title: 'Level 1 Demo',
-        sortOrder: 1,
-        publishedAt: new Date(),
+        description: 'Level 1 Demo',
+        levelNumber: 1,
+        status: 'READY',
       },
       {
         id: levelTwoId,
         subchapterId,
-        title: 'Level 2 Demo',
-        sortOrder: 2,
-        publishedAt: new Date(),
+        description: 'Level 2 Demo',
+        levelNumber: 2,
+        status: 'READY',
       },
     ])
     .onConflictDoNothing();
 
+  await db.insert(competencies).values({ id: competencyId, subchapterId, code: 'DEMO-OPERASI', description: 'Operasi bilangan dasar', status: 'READY' }).onConflictDoNothing();
+
   for (let i = 1; i <= 10; i++) {
     const questionId = uuid(200 + i);
-    const versionId = uuid(300 + i);
     await db
       .insert(questions)
       .values({
         id: questionId,
-        levelId: levelOneId,
-        code: `DEMO-L1-${String(i).padStart(2, '0')}`,
+        primaryCompetencyId: competencyId,
+        sourceRef: `DEMO-L1-${String(i).padStart(2, '0')}`,
+        status: 'READY',
       })
-      .onConflictDoNothing();
-    await db
-      .insert(questionVersions)
-      .values({ id: versionId, questionId, version: 1 })
       .onConflictDoNothing();
     for (let set = 1; set <= 2; set++) {
       const left = i + set;
       const right = set + 2;
       const answer = left + right;
       const optionValues = [answer - 2, answer, answer + 1, answer + 2];
+      const variantId = uuid(400 + (i - 1) * 2 + set);
       await db
         .insert(questionVariants)
         .values({
-          id: uuid(400 + (i - 1) * 2 + set),
-          questionVersionId: versionId,
-          variantNo: set,
-          stem: `Berapakah hasil $${left}+${right}$?`,
-          options: optionValues.map((value, index) => ({
-            id: 'ABCD'[index]!,
-            text: String(value),
-          })),
-          correctOptionId: 'B',
-          explanation: `$${left}+${right}=${answer}$, sehingga jawaban yang benar adalah B.`,
-          isDemo: true,
+          id: variantId,
+          questionId,
+          originalVariantId: set === 1 ? null : uuid(400 + (i - 1) * 2 + 1),
+          variantCode: `DEMO-L1-${i}-V${set}`,
+          kind: set === 1 ? 'ORIGINAL' : 'VARIANT',
+          origin: 'DEMO',
         })
         .onConflictDoNothing();
+      await db.insert(questionVersions).values({
+        id: uuid(300 + (i - 1) * 2 + set),
+        variantId,
+        versionNumber: 1,
+        questionType: 'SINGLE_CHOICE',
+        stem: { text: `Berapakah hasil $${left}+${right}$?` },
+        optionsOrStatements: optionValues.map((value, index) => ({ id: 'ABCD'[index]!, content: { text: String(value) } })),
+        answerKey: { optionId: 'B' },
+        explanation: { text: `$${left}+${right}=${answer}$, sehingga jawaban yang benar adalah B.` },
+        difficulty: 'EASY',
+      }).onConflictDoNothing();
     }
   }
 
@@ -112,6 +119,7 @@ export async function seedDemoLearning() {
           id: uuid(600 + set * 20 + i),
           packageId,
           questionVariantId: uuid(400 + (i - 1) * 2 + set),
+          questionVersionId: uuid(300 + (i - 1) * 2 + set),
           sortOrder: i,
         })
         .onConflictDoNothing();
