@@ -28,6 +28,8 @@ import type {
   StudentVideosDto,
 } from './student-support.dto';
 
+type SupportReader = Pick<ReturnType<typeof getDatabase>['db'], 'select'>;
+
 @Injectable()
 export class StudentSupportService {
   constructor(@Inject(IdentityService) private readonly identity: IdentityService) {}
@@ -37,8 +39,7 @@ export class StudentSupportService {
       throw new ForbiddenException('Akses Student diperlukan.');
     return profile.id;
   }
-  private async drill(studentId: string, attemptId: string) {
-    const { db } = getDatabase();
+  private async drill(studentId: string, attemptId: string, db: SupportReader = getDatabase().db) {
     const [canonical] = await db
       .select()
       .from(assessmentAttempts)
@@ -74,10 +75,13 @@ export class StudentSupportService {
       });
     return { score: legacy.score, levelId: legacy.levelId };
   }
-  private async recommendations(studentId: string, attemptId: string): Promise<StudentVideosDto> {
-    const attempt = await this.drill(studentId, attemptId);
+  private async recommendations(
+    studentId: string,
+    attemptId: string,
+    db: SupportReader = getDatabase().db,
+  ): Promise<StudentVideosDto> {
+    const attempt = await this.drill(studentId, attemptId, db);
     if (attempt.score >= 80 || !attempt.levelId) return { items: [] };
-    const { db } = getDatabase();
     const [level] = await db.select().from(levels).where(eq(levels.id, attempt.levelId));
     if (!level) return { items: [] };
     const items = await db
@@ -180,10 +184,10 @@ export class StudentSupportService {
         )
           throw new ConflictException('ID pengiriman laporan sudah digunakan.');
         // Even an already accepted retry must not bypass ownership of its assessment context.
-        await this.drill(studentId, body.attemptId);
+        await this.drill(studentId, body.attemptId, tx);
         return { id };
       }
-      const recommended = await this.recommendations(studentId, body.attemptId);
+      const recommended = await this.recommendations(studentId, body.attemptId, tx);
       if (!recommended.items.some((item) => item.mappingId === body.mappingId))
         throw new NotFoundException('Rekomendasi video tidak ditemukan.');
       return (
