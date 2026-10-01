@@ -2,6 +2,8 @@
 
 **Status:** fondasi integrasi diperbaiki di branch `fix/mvp-integration-audit`. Seluruh modul PRD belum selesai. Dokumen ini melanjutkan [audit awal](MVP0_INTEGRATION_AUDIT_2026-09-30.md), membedakan hasil teruji dari pekerjaan dan keputusan yang masih diperlukan.
 
+Perubahan dipublikasikan sebagai [draft PR #17](https://github.com/ayiinee/Numora/pull/17). `main` belum diubah; integrasi ke branch utama menunggu review tim.
+
 ## 1. Mandat dan aturan yang tetap berlaku
 
 - **ENGINEERING DECISION:** koordinator mengonfirmasi `Numora-Staging` (`pkamenfnwmoeisccnrnk`) adalah sandbox development, mengizinkan uji/data demo, lalu meminta perbaikan aman dilakukan langsung jika memungkinkan.
