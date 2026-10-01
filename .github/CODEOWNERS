@@ -1,32 +1,3 @@
-# Active reviewers must have repository write access.
-# The full job-list ownership remains in docs/development/OWNERSHIP.md.
-# Restore feature-specific backend/QA reviewers here when their write access is granted.
-# Narrow feature rules override the broader rules above them.
+# Repository-wide code owners; both accounts must have write access.
+# Feature responsibilities remain documented in docs/development/OWNERSHIP.md.
 * @splakplutoy @ayiinee
-
-# Frontend
-/apps/web/ @splakplutoy @Noir-MD @a-ali-wafa
-/apps/web/src/features/core-learning/ @splakplutoy @Noir-MD
-/apps/web/src/features/onboarding/ @a-ali-wafa @splakplutoy
-/apps/web/src/features/monitoring/ @a-ali-wafa @splakplutoy
-/apps/web/src/features/admin/ @Noir-MD @splakplutoy
-/apps/web/src/features/content/ @Noir-MD @splakplutoy
-/apps/web/src/features/pvp/ @splakplutoy @Noir-MD
-/apps/web/src/features/leaderboard/ @splakplutoy @Noir-MD
-/packages/ui/ @splakplutoy @Noir-MD @a-ali-wafa
-
-# Backend and shared data
-/apps/api/ @ayiinee @splakplutoy
-/apps/worker/ @ayiinee @splakplutoy
-/packages/database/ @ayiinee @splakplutoy
-/packages/contracts/ @splakplutoy @ayiinee
-
-# QA and team process
-/packages/testing/ @splakplutoy @ayiinee
-/docs/ @splakplutoy @ayiinee
-/docs/architecture/ @splakplutoy @ayiinee
-/docs/adr/ @splakplutoy @ayiinee
-/docs/testing/ @splakplutoy @ayiinee
-/.github/ @ayiinee @splakplutoy
-/.github/workflows/ @ayiinee @splakplutoy
-/.github/CODEOWNERS @ayiinee @splakplutoy
