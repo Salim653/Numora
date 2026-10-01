@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IsString, Length } from 'class-validator';
+import { IsString, Length, Matches } from 'class-validator';
 import { SchoolsService } from './schools.service';
 
 class SchoolDto {
@@ -11,9 +11,10 @@ class SchoolListDto {
   @ApiProperty({ type: [SchoolDto] }) items!: SchoolDto[];
 }
 class VerifyTeacherDto {
-  @ApiProperty({ minLength: 32, maxLength: 128 })
+  @ApiProperty({ minLength: 8, maxLength: 8, pattern: '^[A-Za-z0-9]+$' })
   @IsString()
-  @Length(32, 128)
+  @Length(8, 8)
+  @Matches(/^[A-Za-z0-9]+$/)
   token!: string;
 }
 class VerifiedDto {

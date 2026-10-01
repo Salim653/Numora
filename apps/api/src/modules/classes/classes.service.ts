@@ -1,5 +1,5 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { randomBytes } from 'node:crypto';
+import { randomInt } from 'node:crypto';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import {
   auditLogs,
@@ -11,6 +11,23 @@ import {
   users,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
+
+const JOIN_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const JOIN_CODE_LENGTH = 6;
+const MAX_CODE_ATTEMPTS = 5;
+
+const generateJoinCode = () => {
+  let out = '';
+  for (let i = 0; i < JOIN_CODE_LENGTH; i++)
+    out += JOIN_CODE_ALPHABET[randomInt(JOIN_CODE_ALPHABET.length)];
+  return out;
+};
+
+const isUniqueViolation = (error: unknown): boolean => {
+  if (typeof error !== 'object' || error === null) return false;
+  if ('code' in error && error.code === '23505') return true;
+  return 'cause' in error && isUniqueViolation(error.cause);
+};
 
 @Injectable()
 export class ClassesService {
@@ -49,25 +66,31 @@ export class ClassesService {
         code: 'SCHOOL_FORBIDDEN',
         detail: 'Sekolah aktif dan verifikasi Guru diperlukan.',
       });
-    const joinCode = randomBytes(10).toString('base64url').toUpperCase();
-    return db.transaction(async (tx) => {
-      const [created] = await tx
-        .insert(classes)
-        .values({
-          schoolId: membership.schoolId,
-          teacherUserId: teacherId,
-          name: name.trim(),
-          joinCode,
-        })
-        .returning({ id: classes.id, name: classes.name, joinCode: classes.joinCode });
-      await tx.insert(auditLogs).values({
-        actorUserId: teacherId,
-        action: 'class_created',
-        entityType: 'class',
-        entityId: created!.id,
-      });
-      return created!;
-    });
+
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await db.transaction(async (tx) => {
+          const [created] = await tx
+            .insert(classes)
+            .values({
+              schoolId: membership.schoolId,
+              teacherUserId: teacherId,
+              name: name.trim(),
+              joinCode: generateJoinCode(),
+            })
+            .returning({ id: classes.id, name: classes.name, joinCode: classes.joinCode });
+          await tx.insert(auditLogs).values({
+            actorUserId: teacherId,
+            action: 'class_created',
+            entityType: 'class',
+            entityId: created!.id,
+          });
+          return created!;
+        });
+      } catch (error) {
+        if (!isUniqueViolation(error) || attempt >= MAX_CODE_ATTEMPTS) throw error;
+      }
+    }
   }
 
   async join(authorization: string | undefined, joinCode: string) {

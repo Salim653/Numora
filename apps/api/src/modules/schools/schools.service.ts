@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHmac, randomInt } from 'node:crypto';
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import {
   auditLogs,
@@ -15,7 +15,21 @@ import {
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
 
-const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
+const TOKEN_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const TOKEN_LENGTH = 8;
+
+const generateToken = () => {
+  let out = '';
+  for (let i = 0; i < TOKEN_LENGTH; i++) out += TOKEN_ALPHABET[randomInt(TOKEN_ALPHABET.length)];
+  return out;
+};
+
+const hashToken = (token: string) => {
+  const pepper = process.env.TEACHER_TOKEN_PEPPER;
+  if (!pepper) throw new Error('TEACHER_TOKEN_PEPPER belum diatur');
+  return createHmac('sha256', pepper).update(token.trim().toUpperCase()).digest('hex');
+};
+
 const isUniqueViolation = (error: unknown): boolean => {
   if (typeof error !== 'object' || error === null) return false;
   if ('code' in error && error.code === '23505') return true;
@@ -120,7 +134,7 @@ export class SchoolsService {
       .limit(1);
     if (!school)
       throw new NotFoundException({ code: 'SCHOOL_NOT_FOUND', detail: 'Sekolah tidak tersedia.' });
-    const token = randomBytes(32).toString('base64url');
+    const token = generateToken();
     const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
     const result = await db.transaction(async (tx) => {
       const [created] = await tx
@@ -232,7 +246,7 @@ export class SchoolsService {
 
   async reissueToken(authorization: string | undefined, schoolId: string, tokenId: string) {
     const adminId = await this.role(authorization, 'ADMIN');
-    const token = randomBytes(32).toString('base64url');
+    const token = generateToken();
     const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
     const { db } = getDatabase();
     const issued = await db.transaction(async (tx) => {
