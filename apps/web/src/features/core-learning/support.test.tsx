@@ -29,7 +29,8 @@ describe('Student support', () => {
       'textContent',
       'Laporan terkirim untuk ditinjau Admin.',
     );
-    expect(submit).toHaveBeenLastCalledWith('Kunci salah', 'Mohon tinjau.');
+    expect(submit).toHaveBeenLastCalledWith('Kunci salah', 'Mohon tinjau.', expect.any(String));
+    expect(submit.mock.calls[0]![2]).toBe(submit.mock.calls[1]![2]);
   });
   it('blocks duplicate submit while a report is pending', async () => {
     let complete!: (result: object) => void;
@@ -48,6 +49,32 @@ describe('Student support', () => {
     expect(screen.getByRole('button', { name: 'Mengirim…' })).toHaveProperty('disabled', true);
     complete({ id: 'report' });
     await screen.findByRole('status');
+  });
+  it('uses a new request ID when a failed report is edited, then preserves it for retry', async () => {
+    const submit = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Network'))
+      .mockRejectedValueOnce(new Error('Network'))
+      .mockResolvedValueOnce({ id: 'report' });
+    render(<ReportForm label="Laporkan soal" submit={submit} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Laporkan soal' }));
+    fireEvent.change(screen.getByLabelText('Jenis masalah'), { target: { value: 'TEST' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim laporan' }));
+    await screen.findByRole('alert');
+    fireEvent.change(screen.getByLabelText('Keterangan tambahan (opsional)'), {
+      target: { value: 'Edited issue' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim ulang laporan' }));
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Kirim ulang laporan' }).hasAttribute('disabled'),
+      ).toBe(false),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim ulang laporan' }));
+    await screen.findByRole('status');
+    expect(submit.mock.calls[0]![2]).not.toBe(submit.mock.calls[1]![2]);
+    expect(submit.mock.calls[1]![2]).toBe(submit.mock.calls[2]![2]);
   });
   it('renders only server-provided videos and keeps an empty response unobtrusive', async () => {
     const videos = vi.spyOn(learningApi, 'videos').mockResolvedValueOnce({ items: [] });

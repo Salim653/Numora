@@ -41,7 +41,9 @@ Rekomendasi mendukung pembacaan hasil canonical maupun hasil Drill kompatibilita
 
 Laporan soal mencari item canonical milik Student dan answer tersimpan, lalu mengisi FK `question_reports.attempt_answer_id`. Item tidak tersedia ditolak `404 REPORT_ITEM_NOT_FOUND`; answer belum tersimpan ditolak `409 REPORT_ANSWER_UNAVAILABLE`. ID pertanyaan Drill kompatibilitas tidak diubah menjadi FK palsu. Form frontend sudah tersedia, tetapi pengiriman untuk Drill kompatibilitas menunggu migrasi Qurotul; kegagalan tampil dan dapat dicoba ulang. Admin membaca/menindaklanjuti laporan melalui API Reports yang sudah ada.
 
-**ENGINEERING IMPLEMENTATION:** category adalah teks 1–80 karakter; details opsional maksimal 2.000 karakter. Ini batas input engineering, bukan daftar kategori produk final. Jangan memasukkan PII dalam laporan. Form mencegah submit bersamaan; retry setelah respons jaringan hilang masih dapat membuat laporan terpisah karena belum ada kontrak idempotency-key laporan.
+**ENGINEERING IMPLEMENTATION:** category adalah teks 1–80 karakter; details opsional maksimal 2.000 karakter. Ini batas input engineering, bukan daftar kategori produk final. Jangan memasukkan PII dalam laporan. Metadata video impor juga diperiksa terhadap aturan HTTPS editor sebelum diberikan kepada Student.
+
+Kedua POST laporan menerima `clientRequestId` UUID opsional. Server memakai ID itu sebagai primary key laporan dan advisory transaction lock: actor, referensi soal/mapping, category, serta details yang sama mengembalikan ID tersimpan; penggunaan ID untuk actor/referensi/isi berbeda ditolak 409. Kepemilikan attempt video tetap diperiksa pada retry, termasuk ketika mapping yang sebelumnya valid sudah diarsipkan. Form mengirim ID yang sama untuk retry isi yang sama dan ID baru setelah isi diubah. Client lama tanpa ID tetap diterima, tetapi retry client lama belum idempotent. Tidak ada migrasi tambahan untuk mekanisme ini.
 
 ## Integrasi IRT — #9
 

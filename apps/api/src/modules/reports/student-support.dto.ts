@@ -11,6 +11,10 @@ export class StudentVideosDto {
   @ApiProperty({ type: [StudentVideoDto] }) items!: StudentVideoDto[];
 }
 export class ReportDetailsDto {
+  @ApiPropertyOptional({ format: 'uuid' })
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsUUID()
+  clientRequestId?: string;
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(80) @Matches(/\S/) category!: string;
   @ApiPropertyOptional()
   @ValidateIf((_o, value) => value !== undefined)

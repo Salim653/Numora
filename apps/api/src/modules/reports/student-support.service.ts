@@ -5,7 +5,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, eq } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
+import { isURL } from 'class-validator';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import {
   assessmentAttempts,
   assessmentPackages,
@@ -96,62 +98,106 @@ export class StudentSupportService {
       )
       .orderBy(asc(videoSubchapterMappings.recommendationOrder), asc(videoSubchapterMappings.id))
       .limit(3);
-    return { items };
+    // Imported metadata must meet the same HTTPS requirement as the Admin editor.
+    return {
+      items: items.filter((item) =>
+        isURL(item.url, { protocols: ['https'], require_protocol: true }),
+      ),
+    };
   }
   async videos(authorization: string | undefined, attemptId: string) {
     return this.recommendations(await this.student(authorization), attemptId);
   }
   async questionReport(authorization: string | undefined, body: StudentQuestionReportDto) {
     const studentId = await this.student(authorization);
-    const { db } = getDatabase();
-    const [item] = await db
-      .select({ id: attemptItems.id })
-      .from(attemptItems)
-      .innerJoin(assessmentAttempts, eq(assessmentAttempts.id, attemptItems.attemptId))
-      .where(
-        and(eq(attemptItems.id, body.attemptItemId), eq(assessmentAttempts.studentId, studentId)),
-      );
-    if (!item)
-      throw new NotFoundException({
-        code: 'REPORT_ITEM_NOT_FOUND',
-        detail: 'Pelaporan soal belum tersedia untuk latihan ini.',
-      });
-    const [answer] = await db
-      .select({ id: attemptAnswers.id })
-      .from(attemptAnswers)
-      .where(eq(attemptAnswers.attemptItemId, item.id));
-    if (!answer)
-      throw new ConflictException({
-        code: 'REPORT_ANSWER_UNAVAILABLE',
-        detail: 'Pelaporan soal belum tersedia untuk jawaban ini.',
-      });
-    return (
-      await db
-        .insert(questionReports)
-        .values({
-          reporterStudentId: studentId,
-          attemptAnswerId: answer.id,
-          category: body.category.trim(),
-          details: body.details?.trim(),
-        })
-        .returning({ id: questionReports.id })
-    )[0]!;
+    return getDatabase().db.transaction(async (tx) => {
+      const id = body.clientRequestId ?? randomUUID();
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${'question-report:' + id}))`);
+      const [existing] = await tx.select().from(questionReports).where(eq(questionReports.id, id));
+      if (existing) {
+        if (
+          existing.reporterStudentId !== studentId ||
+          existing.attemptAnswerId === null ||
+          existing.category !== body.category.trim() ||
+          (existing.details ?? '') !== (body.details?.trim() ?? '')
+        )
+          throw new ConflictException('ID pengiriman laporan sudah digunakan.');
+        const [answer] = await tx
+          .select()
+          .from(attemptAnswers)
+          .where(eq(attemptAnswers.id, existing.attemptAnswerId));
+        if (answer?.attemptItemId !== body.attemptItemId)
+          throw new ConflictException('ID pengiriman laporan sudah digunakan.');
+        return { id };
+      }
+      const [item] = await tx
+        .select({ id: attemptItems.id })
+        .from(attemptItems)
+        .innerJoin(assessmentAttempts, eq(assessmentAttempts.id, attemptItems.attemptId))
+        .where(
+          and(eq(attemptItems.id, body.attemptItemId), eq(assessmentAttempts.studentId, studentId)),
+        );
+      if (!item)
+        throw new NotFoundException({
+          code: 'REPORT_ITEM_NOT_FOUND',
+          detail: 'Pelaporan soal belum tersedia untuk latihan ini.',
+        });
+      const [answer] = await tx
+        .select({ id: attemptAnswers.id })
+        .from(attemptAnswers)
+        .where(eq(attemptAnswers.attemptItemId, item.id));
+      if (!answer)
+        throw new ConflictException({
+          code: 'REPORT_ANSWER_UNAVAILABLE',
+          detail: 'Pelaporan soal belum tersedia untuk jawaban ini.',
+        });
+      return (
+        await tx
+          .insert(questionReports)
+          .values({
+            id,
+            reporterStudentId: studentId,
+            attemptAnswerId: answer.id,
+            category: body.category.trim(),
+            details: body.details?.trim(),
+          })
+          .returning({ id: questionReports.id })
+      )[0]!;
+    });
   }
   async videoReport(authorization: string | undefined, body: StudentVideoReportDto) {
     const studentId = await this.student(authorization);
-    const recommended = await this.recommendations(studentId, body.attemptId);
-    if (!recommended.items.some((item) => item.mappingId === body.mappingId))
-      throw new NotFoundException('Rekomendasi video tidak ditemukan.');
-    return (
-      await getDatabase()
-        .db.insert(videoReports)
-        .values({
-          reporterStudentId: studentId,
-          mappingId: body.mappingId,
-          category: body.category.trim(),
-          details: body.details?.trim(),
-        })
-        .returning({ id: videoReports.id })
-    )[0]!;
+    return getDatabase().db.transaction(async (tx) => {
+      const id = body.clientRequestId ?? randomUUID();
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${'video-report:' + id}))`);
+      const [existing] = await tx.select().from(videoReports).where(eq(videoReports.id, id));
+      if (existing) {
+        if (
+          existing.reporterStudentId !== studentId ||
+          existing.mappingId !== body.mappingId ||
+          existing.category !== body.category.trim() ||
+          (existing.details ?? '') !== (body.details?.trim() ?? '')
+        )
+          throw new ConflictException('ID pengiriman laporan sudah digunakan.');
+        // Even an already accepted retry must not bypass ownership of its assessment context.
+        await this.drill(studentId, body.attemptId);
+        return { id };
+      }
+      const recommended = await this.recommendations(studentId, body.attemptId);
+      if (!recommended.items.some((item) => item.mappingId === body.mappingId))
+        throw new NotFoundException('Rekomendasi video tidak ditemukan.');
+      return (
+        await tx
+          .insert(videoReports)
+          .values({
+            id,
+            reporterStudentId: studentId,
+            mappingId: body.mappingId,
+            category: body.category.trim(),
+            details: body.details?.trim(),
+          })
+          .returning({ id: videoReports.id })
+      )[0]!;
+    });
   }
 }

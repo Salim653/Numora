@@ -31,6 +31,6 @@ export type StudentVideoDto = { "mappingId": string; "title": string; "url": str
 
 export type StudentVideosDto = { "items": StudentVideoDto[]; };
 
-export type StudentQuestionReportDto = { "category": string; "details"?: string; "attemptItemId": string; };
+export type StudentQuestionReportDto = { "clientRequestId"?: string; "category": string; "details"?: string; "attemptItemId": string; };
 
-export type StudentVideoReportDto = { "category": string; "details"?: string; "attemptId": string; "mappingId": string; };
+export type StudentVideoReportDto = { "clientRequestId"?: string; "category": string; "details"?: string; "attemptId": string; "mappingId": string; };
