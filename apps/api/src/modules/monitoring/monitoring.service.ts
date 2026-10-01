@@ -71,7 +71,7 @@ export class MonitoringService {
           chapterLabel: level.chapterLabel,
           subchapterLabel: level.subchapterLabel,
           levelLabel: level.levelLabel ?? `Level ${level.levelOrder}`,
-          accessStatus: state || level.levelOrder === 1 ? 'UNLOCKED' : 'LOCKED',
+          accessStatus: state?.unlockedAt || level.levelOrder === 1 ? 'UNLOCKED' : 'LOCKED',
           inProgress: activeLevelIds.has(level.levelId),
           latestDrillScore: state?.latestScore ?? null,
           bestDrillScore: state?.bestScore ?? null,

@@ -114,11 +114,18 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
       studentId: identities.student, levelId: level!.id, unlockedAt: new Date(), latestScore: 0,
       bestScore: 0,
     });
+    const [lockedLevel] = await db.insert(levels).values({
+      subchapterId: subchapter!.id, levelNumber: 2, status: 'READY',
+    }).returning({ id: levels.id });
+    await db.insert(levelProgress).values({ studentId: identities.student, levelId: lockedLevel!.id });
     const progress = await monitoring.studentProgress(owner, firstClass.id, identities.student);
     expect(progress.student.displayName).toBe('student');
     expect(progress.latestDrillScore).toBe(0);
     expect(progress.levels.find((item) => item.levelId === level!.id)).toMatchObject({
       accessStatus: 'UNLOCKED', latestDrillScore: 0, bestDrillScore: 0,
+    });
+    expect(progress.levels.find((item) => item.levelId === lockedLevel!.id)).toMatchObject({
+      accessStatus: 'LOCKED', levelLabel: 'Level 2',
     });
     await expect(monitoring.studentProgress(outsider, firstClass.id, identities.student))
       .rejects.toMatchObject({ status: 403 });

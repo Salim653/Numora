@@ -6,6 +6,7 @@ import {
   chapters,
   closeDatabaseConnection,
   competencies,
+  drillAttempts,
   drillPackageQuestions,
   drillPackages,
   getDatabase,
@@ -55,6 +56,10 @@ integration('Drill lifecycle against PostgreSQL', () => {
     const [firstPackage, secondPackage] = await db.insert(drillPackages).values([1, 2].map((number) => ({
       levelId: firstLevel!.id, variantSet: number, publishedAt: new Date(),
     }))).returning({ id: drillPackages.id });
+    // A scheduled package sorts first but must not be available before publication.
+    await db.insert(drillPackages).values({
+      levelId: firstLevel!.id, variantSet: 0, publishedAt: new Date(Date.now() + 86_400_000),
+    });
 
     for (let number = 1; number <= 10; number++) {
       const [question] = await db.insert(questions).values({
@@ -81,8 +86,23 @@ integration('Drill lifecycle against PostgreSQL', () => {
       }
     }
 
+    await db.insert(levelProgress).values({ studentId: student!.id, levelId: nextLevel!.id });
+    expect((await learning.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('locked');
     await expect(learning.start('student', nextLevel!.id)).rejects.toMatchObject({ status: 403 });
+    // A pre-existing attempt cannot bypass the current level eligibility check.
+    await db.insert(drillAttempts).values({
+      studentId: stranger!.id, levelId: nextLevel!.id, packageId: firstPackage!.id,
+    });
+    await expect(learning.start('stranger', nextLevel!.id)).rejects.toMatchObject({ status: 403 });
+    expect((await learning.subchapter('stranger', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('locked');
+    // Draft content is restricted to explicitly labeled demo packages.
+    await db.update(drillPackages).set({ isDemo: false }).where(eq(drillPackages.id, firstPackage!.id));
+    await expect(learning.start('student', firstLevel!.id)).rejects.toMatchObject({
+      status: 503, response: { code: 'DRILL_CONTENT_NOT_READY' },
+    });
+    await db.update(drillPackages).set({ isDemo: true }).where(eq(drillPackages.id, firstPackage!.id));
     const attempt = await learning.start('student', firstLevel!.id);
+    expect(attempt.isDemo).toBe(true);
     expect(attempt.levelTitle).toBe('Level 1');
     expect(attempt.questions).toHaveLength(10);
     expect(await learning.start('student', firstLevel!.id)).toMatchObject({ id: attempt.id });
@@ -115,5 +135,13 @@ integration('Drill lifecycle against PostgreSQL', () => {
     expect((await learning.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('open');
     await expect(learning.saveAnswer('student', retry.id, retry.questions[0]!.questionInstanceId, 'B'))
       .rejects.toMatchObject({ status: 409 });
+    // Archiving source content cannot rewrite a completed attempt's snapshot.
+    await db.update(questionVersions).set({ contentStatus: 'ARCHIVED' })
+      .where(eq(questionVersions.variantId, (await db.select().from(questionVariants)
+        .where(eq(questionVariants.variantCode, `ORIG-${suffix}-1`)))[0]!.id));
+    expect(await learning.result('student', attempt.id)).toMatchObject({ score: 80, questions: resultA.questions });
+    await expect(learning.start('student', firstLevel!.id)).rejects.toMatchObject({
+      status: 503, response: { code: 'DRILL_CONTENT_NOT_READY' },
+    });
   }, 30_000);
 });

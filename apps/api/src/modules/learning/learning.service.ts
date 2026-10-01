@@ -16,11 +16,12 @@ import {
   getDatabase,
   levelProgress,
   levels,
+  questions,
   questionVariants,
   questionVersions,
   subchapters,
 } from '@tka/database';
-import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, lte, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 
 const problem = (code: string, detail: string) => ({ code, detail });
@@ -191,13 +192,14 @@ export class LearningService {
       },
       levels: rows.map((row) => {
         const state = byLevel.get(row.id);
-        const status = state?.completedAt
-          ? 'completed'
-          : active.has(row.id)
-            ? 'inProgress'
-            : state || row.levelNumber === 1
-              ? 'open'
-              : 'locked';
+        const unlocked = state?.unlockedAt || row.levelNumber === 1;
+        const status = !unlocked
+          ? 'locked'
+          : state?.completedAt
+            ? 'completed'
+            : active.has(row.id)
+              ? 'inProgress'
+              : 'open';
         return {
           id: row.id,
           title: row.description ?? `Level ${row.levelNumber}`,
@@ -265,6 +267,14 @@ export class LearningService {
         )
         .limit(1);
       if (!level) throw new NotFoundException(problem('LEVEL_NOT_FOUND', 'Level tidak ditemukan.'));
+      if (level.levelNumber !== 1) {
+        const [access] = await tx
+          .select({ id: levelProgress.id })
+          .from(levelProgress)
+          .where(and(eq(levelProgress.studentId, studentId), eq(levelProgress.levelId, levelId), isNotNull(levelProgress.unlockedAt)))
+          .limit(1);
+        if (!access) throw new ForbiddenException(problem('LEVEL_LOCKED', 'Level masih terkunci.'));
+      }
       const [existing] = await tx
         .select({ id: drillAttempts.id })
         .from(drillAttempts)
@@ -277,18 +287,10 @@ export class LearningService {
         )
         .limit(1);
       if (existing) return existing.id;
-      if (level.levelNumber !== 1) {
-        const [access] = await tx
-          .select({ id: levelProgress.id })
-          .from(levelProgress)
-          .where(and(eq(levelProgress.studentId, studentId), eq(levelProgress.levelId, levelId)))
-          .limit(1);
-        if (!access) throw new ForbiddenException(problem('LEVEL_LOCKED', 'Level masih terkunci.'));
-      }
       const packages = await tx
         .select()
         .from(drillPackages)
-        .where(and(eq(drillPackages.levelId, levelId), isNotNull(drillPackages.publishedAt)))
+        .where(and(eq(drillPackages.levelId, levelId), lte(drillPackages.publishedAt, new Date())))
         .orderBy(asc(drillPackages.variantSet));
       if (!packages.length)
         throw new ServiceUnavailableException(
@@ -318,6 +320,8 @@ export class LearningService {
           questionVariantId: questionVariants.id,
           questionVersionId: questionVersions.id,
           questionType: questionVersions.questionType,
+          contentStatus: questionVersions.contentStatus,
+          questionStatus: questions.status,
           stem: questionVersions.stem,
           optionsOrStatements: questionVersions.optionsOrStatements,
           answerKey: questionVersions.answerKey,
@@ -329,12 +333,21 @@ export class LearningService {
           eq(questionVariants.id, drillPackageQuestions.questionVariantId),
         )
         .innerJoin(questionVersions, eq(questionVersions.id, drillPackageQuestions.questionVersionId))
+        .innerJoin(questions, eq(questions.id, questionVariants.questionId))
         .where(eq(drillPackageQuestions.packageId, selected.id))
         .orderBy(asc(drillPackageQuestions.sortOrder));
       if (items.length !== 10)
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill demo harus berisi 10 soal.'),
         );
+      if (items.some((item) =>
+        item.contentStatus === 'ARCHIVED' || item.questionStatus === 'ARCHIVED' ||
+        (!selected.isDemo && (item.contentStatus !== 'READY' || item.questionStatus !== 'READY')),
+      )) {
+        throw new ServiceUnavailableException(
+          problem('DRILL_CONTENT_NOT_READY', 'Konten Drill belum disetujui atau telah diarsipkan.'),
+        );
+      }
       const [attempt] = await tx
         .insert(drillAttempts)
         .values({ studentId, levelId, packageId: selected.id, isDemo: selected.isDemo })
@@ -519,7 +532,13 @@ export class LearningService {
         await tx
           .insert(levelProgress)
           .values({ studentId, levelId: next.id, unlockedAt: now, unlockSource: 'DRILL' })
-          .onConflictDoNothing();
+          .onConflictDoUpdate({
+            target: [levelProgress.studentId, levelProgress.levelId],
+            set: {
+              unlockedAt: sql`coalesce(${levelProgress.unlockedAt}, ${now.toISOString()}::timestamptz)`,
+              unlockSource: sql`case when ${levelProgress.unlockedAt} is null then 'DRILL' else ${levelProgress.unlockSource} end`,
+            },
+          });
       await tx
         .insert(analyticsOutbox)
         .values({
