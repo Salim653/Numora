@@ -1,25 +1,33 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import {
   analyticsOutbox,
+  assessmentAttempts,
+  assessmentPackages,
+  attemptAnswers,
+  attemptItems,
   chapters,
   closeDatabaseConnection,
   competencies,
-  drillAttempts,
-  drillPackageQuestions,
-  drillPackages,
   getDatabase,
   levelProgress,
   levels,
+  learningVideos,
+  packageItems,
   questions,
   questionVariants,
   questionVersions,
+  scoringPolicyVersions,
   subchapters,
   users,
+  videoSubchapterMappings,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
-import { LearningService } from './learning.service';
+import { DrillAssessmentService } from './drill-assessment.service';
+import { AssessmentHistoryService } from './assessment-history.service';
+import { LearningCatalogService } from './learning-catalog.service';
+import { TryoutReleaseService } from './tryout-release.service';
 
 const testUrl = process.env.TEST_DATABASE_URL;
 const integration = testUrl ? describe : describe.skip;
@@ -38,7 +46,9 @@ integration('Drill lifecycle against PostgreSQL', () => {
     const identity = { me: async (authorization?: string) => ({
       id: authorization === 'stranger' ? stranger!.id : student!.id, role: 'STUDENT',
     }) } as unknown as IdentityService;
-    const learning = new LearningService(identity);
+    const learning = new DrillAssessmentService(identity);
+    const catalog = new LearningCatalogService(identity);
+    const history = new AssessmentHistoryService(identity, new TryoutReleaseService());
     const [chapter] = await db.insert(chapters).values({
       code: `TEST-${suffix}`, name: `Bab ${suffix}`, displayOrder: parseInt(suffix, 16) % 2_000_000_000,
       status: 'READY',
@@ -53,13 +63,34 @@ integration('Drill lifecycle against PostgreSQL', () => {
     const [competency] = await db.insert(competencies).values({
       subchapterId: subchapter!.id, code: `COMP-${suffix}`, description: 'Fixture', status: 'READY',
     }).returning({ id: competencies.id });
-    const [firstPackage, secondPackage] = await db.insert(drillPackages).values([1, 2].map((number) => ({
-      levelId: firstLevel!.id, variantSet: number, publishedAt: new Date(),
-    }))).returning({ id: drillPackages.id });
+    const [policy] = await db.select({ id: scoringPolicyVersions.id })
+      .from(scoringPolicyVersions)
+      .where(and(
+        eq(scoringPolicyVersions.policyCode, 'DRILL_PG_DEMO'),
+        eq(scoringPolicyVersions.version, 1),
+      )).limit(1);
+    expect(policy).toBeDefined();
+    const [firstPackage, secondPackage] = await db.insert(assessmentPackages).values([1, 2].map((number) => ({
+      familyCode: `TEST-DRILL-${suffix}-${number}`, packageVersion: 1,
+      name: `Drill ${suffix} ${number}`, assessmentType: 'DRILL' as const,
+      chapterId: chapter!.id, levelId: firstLevel!.id, variantIndex: number,
+      isDemo: true, scoringPolicyVersionId: policy!.id, releaseAt: new Date(),
+      status: 'PUBLISHED' as const,
+    }))).returning({ id: assessmentPackages.id });
     // A scheduled package sorts first but must not be available before publication.
-    await db.insert(drillPackages).values({
-      levelId: firstLevel!.id, variantSet: 0, publishedAt: new Date(Date.now() + 86_400_000),
+    await db.insert(assessmentPackages).values({
+      familyCode: `TEST-DRILL-${suffix}-SCHEDULED`, packageVersion: 1,
+      name: `Scheduled ${suffix}`, assessmentType: 'DRILL', chapterId: chapter!.id,
+      levelId: firstLevel!.id, variantIndex: 0, isDemo: true,
+      scoringPolicyVersionId: policy!.id, releaseAt: new Date(Date.now() + 86_400_000),
+      status: 'PUBLISHED',
     });
+    const [lockedPackage] = await db.insert(assessmentPackages).values({
+      familyCode: `TEST-DRILL-${suffix}-LOCKED`, packageVersion: 1,
+      name: `Locked ${suffix}`, assessmentType: 'DRILL', chapterId: chapter!.id,
+      levelId: nextLevel!.id, variantIndex: 1, isDemo: true,
+      scoringPolicyVersionId: policy!.id, releaseAt: new Date(), status: 'PUBLISHED',
+    }).returning({ id: assessmentPackages.id });
 
     for (let number = 1; number <= 10; number++) {
       const [question] = await db.insert(questions).values({
@@ -79,34 +110,54 @@ integration('Drill lifecycle against PostgreSQL', () => {
           optionsOrStatements: ['A', 'B', 'C', 'D'].map((id) => ({ id, content: { text: id === 'A' ? 'Benar' : 'Salah' } })),
           answerKey: { optionId: 'A' }, explanation: { text: 'Demo' }, difficulty: 'EASY',
         }).returning({ id: questionVersions.id });
-        await db.insert(drillPackageQuestions).values({
+        await db.insert(packageItems).values({
           packageId: variantNo === 1 ? firstPackage!.id : secondPackage!.id,
-          questionVariantId: variant.id, questionVersionId: version!.id, sortOrder: number,
+          questionVersionId: version!.id, displayOrder: number, maxPoints: '1',
         });
       }
     }
 
     await db.insert(levelProgress).values({ studentId: student!.id, levelId: nextLevel!.id });
-    expect((await learning.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('locked');
+    expect((await catalog.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('locked');
     await expect(learning.start('student', nextLevel!.id)).rejects.toMatchObject({ status: 403 });
     // A pre-existing attempt cannot bypass the current level eligibility check.
-    await db.insert(drillAttempts).values({
-      studentId: stranger!.id, levelId: nextLevel!.id, packageId: firstPackage!.id,
+    await db.insert(assessmentAttempts).values({
+      studentId: stranger!.id, packageId: lockedPackage!.id, assessmentType: 'DRILL',
+      chapterIdAtStart: chapter!.id, levelIdAtStart: nextLevel!.id,
+      scoringPolicyVersionId: policy!.id,
     });
     await expect(learning.start('stranger', nextLevel!.id)).rejects.toMatchObject({ status: 403 });
-    expect((await learning.subchapter('stranger', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('locked');
+    expect((await catalog.subchapter('stranger', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('locked');
     // Draft content is restricted to explicitly labeled demo packages.
-    await db.update(drillPackages).set({ isDemo: false }).where(eq(drillPackages.id, firstPackage!.id));
+    await db.update(assessmentPackages).set({ isDemo: false }).where(eq(assessmentPackages.id, firstPackage!.id));
     await expect(learning.start('student', firstLevel!.id)).rejects.toMatchObject({
       status: 503, response: { code: 'DRILL_CONTENT_NOT_READY' },
     });
-    await db.update(drillPackages).set({ isDemo: true }).where(eq(drillPackages.id, firstPackage!.id));
+    await db.update(assessmentPackages).set({ isDemo: true }).where(eq(assessmentPackages.id, firstPackage!.id));
     const attempt = await learning.start('student', firstLevel!.id);
     expect(attempt.isDemo).toBe(true);
     expect(attempt.levelTitle).toBe('Level 1');
     expect(attempt.questions).toHaveLength(10);
-    expect(await learning.start('student', firstLevel!.id)).toMatchObject({ id: attempt.id });
+    await expect(db.insert(assessmentAttempts).values({
+      studentId: student!.id, packageId: firstPackage!.id, assessmentType: 'DRILL',
+      chapterIdAtStart: chapter!.id, levelIdAtStart: firstLevel!.id,
+      scoringPolicyVersionId: policy!.id,
+    })).rejects.toMatchObject({ cause: { code: '23505' } });
+    await expect(db.insert(assessmentAttempts).values({
+      studentId: student!.id, packageId: firstPackage!.id, assessmentType: 'DRILL',
+      chapterIdAtStart: chapter!.id, levelIdAtStart: nextLevel!.id,
+      scoringPolicyVersionId: policy!.id,
+    })).rejects.toMatchObject({ cause: { code: '23503' } });
+    const concurrentStarts = await Promise.all([
+      learning.start('student', firstLevel!.id),
+      learning.start('student', firstLevel!.id),
+    ]);
+    expect(concurrentStarts.map((item) => item.id)).toEqual([attempt.id, attempt.id]);
     await expect(learning.attempt('stranger', attempt.id)).rejects.toMatchObject({ status: 404 });
+    await learning.saveAnswer('student', attempt.id, attempt.questions[0]!.questionInstanceId, 'B');
+    expect((await learning.attempt('student', attempt.id)).questions[0]?.selectedOptionId).toBe('B');
+    await learning.saveAnswer('student', attempt.id, attempt.questions[0]!.questionInstanceId, null);
+    expect((await learning.attempt('student', attempt.id)).questions[0]?.selectedOptionId).toBeNull();
     for (const item of attempt.questions.slice(0, 8))
       await learning.saveAnswer('student', attempt.id, item.questionInstanceId, 'A');
 
@@ -117,22 +168,35 @@ integration('Drill lifecycle against PostgreSQL', () => {
     expect(resultA).toMatchObject({ score: 80, mastered: true, unlockedLevelId: nextLevel!.id });
     expect(resultA.levelTitle).toBe('Level 1');
     expect(resultB).toMatchObject({ attemptId: attempt.id, score: 80 });
+    expect(resultA.recommendations).toEqual([]);
+    expect((await history.list('student')).records[0]).toMatchObject({
+      attemptId: attempt.id, activity: 'drill', resultState: 'ready', score: 80,
+    });
     const events = await db.select({ id: analyticsOutbox.id }).from(analyticsOutbox)
       .where(eq(analyticsOutbox.entityId, attempt.id));
     expect(events).toHaveLength(1);
     await expect(learning.result('stranger', attempt.id)).rejects.toMatchObject({ status: 404 });
-    expect((await learning.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('open');
+    expect((await catalog.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('open');
 
     const retry = await learning.start('student', firstLevel!.id);
     expect(retry.id).not.toBe(attempt.id);
     expect(retry.questions[0]?.stem).toContain('varian 2');
     for (const item of retry.questions.slice(0, 7))
       await learning.saveAnswer('student', retry.id, item.questionInstanceId, 'A');
+    const [video] = await db.insert(learningVideos).values({
+      title: 'Ulang materi', url: 'https://example.test/lesson', source: 'TEST',
+      curationStatus: 'READY',
+    }).returning({ id: learningVideos.id });
+    await db.insert(videoSubchapterMappings).values({
+      videoId: video!.id, subchapterId: subchapter!.id,
+      recommendationOrder: 1, status: 'READY',
+    });
     const failedRetry = await learning.submit('student', retry.id);
     expect(failedRetry).toMatchObject({ score: 70, mastered: false, unlockedLevelId: null });
+    expect(failedRetry.recommendations).toMatchObject([{ id: video!.id }]);
     const [progress] = await db.select().from(levelProgress).where(eq(levelProgress.levelId, firstLevel!.id));
     expect(progress).toMatchObject({ latestScore: 70, bestScore: 80, bestStars: 2 });
-    expect((await learning.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('open');
+    expect((await catalog.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('open');
     await expect(learning.saveAnswer('student', retry.id, retry.questions[0]!.questionInstanceId, 'B'))
       .rejects.toMatchObject({ status: 409 });
     // Archiving source content cannot rewrite a completed attempt's snapshot.
@@ -143,5 +207,19 @@ integration('Drill lifecycle against PostgreSQL', () => {
     await expect(learning.start('student', firstLevel!.id)).rejects.toMatchObject({
       status: 503, response: { code: 'DRILL_CONTENT_NOT_READY' },
     });
+    const [storedAttempt] = await db.select().from(assessmentAttempts)
+      .where(eq(assessmentAttempts.id, attempt.id));
+    expect(storedAttempt).toMatchObject({
+      assessmentType: 'DRILL', status: 'GRADED', levelIdAtStart: firstLevel!.id,
+    });
+    expect(await db.select({ id: attemptAnswers.id }).from(attemptAnswers)
+      .innerJoin(attemptItems, eq(attemptItems.id, attemptAnswers.attemptItemId))
+      .where(eq(attemptItems.attemptId, attempt.id))).toHaveLength(10);
+    const [completedProgress] = await db.select().from(levelProgress)
+      .where(and(eq(levelProgress.studentId, student!.id), eq(levelProgress.levelId, firstLevel!.id)));
+    expect(completedProgress?.completionAttemptId).toBe(attempt.id);
+    const [nextProgress] = await db.select().from(levelProgress)
+      .where(and(eq(levelProgress.studentId, student!.id), eq(levelProgress.levelId, nextLevel!.id)));
+    expect(nextProgress?.unlockingAttemptId).toBe(attempt.id);
   }, 30_000);
 });

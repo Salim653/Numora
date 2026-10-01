@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { getDatabase } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
-import { LearningService } from './learning.service';
+import { DrillAssessmentService } from './drill-assessment.service';
 
 vi.mock('@tka/database', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tka/database')>();
@@ -15,7 +15,7 @@ const attemptId = '33333333-3333-4333-8333-333333333333';
 
 function query(rows: unknown[]) {
   const q = {
-    from: () => q, innerJoin: () => q, where: () => q, for: () => q,
+    from: () => q, innerJoin: () => q, leftJoin: () => q, where: () => q, for: () => q,
     limit: async () => rows, orderBy: async () => rows,
     then: (resolve: (value: unknown[]) => void) => resolve(rows),
   };
@@ -24,7 +24,7 @@ function query(rows: unknown[]) {
 
 function learning() {
   const identity = { me: vi.fn().mockResolvedValue({ id: studentId, role: 'STUDENT' }) };
-  return new LearningService(identity as unknown as IdentityService);
+  return new DrillAssessmentService(identity as unknown as IdentityService);
 }
 
 beforeEach(() => vi.clearAllMocks());
@@ -41,16 +41,18 @@ describe('Drill access and duplicate submit', () => {
   });
 
   it('refuses to change an answer after finalization', async () => {
-    const tx = { select: vi.fn(() => query([{ studentId, status: 'COMPLETED' }])) };
+    const tx = { select: vi.fn(() => query([{ studentId, assessmentType: 'DRILL', status: 'GRADED' }])) };
     vi.mocked(getDatabase).mockReturnValue({ db: { transaction: (run: (value: typeof tx) => unknown) => run(tx) } } as never);
     await expect(learning().saveAnswer('Bearer valid', attemptId, otherId, 'A')).rejects.toThrow(ConflictException);
     expect(tx.select).toHaveBeenCalledTimes(1);
   });
 
   it('returns the prior result on duplicate submit without writing another outbox event', async () => {
-    const completedAt = new Date();
+    const completedAt = new Date('2026-01-01T00:00:00.000Z');
     const tx = {
-      select: vi.fn(() => query([{ id: attemptId, studentId, status: 'COMPLETED' }])),
+      select: vi.fn(() => query([{
+        id: attemptId, studentId, assessmentType: 'DRILL', status: 'GRADED',
+      }])),
       insert: vi.fn(), update: vi.fn(),
     };
     const db = {
@@ -58,11 +60,10 @@ describe('Drill access and duplicate submit', () => {
       select: vi.fn()
         .mockImplementationOnce(() => query([{
           id: attemptId, studentId, levelId: 'level', levelTitle: 'Level 1',
-          status: 'COMPLETED', completedAt, score: 80, rawPoints: 8,
-          correctCount: 8, questionCount: 10, mastered: true, stars: 2,
-          unlockedLevelId: 'next', isDemo: true,
+          status: 'GRADED', completedAt, score: '80', rawPoints: '8',
+          stars: 2, isDemo: true,
         }]))
-        .mockImplementationOnce(() => query([])),
+        .mockImplementationOnce(() => query([{ levelId: 'next' }])),
     };
     vi.mocked(getDatabase).mockReturnValue({ db } as never);
     await expect(learning().submit('Bearer valid', attemptId)).resolves.toMatchObject({ score: 80, mastered: true });

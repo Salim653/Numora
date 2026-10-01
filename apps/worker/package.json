@@ -11,7 +11,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@tka/database": "workspace:*",
     "bullmq": "6.3.9",
+    "drizzle-orm": "0.45.3",
     "ioredis": "6.0.0"
   },
   "devDependencies": {

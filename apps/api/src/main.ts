@@ -8,7 +8,8 @@ async function bootstrap() {
   configureApplication(app);
 
   const port = Number(process.env.API_PORT ?? 3001);
-  await app.listen(port, '0.0.0.0');
+  // Let Node bind both IPv4 and IPv6 so either localhost address can reach the API.
+  await app.listen(port);
 }
 
 void bootstrap();

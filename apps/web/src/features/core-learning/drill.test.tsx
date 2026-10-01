@@ -19,6 +19,7 @@ const result: DrillResult = {
   isDemo: true,
   explanationState: 'available',
   questions: [],
+  recommendations: [],
 };
 
 describe('ringkasan hasil Drill', () => {

@@ -47,7 +47,11 @@ function AssessmentHistoryData({ token }: { token: string }) {
         <Panel key={record.attemptId} className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-[var(--numora-purple)]">
-              {record.activity === 'drill' ? 'Practice & Drill' : 'TryOut'}
+              {record.activity === 'drill'
+                ? 'Practice & Drill'
+                : record.activity === 'pretest'
+                  ? 'Pretest'
+                  : 'TryOut'}
             </p>
             <h2 className="mt-1 font-bold">{record.title}</h2>
             <p className="mt-1 text-sm text-slate-700">
@@ -62,7 +66,7 @@ function AssessmentHistoryData({ token }: { token: string }) {
                 : `Nilai: ${record.score ?? 'Belum tersedia'}`}
             </p>
           </div>
-          {record.resultState === 'ready' && (
+          {record.resultState === 'ready' && record.activity !== 'pretest' && (
             <Link
               className="min-h-11 rounded-xl bg-[var(--numora-purple)] px-5 py-3 font-semibold text-white"
               href={

@@ -1,0 +1,33 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { AssessmentRecordDto } from './learning.dto';
+
+export class DashboardClassDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() name!: string;
+  @ApiProperty() schoolName!: string;
+}
+export class DashboardDrillDto {
+  @ApiProperty() attemptId!: string;
+  @ApiProperty({ nullable: true, type: String }) levelId!: string | null;
+  @ApiProperty() title!: string;
+}
+export class StudentFeaturesDto {
+  @ApiProperty() drill!: boolean;
+  @ApiProperty() tryout!: boolean;
+  @ApiProperty() pretest!: boolean;
+  @ApiProperty() pvp!: boolean;
+  @ApiProperty() classLeaderboard!: boolean;
+  @ApiProperty({ type: [String] }) pendingPolicies!: string[];
+}
+export class StudentDashboardDto {
+  @ApiProperty() displayName!: string;
+  @ApiProperty({ enum: ['MANDIRI', 'SCHOOL'] }) affiliation!: 'MANDIRI' | 'SCHOOL';
+  @ApiProperty({ type: DashboardClassDto, nullable: true }) class!: DashboardClassDto | null;
+  @ApiProperty() completedLevels!: number;
+  @ApiProperty() availableLevels!: number;
+  @ApiProperty({ type: Number, nullable: true }) latestDrillScore!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) bestDrillScore!: number | null;
+  @ApiProperty({ type: [AssessmentRecordDto] }) activities!: AssessmentRecordDto[];
+  @ApiProperty({ type: DashboardDrillDto, nullable: true }) activeDrill!: DashboardDrillDto | null;
+  @ApiProperty({ type: StudentFeaturesDto }) features!: StudentFeaturesDto;
+}

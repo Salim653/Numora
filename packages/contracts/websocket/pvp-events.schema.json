@@ -1,31 +1,1186 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://tka.local/contracts/websocket/pvp-events.schema.json",
-  "title": "PvP WebSocket Event Envelope",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["event", "eventVersion", "sentAt", "payload"],
-  "properties": {
-    "event": {
-      "type": "string",
-      "enum": [
-        "room:create",
-        "room:join",
-        "player:ready",
-        "answer:submit",
-        "match:reconnect",
-        "room:state",
-        "match:started",
-        "question:started",
-        "answer:acknowledged",
-        "question:resolved",
-        "match:completed",
-        "match:forfeited"
+  "$id": "https://numora.local/contracts/pvp-events.schema.json",
+  "title": "PvP WebSocket envelopes (/pvp namespace)",
+  "$defs": {
+    "PvpSnapshotDto": {
+      "type": "object",
+      "properties": {
+        "matchId": {
+          "type": "string"
+        },
+        "roomCode": {
+          "type": "string"
+        },
+        "creatorStudentId": {
+          "type": "string"
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": [
+            "easy",
+            "medium",
+            "hard"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "WAITING",
+            "READY",
+            "RUNNING",
+            "FINISHED",
+            "CANCELLED"
+          ]
+        },
+        "serverTime": {
+          "type": "string"
+        },
+        "isDemo": {
+          "type": "boolean"
+        },
+        "recordEligible": {
+          "type": "boolean"
+        },
+        "endReason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "players": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PvpPlayerDto"
+          }
+        },
+        "question": {
+          "anyOf": [
+            {
+              "type": "object",
+              "allOf": [
+                {
+                  "$ref": "#/$defs/PvpQuestionDto"
+                }
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "matchId",
+        "roomCode",
+        "creatorStudentId",
+        "difficulty",
+        "status",
+        "serverTime",
+        "isDemo",
+        "recordEligible",
+        "endReason",
+        "players",
+        "question"
+      ],
+      "additionalProperties": false
+    },
+    "PvpPlayerDto": {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "number"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "connectionStatus": {
+          "type": "string"
+        },
+        "reconnectDeadlineAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "points": {
+          "type": "number"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "studentId",
+        "displayName",
+        "slot",
+        "ready",
+        "connectionStatus",
+        "reconnectDeadlineAt",
+        "points",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    "StudentPeerDto": {
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "studentId",
+        "displayName"
+      ],
+      "additionalProperties": false
+    },
+    "PvpQuestionDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "order": {
+          "type": "number"
+        },
+        "stem": {
+          "type": "string"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OptionDto"
+          }
+        },
+        "deadlineAt": {
+          "type": "string"
+        },
+        "durationSeconds": {
+          "type": "number"
+        },
+        "answered": {
+          "type": "boolean"
+        },
+        "selectedOptionId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "order",
+        "stem",
+        "options",
+        "deadlineAt",
+        "durationSeconds",
+        "answered",
+        "selectedOptionId"
+      ],
+      "additionalProperties": false
+    },
+    "OptionDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "Problem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "code": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "code",
+        "detail"
       ]
     },
-    "eventVersion": { "type": "integer", "minimum": 1 },
-    "sentAt": { "type": "string", "format": "date-time" },
-    "requestId": { "type": ["string", "null"] },
-    "payload": { "type": "object" }
-  }
+    "Acknowledgement": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ok": {
+              "const": true
+            },
+            "state": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PvpSnapshotDto"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "response": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "inviteId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "inviteId"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "ok",
+            "state",
+            "response"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ok": {
+              "const": false
+            },
+            "error": {
+              "$ref": "#/$defs/Problem"
+            }
+          },
+          "required": [
+            "ok",
+            "error"
+          ]
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "room:create"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "difficulty": {
+              "enum": [
+                "easy",
+                "medium",
+                "hard"
+              ]
+            }
+          },
+          "required": [
+            "difficulty"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "room:join"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "roomCode": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9]{12}$"
+            }
+          },
+          "required": [
+            "roomCode"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "player:ready"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matchId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "matchId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "answer:submit"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matchId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "questionId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "optionId": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "required": [
+            "matchId",
+            "questionId",
+            "optionId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "match:reconnect"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matchId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "matchId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "room:leave"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matchId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "matchId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "room:cancel"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matchId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "matchId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "invitation:send"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matchId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "recipientStudentId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "matchId",
+            "recipientStudentId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "invitation:respond"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "inviteId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "accept": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "inviteId",
+            "accept"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "room:state"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "$ref": "#/$defs/PvpSnapshotDto"
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "match:started"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "$ref": "#/$defs/PvpSnapshotDto"
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "question:started"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "$ref": "#/$defs/PvpSnapshotDto"
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "match:completed"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "$ref": "#/$defs/PvpSnapshotDto"
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "match:forfeited"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "$ref": "#/$defs/PvpSnapshotDto"
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "match:cancelled"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "$ref": "#/$defs/PvpSnapshotDto"
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "question:resolved"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matchId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "questionId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "matchId",
+            "questionId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "player:disconnected"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matchId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "studentId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "matchId",
+            "studentId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "invitation:received"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "inviteId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "inviteId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "command:acknowledged"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "$ref": "#/$defs/Acknowledgement"
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "answer:acknowledged"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "$ref": "#/$defs/Acknowledgement"
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "const": "room:error"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "$ref": "#/$defs/Problem"
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    }
+  ]
 }

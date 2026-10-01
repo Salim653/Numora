@@ -29,7 +29,8 @@
     "openapi:generate": "pnpm --filter @tka/database build && pnpm --filter @tka/api openapi:generate",
     "contracts:validate": "node scripts/validate-contracts.mjs",
     "contracts:types": "node scripts/generate-learning-types.mjs",
-    "contracts:types:check": "node scripts/generate-learning-types.mjs --check"
+    "contracts:types:check": "node scripts/generate-learning-types.mjs --check && node scripts/generate-pvp-contract.mjs --check",
+    "contracts:pvp": "node scripts/generate-pvp-contract.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

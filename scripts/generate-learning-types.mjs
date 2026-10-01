@@ -15,7 +15,29 @@ const names = [
   'DrillAttemptDto',
   'SavedAnswerDto',
   'ReviewedQuestionDto',
+  'RecommendedVideoDto',
   'DrillResultDto',
+  'AssessmentRecordDto',
+  'AssessmentHistoryDto',
+  'CurrentTryoutDto',
+  'TryoutAttemptDto',
+  'TryoutReviewedQuestionDto',
+  'TryoutResultDto',
+  'DashboardClassDto',
+  'DashboardDrillDto',
+  'StudentFeaturesDto',
+  'StudentDashboardDto',
+  'PvpAvailabilityDto',
+  'StudentPeerDto',
+  'StudentPeersDto',
+  'PvpPlayerDto',
+  'PvpQuestionDto',
+  'PvpSnapshotDto',
+  'PvpInviteDto',
+  'PvpInvitesDto',
+  'LeaderboardEntryDto',
+  'LeaderboardPeriodDto',
+  'LeaderboardDto',
 ];
 const groups = [
   { target: 'apps/web/src/features/core-learning/generated-types.ts', names },
@@ -60,11 +82,19 @@ const groups = [
 ];
 
 function renderType(schema) {
-  if (schema.$ref) return schema.$ref.split('/').at(-1);
+  if (schema.$ref) return schema.$ref.split('/').at(-1) + (schema.nullable ? ' | null' : '');
+  if (schema.allOf)
+    return schema.allOf.map(renderType).join(' & ') + (schema.nullable ? ' | null' : '');
+  if (schema.oneOf || schema.anyOf)
+    return (schema.oneOf ?? schema.anyOf).map(renderType).join(' | ');
+  if ('const' in schema) return JSON.stringify(schema.const);
+  if (Array.isArray(schema.type))
+    return schema.type.map((type) => renderType({ ...schema, type })).join(' | ');
+  if (schema.type === 'null') return 'null';
   const base = schema.enum
     ? schema.enum.map((value) => JSON.stringify(value)).join(' | ')
     : schema.type === 'array'
-      ? `${renderType(schema.items)}[]`
+      ? `(${renderType(schema.items)})[]`
       : schema.type === 'string'
         ? 'string'
         : schema.type === 'number' || schema.type === 'integer'
@@ -76,6 +106,25 @@ function renderType(schema) {
               : 'unknown';
   return schema.nullable ? `${base} | null` : base;
 }
+
+const socketSchema = JSON.parse(
+  await readFile('packages/contracts/websocket/pvp-events.schema.json', 'utf8'),
+);
+const socketTarget = 'apps/web/src/features/pvp/generated-protocol.ts';
+const socketResult = [
+  '// Generated from pvp-events.schema.json. Do not edit by hand.',
+  '',
+  ...Object.entries(socketSchema.$defs).map(
+    ([name, schema]) => `export type ${name} = ${renderType(schema)};\n`,
+  ),
+  `export type PvpEnvelope = ${renderType(socketSchema)};\n`,
+].join('\n');
+if (process.argv.includes('--check')) {
+  if (
+    (await readFile(socketTarget, 'utf8').catch(() => '')).replaceAll('\r\n', '\n') !== socketResult
+  )
+    throw new Error('PvP types are stale.');
+} else await writeFile(socketTarget, socketResult);
 
 function renderObject(schema) {
   const required = new Set(schema.required ?? []);

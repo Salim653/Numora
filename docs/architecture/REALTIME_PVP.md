@@ -27,7 +27,7 @@ Player A ─┐
           ├─ WSS ─> NestJS PvP Gateway / Match Engine
 Player B ─┘                 │
                             ├── Redis: active room/match ephemeral state
-                            └── PostgreSQL: durable completed result/history
+                            └── PostgreSQL: durable state, answers, versions, result/outbox
 ```
 
 ## Recommended match state machine
@@ -79,6 +79,73 @@ Exact payloads belong in a machine-readable contract later.
 - `pvp:match:forfeited`
 - `pvp:match:cancelled`
 - standardized error event/acknowledgement
+
+## Server time authority
+
+Client submits answer identity only. Client-provided elapsed time/score is not trusted.
+
+Server determines:
+
+- question start/deadline;
+- whether answer arrived before deadline;
+- remaining time;
+- score formula;
+- state transition.
+
+## Baseline scoring
+
+For a correct answer:
+
+```text
+100 + floor(50 × remainingTime / questionDuration)
+```
+
+Wrong/blank: 0.
+
+Question durations:
+
+- Easy: 30s
+- Medium: 45s
+- Hard: 60s
+
+## Reconnect
+
+- Detect disconnect and start server-side 20s reconnect window.
+- Question timer continues.
+- Reconnecting player receives current authoritative match state.
+- Locked answers remain locked.
+- Player does not replay a previous question.
+- No return in 20s → forfeit.
+
+## Durability
+
+**ENGINEERING DECISION:** PostgreSQL persists active state, answers, pinned content/scoring versions, final results and atomic outbox. Redis holds cache and BullMQ deadline jobs; a database sweep repairs lost jobs. A service interruption cancels affected matches without records. API restart cancels outstanding matches before accepting new fixture-policy matches. Completed history survives Redis restart.
+
+System-wide failure should produce a cancelled/no-win-loss result according to PRD rather than falsely awarding a normal match result.
+
+## Scaling path
+
+Initial single API instance can use Socket.IO locally. If multiple API instances are introduced, use a compatible Redis adapter and ensure room ownership/state remains consistent.
+
+Do not add horizontal WebSocket complexity before load tests justify it.
+
+## OPEN-07
+
+Still unresolved:
+
+- room/invite expiry;
+- final readiness edge cases;
+- behavior when both players independently lose network.
+
+Implement configuration/state extension points; do not hardcode undocumented product outcomes.## WebSocket contract
+
+**ENGINEERING DECISION:** Socket.IO namespace `/pvp`; event names and envelopes follow [Student Area Contract](../api/STUDENT_AREA_CONTRACT.md) and `packages/contracts/websocket/pvp-events.schema.json`. Commands use `eventVersion: "1"`, UUID `requestId`, and validated payloads. Handshake accepts Bearer auth; every command revalidates Student authorization.
+
+Client events: `room:create`, `room:join`, `player:ready`, `answer:submit`, `match:reconnect`, `room:leave`, `room:cancel`, `invitation:send`, `invitation:respond`.
+
+Server state/transition events: `room:state`, `match:started`, `question:started`, `answer:acknowledged`, `question:resolved`, `player:disconnected`, `match:completed`, `match:forfeited`, `match:cancelled`, `invitation:received`. Callback envelopes use `command:acknowledged`; failures also emit `room:error`.
+
+**OPEN-07:** runtime policy remains absent and real matches are blocked. Fixture policy is injected only by tests, with no environment/user bypass.
 
 ## Server time authority
 
