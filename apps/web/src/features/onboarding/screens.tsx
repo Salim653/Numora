@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@tka/ui';
 import { destination, useAuth } from './auth';
@@ -181,6 +182,17 @@ export function LoginScreen() {
               )}
             </>
           )}
+          <div className="demo-entry">
+            <p>Coba tampilan NUMORA tanpa akun atau backend. Semua data dalam demo bersifat fiktif.</p>
+            <Link className="secondary-button demo-entry-link" href="/demo/student">
+              Jelajahi demo Siswa, PvP, dan peringkat
+            </Link>
+            {process.env.NODE_ENV === 'development' && (
+              <Link className="demo-entry-admin" href="/admin/preview">
+                Lihat pratinjau Admin (development)
+              </Link>
+            )}
+          </div>
           <p className="helper">Role dipilih sekali setelah login pertama.</p>
         </section>
       </div>
