@@ -6,6 +6,10 @@ import { ClassesModule } from './modules/classes/classes.module';
 import { LearningModule } from './modules/learning/learning.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { SchoolsModule } from './modules/schools/schools.module';
+import { ContentModule } from './modules/content/content.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { IrtModule } from './modules/irt/irt.module';
 
 @Module({
   imports: [
@@ -19,6 +23,10 @@ import { SchoolsModule } from './modules/schools/schools.module';
     LearningModule,
     MonitoringModule,
     SchoolsModule,
+    ContentModule,
+    AdminModule,
+    ReportsModule,
+    IrtModule,
   ],
 })
 export class AppModule {}

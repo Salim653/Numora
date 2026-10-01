@@ -983,6 +983,1161 @@
           "admin-schools"
         ]
       }
+    },
+    "/api/v1/admin/content/curriculum": {
+      "get": {
+        "operationId": "ContentController_curriculum",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminCurriculumDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/chapters": {
+      "post": {
+        "operationId": "ContentController_chapter",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChapterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/chapters/{id}": {
+      "patch": {
+        "operationId": "ContentController_patchChapter",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChapterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/subchapters": {
+      "post": {
+        "operationId": "ContentController_subchapter",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubchapterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/subchapters/{id}": {
+      "patch": {
+        "operationId": "ContentController_patchSubchapter",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubchapterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/competencies": {
+      "post": {
+        "operationId": "ContentController_competency",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompetencyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/competencies/{id}": {
+      "patch": {
+        "operationId": "ContentController_patchCompetency",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompetencyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/levels": {
+      "post": {
+        "operationId": "ContentController_level",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLevelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/levels/{id}": {
+      "patch": {
+        "operationId": "ContentController_patchLevel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLevelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/versions": {
+      "get": {
+        "operationId": "ContentController_versions",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVersionsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/questions": {
+      "post": {
+        "operationId": "ContentController_question",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuestionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/questions/{id}/variants": {
+      "post": {
+        "operationId": "ContentController_variant",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVariantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/questions/{id}/status": {
+      "patch": {
+        "operationId": "ContentController_questionStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/versions/{id}/revisions": {
+      "post": {
+        "operationId": "ContentController_revise",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionContentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/versions/{id}/status": {
+      "patch": {
+        "operationId": "ContentController_versionStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/videos": {
+      "get": {
+        "operationId": "ContentController_videos",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminVideosDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      },
+      "post": {
+        "operationId": "ContentController_video",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVideoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/videos/{id}": {
+      "patch": {
+        "operationId": "ContentController_patchVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVideoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/tryout-packages": {
+      "get": {
+        "operationId": "ContentController_packages",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminTryoutDraftsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      },
+      "post": {
+        "operationId": "ContentController_createPackage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTryoutDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/tryout-packages/{id}": {
+      "patch": {
+        "operationId": "ContentController_updatePackage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTryoutDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/tryout-packages/{id}/publish": {
+      "post": {
+        "operationId": "ContentController_publishPackage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard": {
+      "get": {
+        "operationId": "AdminController_dashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDashboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/audit-logs": {
+      "get": {
+        "operationId": "AdminController_audit",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAuditListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/reports": {
+      "get": {
+        "operationId": "ReportsController_list",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReportsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-reports"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/{kind}/{id}": {
+      "patch": {
+        "operationId": "ReportsController_update",
+        "parameters": [
+          {
+            "name": "kind",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-reports"
+        ]
+      }
+    },
+    "/api/v1/admin/irt": {
+      "get": {
+        "operationId": "IrtController_list",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIrtDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
     }
   },
   "info": {
@@ -1895,6 +3050,994 @@
         },
         "required": [
           "revoked"
+        ]
+      },
+      "AdminTaxonDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "CHAPTER",
+              "SUBCHAPTER",
+              "COMPETENCY",
+              "LEVEL"
+            ]
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "parentId",
+          "code",
+          "name",
+          "displayOrder",
+          "status"
+        ]
+      },
+      "AdminCurriculumDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminTaxonDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateChapterDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ],
+            "default": "DRAFT"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "displayOrder"
+        ]
+      },
+      "ContentMutationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "UpdateChapterDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ],
+            "default": "DRAFT"
+          }
+        }
+      },
+      "CreateSubchapterDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ],
+            "default": "DRAFT"
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "displayOrder",
+          "chapterId"
+        ]
+      },
+      "UpdateSubchapterDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ],
+            "default": "DRAFT"
+          }
+        }
+      },
+      "CreateCompetencyDto": {
+        "type": "object",
+        "properties": {
+          "subchapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          }
+        },
+        "required": [
+          "subchapterId",
+          "code",
+          "description"
+        ]
+      },
+      "UpdateCompetencyDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          }
+        }
+      },
+      "CreateLevelDto": {
+        "type": "object",
+        "properties": {
+          "subchapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "levelNumber": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          }
+        },
+        "required": [
+          "subchapterId",
+          "levelNumber"
+        ]
+      },
+      "UpdateLevelDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          }
+        }
+      },
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
+      "ContentOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ]
+      },
+      "AdminVersionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "questionId": {
+            "type": "string"
+          },
+          "primaryCompetencyId": {
+            "type": "string"
+          },
+          "variantId": {
+            "type": "string"
+          },
+          "variantCode": {
+            "type": "string"
+          },
+          "variantKind": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "VARIANT"
+            ]
+          },
+          "originalVariantId": {
+            "type": "string",
+            "nullable": true
+          },
+          "versionNumber": {
+            "type": "number"
+          },
+          "questionType": {
+            "type": "string"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentOptionDto"
+            }
+          },
+          "answerOptionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string"
+          },
+          "contentStatus": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          },
+          "questionStatus": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          },
+          "reviewedByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "questionId",
+          "primaryCompetencyId",
+          "variantId",
+          "variantCode",
+          "variantKind",
+          "originalVariantId",
+          "versionNumber",
+          "questionType",
+          "stem",
+          "options",
+          "answerOptionId",
+          "explanation",
+          "difficulty",
+          "contentStatus",
+          "questionStatus",
+          "reviewedByUserId",
+          "reviewedAt"
+        ]
+      },
+      "AdminVersionsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminVersionDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateQuestionDto": {
+        "type": "object",
+        "properties": {
+          "stem": {
+            "type": "string"
+          },
+          "options": {
+            "minItems": 4,
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentOptionDto"
+            }
+          },
+          "answerOptionId": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string"
+          },
+          "primaryCompetencyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceRef": {
+            "type": "string"
+          },
+          "variantCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "stem",
+          "options",
+          "answerOptionId",
+          "explanation",
+          "difficulty",
+          "primaryCompetencyId",
+          "variantCode"
+        ]
+      },
+      "CreateVariantDto": {
+        "type": "object",
+        "properties": {
+          "stem": {
+            "type": "string"
+          },
+          "options": {
+            "minItems": 4,
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentOptionDto"
+            }
+          },
+          "answerOptionId": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string"
+          },
+          "originalVariantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "variantCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "stem",
+          "options",
+          "answerOptionId",
+          "explanation",
+          "difficulty",
+          "originalVariantId",
+          "variantCode"
+        ]
+      },
+      "ContentStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "QuestionContentDto": {
+        "type": "object",
+        "properties": {
+          "stem": {
+            "type": "string"
+          },
+          "options": {
+            "minItems": 4,
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentOptionDto"
+            }
+          },
+          "answerOptionId": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "stem",
+          "options",
+          "answerOptionId",
+          "explanation",
+          "difficulty"
+        ]
+      },
+      "AdminVideoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mappingId": {
+            "type": "string"
+          },
+          "subchapterId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "recommendationOrder": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "mappingId",
+          "subchapterId",
+          "title",
+          "url",
+          "source",
+          "recommendationOrder",
+          "status"
+        ]
+      },
+      "AdminVideosDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminVideoDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateVideoDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "subchapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recommendationOrder": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "url",
+          "source",
+          "subchapterId",
+          "recommendationOrder"
+        ]
+      },
+      "UpdateVideoDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "subchapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recommendationOrder": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED"
+            ]
+          }
+        }
+      },
+      "AdminTryoutDraftDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "questionVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "familyCode",
+          "packageVersion",
+          "name",
+          "status",
+          "questionVersionIds"
+        ]
+      },
+      "AdminTryoutDraftsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminTryoutDraftDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateTryoutDraftDto": {
+        "type": "object",
+        "properties": {
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "questionVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "familyCode",
+          "packageVersion",
+          "name",
+          "questionVersionIds"
+        ]
+      },
+      "UpdateTryoutDraftDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "questionVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "questionVersionIds"
+        ]
+      },
+      "AdminDashboardDto": {
+        "type": "object",
+        "properties": {
+          "schools": {
+            "type": "number"
+          },
+          "chapters": {
+            "type": "number"
+          },
+          "questions": {
+            "type": "number"
+          },
+          "readyVersions": {
+            "type": "number"
+          },
+          "openReports": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "schools",
+          "chapters",
+          "questions",
+          "readyVersions",
+          "openReports"
+        ]
+      },
+      "AdminAuditDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "actorUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "action": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "actorUserId",
+          "action",
+          "entityType",
+          "entityId",
+          "createdAt"
+        ]
+      },
+      "AdminAuditListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAuditDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "AdminReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "QUESTION",
+              "VIDEO"
+            ]
+          },
+          "referenceId": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "IN_REVIEW",
+              "RESOLVED",
+              "REJECTED"
+            ]
+          },
+          "followUp": {
+            "type": "string",
+            "nullable": true
+          },
+          "reportedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "referenceId",
+          "category",
+          "details",
+          "status",
+          "followUp",
+          "reportedAt"
+        ]
+      },
+      "AdminReportsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminReportDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ResolveReportDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "IN_REVIEW",
+              "RESOLVED",
+              "REJECTED"
+            ]
+          },
+          "followUp": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "followUp"
+        ]
+      },
+      "AdminIrtItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "batchId": {
+            "type": "string"
+          },
+          "questionVersionId": {
+            "type": "string"
+          },
+          "modelVersion": {
+            "type": "string"
+          },
+          "batchStatus": {
+            "type": "string"
+          },
+          "sampleSize": {
+            "type": "number"
+          },
+          "dataStatus": {
+            "type": "string"
+          },
+          "difficultyB": {
+            "type": "string",
+            "nullable": true
+          },
+          "discriminationA": {
+            "type": "string",
+            "nullable": true
+          },
+          "guessingC": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "batchId",
+          "questionVersionId",
+          "modelVersion",
+          "batchStatus",
+          "sampleSize",
+          "dataStatus",
+          "difficultyB",
+          "discriminationA",
+          "guessingC"
+        ]
+      },
+      "AdminIrtDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminIrtItemDto"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       }
     }
