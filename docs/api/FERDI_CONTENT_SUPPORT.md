@@ -66,6 +66,8 @@ Output memuat satu hasil per questionVersionId input, sampleSize, dataStatus `SU
 
 **Migrasi:** `0004_flimsy_korg` menambah input_snapshot, output_digest, dan failure_code pada irt_batches. Field nullable menjaga batch lama dapat dibaca. Batch lama tanpa snapshot tidak dapat difinalisasi ulang melalui layanan baru.
 
+**ENGINEERING RECOVERY:** `0005_irt_metadata_cursor_recovery` menambahkan ketiga kolom dengan `IF NOT EXISTS` untuk database hasil bridge yang mempertahankan timestamp legacy lebih baru daripada 0004. Database yang sudah menjalankan 0004 tetap aman; riwayat lama dan nilai metadata tidak ditimpa. Jalankan migrator sampai jurnal terbaru, lalu `pnpm db:check`; jangan menghapus atau menurunkan timestamp riwayat database.
+
 Admin membaca parameter melalui endpoint lama; `GET /admin/irt/batches` menambah informasi status, waktu mulai/selesai, failureCode, dan waktu rilis tanpa respons mentah. Batch gagal/pending atau sample <30 tidak membuka parameter numerik.
 
 **OPEN-12/18:** model, seleksi respons, skala nilai Tryout, scheduling dan failure/release policy belum disetujui. `complete` tidak mengisi resultReleasedAt dan tidak mengubah nilai/XP historis. UI/engine Tryout harus memakai gate rilis yang disepakati, bukan menganggap SUCCEEDED otomatis berarti hasil boleh dibuka.

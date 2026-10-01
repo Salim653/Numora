@@ -1,6 +1,6 @@
 # Audit ulang perubahan Ferdi — 1 Oktober 2026
 
-**ENGINEERING AUDIT:** cakupan adalah diff tiga PR Ferdi terhadap `origin/main` yang diperbarui pada audit, yaitu `4f912cf`. Audit tidak mengubah aturan PRD, menutup OPEN, menerapkan migrasi cloud, atau melakukan merge ke main.
+**ENGINEERING AUDIT:** cakupan adalah diff tiga PR Ferdi terhadap `origin/main` yang diperbarui pada audit, yaitu `4f912cf`. Audit awal tidak mengubah aturan PRD, menutup OPEN, menerapkan migrasi cloud, atau melakukan merge ke main. Pemulihan startup sandbox yang kemudian diminta pengguna tercatat di [progress implementasi](FERDI_IMPLEMENTATION_2026-10-01.md#pemulihan-pnpm-dev).
 
 ## Hasil dan cakupan ownership
 
@@ -41,6 +41,6 @@ Review/merge berurutan: [PR #22](https://github.com/ayiinee/Numora/pull/22), [PR
 
 Paket canonical belum dikonsumsi engine Student; laporan soal legacy masih menunggu migrasi canonical. API Tryout/PvP/leaderboard final dan agregasi dashboard lengkap tetap dependensi. Batch IRT SUCCEEDED tidak melepas hasil Tryout atau mengubah nilai/XP historis; OPEN-12/18 dan review kontrak Data tetap terbuka. Client laporan lama tanpa clientRequestId tetap diterima, dengan batas retry yang terdokumentasi.
 
-Operator Database menerapkan migrasi 0004 melalui prosedur tim sebelum fitur metadata batch/integrasi IRT digunakan. Operator menyiapkan IRT_PSEUDONYM_KEY server-only sebelum scheduler memanggil prepare. Tidak ada pemanggilan cloud atau migration/seed otomatis dalam audit.
+Operator Database menerapkan migrasi sampai jurnal terbaru, termasuk recovery 0005 untuk timestamp legacy yang melewati 0004, melalui prosedur tim sebelum fitur metadata batch/integrasi IRT digunakan. Sandbox development sudah dipulihkan atas permintaan eksplisit pengguna; deployment tetap pekerjaan operator. Operator menyiapkan IRT_PSEUDONYM_KEY server-only sebelum scheduler memanggil prepare. Tidak ada migration/seed otomatis dalam `pnpm dev`.
 
 Automation browser belum dapat dipakai: browser `iab` tidak tersedia, sedangkan Chrome gagal memulai app-server dengan `os error 3`. Fixture UI lokal sementara tidak dimasukkan ke PR. Keyboard/responsivitas dan E2E authenticated lintas peran tetap memerlukan bukti QA browser sebelum rilis. Skenario QA lengkap tersedia di [FERDI_CONTENT_SUPPORT](../api/FERDI_CONTENT_SUPPORT.md).

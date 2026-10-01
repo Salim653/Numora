@@ -24,9 +24,20 @@ Suite baru menjalankan HTTP NestJS dengan PostgreSQL nyata dan Auth provider fix
 - Worker Vitest API/web dibatasi dua per package untuk menghindari overload proses pada regresi paralel Windows. Dua tes lama sempat mencapai timeout 5 detik saat semua worker berjalan; pengujian terpisah dan regresi dengan batas worker lulus.
 - `pnpm openapi:generate` dan `pnpm contracts:types:check` **lulus**; hasil regenerasi OpenAPI identik dengan kontrak yang dikomit. Generated types pada dua branch awal juga diperiksa terhadap kontrak masing-masing. Bukti ini bukan OAuth Google atau acceptance staging sekolah.
 
-Migrasi 0004 hanya di-rehearsal pada database lokal khusus pengujian. Penerapan cloud dilakukan operator Database; layanan development pengguna yang aktif tidak dihentikan oleh pekerjaan ini.
+Pada audit awal, migrasi 0004 hanya di-rehearsal pada database lokal khusus pengujian. Pemulihan startup sandbox yang kemudian diminta pengguna tercatat di bagian berikut; database deployment tetap mengikuti prosedur operator.
 
 Temuan, perbaikan, dan batas bukti audit ulang tercatat di [FERDI_AUDIT_2026-10-01](FERDI_AUDIT_2026-10-01.md). Automation browser lingkungan belum dapat dibuka; pemeriksaan HTTP/React bukan pengganti E2E login Google dan acceptance lintas peran oleh QA.
+
+## Pemulihan `pnpm dev`
+
+**ENGINEERING RECOVERY, 1 Oktober 2026:** setelah pengguna meminta solusi dijalankan, sandbox development terverifikasi dibackup dan dimigrasi sampai `0005_irt_metadata_cursor_recovery`. Tiga kolom IRT belum ada, sementara timestamp riwayat legacy lebih tinggi daripada 0004 sehingga migrator melewatinya. Migrasi koreksi memakai `IF NOT EXISTS`, mempertahankan riwayat lama, dan tidak menimpa metadata pada jalur yang sudah menjalankan 0004.
+
+- `DATABASE_MIGRATION_URL` kosong; URL runtime yang telah diverifikasi cocok dengan sandbox dan memiliki ownership tabel hanya diteruskan sebagai variabel proses migrasi sementara. `.env` tidak diubah dan fallback tidak dimasukkan ke script aplikasi.
+- Backup public/drizzle, hash, bukti histori sebelum/sesudah, dan log pengujian berada di `D:\numora-ferdi-migration-20261001`. Backup ini tidak mencakup Auth/Storage atau ACL proyek.
+- Uji upgrade, bridge dengan cursor legacy, dan migrasi berulang lulus. `pnpm run ci` kembali lulus dengan 74 tes.
+- `pnpm db:check` sandbox lulus: 50 definisi tabel/kolom aplikasi hadir dan RLS aktif.
+- `pnpm dev` berhasil: web `/`, API health, dan database health HTTP 200; worker terhubung ke Redis. Identity dan Admin IRT tanpa sesi ditolak 401. Ini smoke startup, bukan E2E Google atau acceptance seluruh PRD.
+- Proses development yang dibuat untuk smoke dihentikan setelah pemeriksaan, sehingga pengguna dapat menjalankan `pnpm dev` dari terminal sendiri.
 
 ## Batas kesiapan
 
