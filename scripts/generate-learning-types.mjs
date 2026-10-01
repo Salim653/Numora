@@ -61,7 +61,7 @@ for (const name of names) {
 const result = lines.join('\n');
 if (process.argv.includes('--check')) {
   const current = await readFile(target, 'utf8').catch(() => '');
-  if (current !== result)
+  if (current.replaceAll('\r\n', '\n') !== result)
     throw new Error('Core Learning generated types are stale. Run pnpm contracts:types.');
 } else {
   await writeFile(target, result);
