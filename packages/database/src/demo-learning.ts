@@ -20,8 +20,7 @@ const levelTwoId = uuid(103);
 const competencyId = uuid(104);
 
 // DEMO fixtures only. Curriculum must review every stem, key, and explanation before a school trial.
-export async function seedDemoLearning() {
-  const { db } = getDatabase();
+export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['db'], 'insert' | 'select'> = getDatabase().db) {
   await db
     .insert(chapters)
     .values({ id: chapterId, code: 'DEMO-BILANGAN', name: 'Bab Demo: Bilangan', displayOrder: 1, status: 'READY' })

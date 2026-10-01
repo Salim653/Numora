@@ -17,11 +17,13 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "ci": "pnpm contracts:validate && pnpm contracts:types:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "ci": "pnpm test:checks && pnpm contracts:validate && pnpm contracts:types:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "test:checks": "node --test scripts/check-dev-env.test.mjs scripts/validate-contracts.test.mjs",
     "db:generate": "pnpm --filter @tka/database db:generate",
     "db:migrate": "dotenv -e .env -- pnpm --filter @tka/database db:migrate",
     "db:cloud:check": "dotenv -e .env.cloud.local -- pnpm --filter @tka/database db:cloud:check",
     "db:seed": "dotenv -e .env -- pnpm --filter @tka/database db:seed",
+    "db:seed:learning": "dotenv -e .env -- pnpm --filter @tka/database db:seed:learning",
     "db:studio": "dotenv -e .env -- pnpm --filter @tka/database db:studio",
     "worker:probe": "dotenv -e .env -- pnpm --filter @tka/worker worker:probe",
     "openapi:generate": "pnpm --filter @tka/database build && pnpm --filter @tka/api openapi:generate",
@@ -32,11 +34,13 @@
   "devDependencies": {
     "@eslint/js": "9.39.5",
     "@types/node": "24.19.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "dotenv-cli": "11.0.0",
     "eslint": "9.39.5",
     "prettier": "3.9.9",
     "turbo": "^2.5.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.70.0",
-    "dotenv-cli": "11.0.0"
+    "typescript-eslint": "8.70.0"
   }
 }

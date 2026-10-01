@@ -2,6 +2,8 @@
 
 **Status:** audit berjalan. Dokumen ini mencatat bukti pada `main` commit `a74ca07`, pemeriksaan lokal 30 September 2026, dan pemeriksaan ulang cloud **1 Oktober 2026 WIB** setelah password database direset. Hasil cloud dapat berubah. Jangan menafsirkan CI hijau sebagai bukti alur pengguna end-to-end.
 
+**Pembaruan pemulihan, 1 Oktober:** perbedaan skema di bawah adalah bukti **sebelum perbaikan**. PR #13 dan perbaikan sesi PR #15 kini terintegrasi di branch `fix/mvp-integration-audit`; sandbox berhasil direkonsiliasi setelah backup/restore dan pengujian. Skema aktif memiliki 52 tabel, kolom/tipe/nullability/default serta definisi constraint/index cocok dengan jalur migrasi baru. Status terkini dan pekerjaan tersisa dicatat di [MVP_RECOVERY_2026-10-01.md](MVP_RECOVERY_2026-10-01.md). `main` dan status PR asal belum diubah.
+
 **Target yang diklarifikasi koordinator:** seluruh modul PRD v0.5 harus berjalan end-to-end, bukan hanya demo UI. Koordinator juga mengonfirmasi proyek bernama `Numora-Staging` saat ini dipakai sebagai **sandbox development**. Nama tersebut bertabrakan dengan istilah *staging* untuk uji sekolah dalam [ENVIRONMENTS.md](ENVIRONMENTS.md); sebelum memakai akun siswa/guru sungguhan, siapkan lingkungan uji sekolah terpisah.
 
 ## Temuan penghambat

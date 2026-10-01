@@ -43,7 +43,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate contracts
-        run: pnpm contracts:validate && pnpm contracts:types:check
+        run: pnpm test:checks && pnpm contracts:validate && pnpm contracts:types:check
 
       - name: Lint
         run: pnpm lint
