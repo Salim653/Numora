@@ -4178,10 +4178,12 @@
             "type": "string"
           },
           "variantIndex": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "scoringPolicyVersionId": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "type": "string",

@@ -130,8 +130,8 @@ export class DrillPackagesService {
       packageVersion: row.packageVersion,
       name: row.name,
       levelId: row.levelId!,
-      variantIndex: row.variantIndex!,
-      scoringPolicyVersionId: row.scoringPolicyVersionId!,
+      variantIndex: row.variantIndex,
+      scoringPolicyVersionId: row.scoringPolicyVersionId,
       status: row.status,
       releaseAt: row.releaseAt?.toISOString() ?? null,
       questionVersionIds: ids,
@@ -307,6 +307,13 @@ export class DrillPackagesService {
       const row = await this.lock(tx, id);
       if (row.status === 'PUBLISHED') return { id };
       if (row.status !== 'DRAFT') throw new ConflictException('Hanya draf yang dapat diterbitkan.');
+      if (row.variantIndex === null || row.scoringPolicyVersionId === null)
+        throw new ConflictException(
+          problem(
+            'DRILL_PACKAGE_NOT_READY',
+            'Varian dan kebijakan penilaian harus tersedia sebelum publikasi.',
+          ),
+        );
       const items = await tx
         .select()
         .from(packageItems)
