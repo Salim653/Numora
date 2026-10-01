@@ -23,5 +23,7 @@ Endpoint di bawah memerlukan Admin aktif:
 
 Keluarga paket mempertahankan tipe, level, dan variantIndex. Revisi paket terbit menggunakan `POST` dengan family sama dan packageVersion baru. Update draf, publikasi, dan arsip dilindungi transaksi; kegagalan audit membatalkan mutasi. Publikasi berulang tidak membuat paket/versi baru, tetapi setiap request mutasi Admin yang berhasil tetap diaudit.
 
+Pembacaan paket legacy mengikuti nullable schema untuk `variantIndex` dan `scoringPolicyVersionId`; generated types tidak menyatakan metadata yang belum ada sebagai nilai wajib non-null. Draf tanpa varian/policy ditolak saat publikasi. API pembuatan baru tetap memerlukan keduanya; penanganan paket lama yang belum lengkap dikoordinasikan dengan pemilik engine.
+
 **DEPENDENCY:** paket ini berada di `assessment_packages`/`package_items`. Learning Student saat ini membaca tabel kompatibilitas `drill_*`. Migrasi dan konsumsi engine canonical milik Qurotul. Tidak ada dual-write, migrasi attempt, seed cloud, atau perubahan scoring dari pekerjaan ini.
 
