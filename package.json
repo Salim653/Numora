@@ -8,7 +8,8 @@
     "pnpm": ">=12 <13"
   },
   "scripts": {
-    "dev": "dotenv -e .env -- pnpm --filter @tka/database build && dotenv -e .env -- turbo run dev --env-mode=loose --filter=@tka/web --filter=@tka/api --filter=@tka/worker",
+    "dev": "pnpm env:check && dotenv -e .env -- pnpm --filter @tka/database build && dotenv -e .env -- turbo run dev --env-mode=loose --filter=@tka/web --filter=@tka/api --filter=@tka/worker",
+    "env:check": "dotenv -e .env -- node scripts/check-dev-env.mjs",
     "build": "turbo run build",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "turbo run typecheck",
