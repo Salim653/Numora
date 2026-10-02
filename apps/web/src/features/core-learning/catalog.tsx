@@ -1,103 +1,77 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Badge, Button, Card, EmptyState, Icon, Input, ProgressBar, SectionHeader } from '@tka/ui';
+import { StudentLayout } from '@/components/shell';
 import { learningApi } from './api';
-import { joinClass } from '@/lib/api';
-import { useAuth } from '@/features/onboarding/auth';
-import { DataState, LearningFrame, Panel, PrimaryButton, Status, StudentGate } from './ui';
-
-function sortByOrder<T extends { order: number }>(items: T[]) {
-  return [...items].sort((a, b) => a.order - b.order);
-}
-
-export function JoinClassPanel({ token }: { token: string }) {
-  const { state, refresh } = useAuth();
-  const queryClient = useQueryClient();
-  const [joinCode, setJoinCode] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  if (state.status !== 'ready' || state.profile.studentAffiliation === 'SCHOOL') return null;
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!joinCode.trim()) return;
-    setBusy(true);
-    setError('');
-    try {
-      await joinClass(token, joinCode.trim());
-      setJoinCode('');
-      await refresh();
-      await queryClient.invalidateQueries();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Belum dapat bergabung.');
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <form
-      className="mb-6 rounded-2xl border border-slate-200 bg-white p-6"
-      onSubmit={(event) => void submit(event)}
-    >
-      <h2 className="text-xl font-bold">Gabung Class</h2>
-      <p className="mt-2 text-sm text-slate-700">
-        Masukkan kode dari Guru untuk terafiliasi dengan sekolah.
-      </p>
-      <label className="mt-4 block text-sm font-semibold" htmlFor="student-join-code">
-        Kode Class
-      </label>
-      <input
-        id="student-join-code"
-        className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-4 sm:max-w-sm"
-        value={joinCode}
-        onChange={(event) => setJoinCode(event.target.value)}
-        maxLength={32}
-        required
-      />
-      {error && (
-        <p className="mt-2 text-red-700" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="mt-4">
-        <PrimaryButton type="submit" disabled={busy}>
-          {busy ? 'Bergabung…' : 'Gabung Class'}
-        </PrimaryButton>
-      </div>
-    </form>
-  );
-}
+import { DataState, StudentGate } from './ui';
+import { ChapterCard } from './cards';
 
 export function CatalogScreen() {
   return (
-    <LearningFrame title="Pilih Bab">
-      <StudentGate>{(token) => <CatalogData token={token} />}</StudentGate>
-    </LearningFrame>
+    <StudentLayout title="Belajar matematika" subtitle="Satu bab, satu langkah lebih paham.">
+      <StudentGate>{(token) => <CatalogContent token={token} />}</StudentGate>
+    </StudentLayout>
   );
 }
-
-function CatalogData({ token }: { token: string }) {
+function CatalogContent({ token }: { token: string }) {
+  const [search, setSearch] = useState('');
   const query = useQuery({ queryKey: ['chapters'], queryFn: () => learningApi.catalog(token) });
   if (query.isPending || query.isError)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
-  if (!query.data.chapters.length)
-    return <Status title="Materi belum tersedia">Bab belum diterbitkan.</Status>;
+  const chapters = [...query.data.chapters].sort((a, b) => a.order - b.order);
+  const visible = chapters
+    .map((chapter, index) => ({ chapter, index }))
+    .filter(({ chapter }) =>
+      chapter.title.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
+    );
   return (
-    <div className="grid gap-3">
-      {sortByOrder(query.data.chapters).map((chapter) => (
-        <Link
-          key={chapter.id}
-          className="flex min-h-16 items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 font-semibold shadow-sm hover:border-[var(--numora-purple)]"
-          href={`/student/learn/${chapter.id}`}
-        >
-          <span>{chapter.title}</span>
-          <span aria-hidden="true">→</span>
-        </Link>
-      ))}
+    <div className="page-stack">
+      <div className="catalog-intro">
+        <div>
+          <Badge variant="secondary">TKA Matematika · Kelas IX</Badge>
+          <h2>Temukan materi belajarmu</h2>
+          <p>Pilih bab, jelajahi subbab, lalu berlatih dari level yang terbuka.</p>
+        </div>
+        <span className="catalog-math" aria-hidden="true">
+          a² + b²
+        </span>
+      </div>
+      <div className="catalog-toolbar">
+        <Input
+          label="Cari bab"
+          type="search"
+          placeholder="Ketik nama bab…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          leftIcon={<Icon name="search" />}
+        />
+        <span className="muted">{chapters.length} bab tersedia</span>
+      </div>
+      {visible.length ? (
+        <div className="chapter-grid catalog-grid">
+          {visible.map(({ chapter, index }) => (
+            <ChapterCard key={chapter.id} chapter={chapter} index={index} />
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={<Icon name="book" />}
+            title={chapters.length ? 'Bab tidak ditemukan' : 'Materi sedang disiapkan'}
+            description={
+              chapters.length
+                ? 'Coba kata kunci yang lain.'
+                : 'Bab yang diterbitkan akan muncul di sini.'
+            }
+          />
+        </Card>
+      )}
     </div>
   );
 }
@@ -105,13 +79,12 @@ function CatalogData({ token }: { token: string }) {
 export function ChapterScreen() {
   const { chapterId } = useParams<{ chapterId: string }>();
   return (
-    <LearningFrame title="Pilih Subbab">
-      <StudentGate>{(token) => <ChapterData token={token} chapterId={chapterId} />}</StudentGate>
-    </LearningFrame>
+    <StudentLayout title="Jelajahi subbab" backHref="/student/learn">
+      <StudentGate>{(token) => <ChapterContent token={token} chapterId={chapterId} />}</StudentGate>
+    </StudentLayout>
   );
 }
-
-function ChapterData({ token, chapterId }: { token: string; chapterId: string }) {
+function ChapterContent({ token, chapterId }: { token: string; chapterId: string }) {
   const query = useQuery({
     queryKey: ['chapter', chapterId],
     queryFn: () => learningApi.chapter(token, chapterId),
@@ -121,40 +94,63 @@ function ChapterData({ token, chapterId }: { token: string; chapterId: string })
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   return (
-    <div>
-      <p className="mb-5 text-slate-700">{query.data.chapter.title}</p>
-      {!query.data.subchapters.length ? (
-        <Status title="Subbab belum tersedia">Belum ada subbab pada bab ini.</Status>
-      ) : (
-        <div className="grid gap-3">
-          {sortByOrder(query.data.subchapters).map((subchapter) => (
-            <Link
-              key={subchapter.id}
-              className="flex min-h-16 items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 font-semibold shadow-sm hover:border-[var(--numora-purple)]"
-              href={`/student/learn/${chapterId}/${subchapter.id}`}
-            >
-              <span>{subchapter.title}</span>
-              <span aria-hidden="true">→</span>
-            </Link>
-          ))}
+    <div className="page-stack">
+      <div className="catalog-intro">
+        <div>
+          <span className="eyebrow">Bab matematika</span>
+          <h2>{query.data.chapter.title}</h2>
+          <p>{query.data.subchapters.length} subbab · Pilih topik yang ingin kamu latih.</p>
         </div>
+        <span className="icon-tile accent-0">
+          <Icon name="book" />
+        </span>
+      </div>
+      <SectionHeader title="Materi dalam bab ini" />
+      {query.data.subchapters.length ? (
+        <div className="subchapter-list">
+          {[...query.data.subchapters]
+            .sort((a, b) => a.order - b.order)
+            .map((sub, index) => (
+              <Link
+                className="subchapter-row"
+                key={sub.id}
+                href={`/student/learn/${chapterId}/${sub.id}`}
+              >
+                <span className={`subchapter-number accent-${index % 4}`}>
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div className="row-copy">
+                  <h3>{sub.title}</h3>
+                  <p>Lihat level dan progres latihan</p>
+                </div>
+                <Icon name="arrow" />
+              </Link>
+            ))}
+        </div>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={<Icon name="book" />}
+            title="Subbab belum tersedia"
+            description="Materi pada bab ini sedang disiapkan."
+          />
+        </Card>
       )}
     </div>
   );
 }
 
 export function SubchapterScreen() {
-  const { subchapterId } = useParams<{ subchapterId: string }>();
+  const { chapterId, subchapterId } = useParams<{ chapterId: string; subchapterId: string }>();
   return (
-    <LearningFrame title="Pilih Level">
+    <StudentLayout title="Langkah belajarmu" backHref={`/student/learn/${chapterId}`}>
       <StudentGate>
-        {(token) => <SubchapterData token={token} subchapterId={subchapterId} />}
+        {(token) => <SubchapterContent token={token} subchapterId={subchapterId} />}
       </StudentGate>
-    </LearningFrame>
+    </StudentLayout>
   );
 }
-
-function SubchapterData({ token, subchapterId }: { token: string; subchapterId: string }) {
+function SubchapterContent({ token, subchapterId }: { token: string; subchapterId: string }) {
   const router = useRouter();
   const query = useQuery({
     queryKey: ['subchapter', subchapterId],
@@ -168,47 +164,111 @@ function SubchapterData({ token, subchapterId }: { token: string; subchapterId: 
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
+  const levels = [...query.data.levels].sort((a, b) => a.order - b.order);
+  const completed = levels.filter((level) => level.status === 'completed').length;
   return (
-    <div>
-      <p className="mb-5 text-slate-700">{query.data.subchapter.title}</p>
-      {!query.data.levels.length ? (
-        <Status title="Level belum tersedia">Belum ada level pada subbab ini.</Status>
-      ) : (
-        <div className="grid gap-3">
-          {sortByOrder(query.data.levels).map((level) => (
-            <Panel key={level.id} className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="font-bold">{level.title}</h2>
-                <p className="mt-1 text-sm text-slate-700">
-                  {level.status === 'locked'
-                    ? 'Terkunci'
-                    : level.status === 'inProgress'
-                      ? 'Sedang dikerjakan'
-                      : level.status === 'completed'
-                        ? 'Selesai'
-                        : 'Terbuka'}
-                </p>
-                {level.latestScore !== null && (
-                  <p className="text-sm text-slate-700">
-                    Terakhir {level.latestScore} · Terbaik {level.bestScore ?? level.latestScore}
-                  </p>
-                )}
-              </div>
-              {level.status === 'locked' ? (
-                <span className="text-sm font-semibold text-slate-600">
-                  Selesaikan level sebelumnya
+    <div className="page-stack">
+      <div className="catalog-intro">
+        <div>
+          <span className="eyebrow">Subbab</span>
+          <h2>{query.data.subchapter.title}</h2>
+          <p>Latihan dengan ritmemu. Nilai minimal 80 membuka level berikutnya.</p>
+          {levels.length > 0 && (
+            <ProgressBar
+              value={completed}
+              max={levels.length}
+              showLabel
+              label={`${completed} dari ${levels.length} level selesai`}
+            />
+          )}
+        </div>
+        <span className="icon-tile accent-2">
+          <Icon name="target" />
+        </span>
+      </div>
+      <SectionHeader
+        title="Pilih level latihan"
+        subtitle="Nilai terakhir dan terbaik tersimpan di setiap level."
+      />
+      {levels.length ? (
+        <div className="level-grid">
+          {levels.map((level, index) => (
+            <Card key={level.id} className={`level-card level-card--${level.status}`}>
+              <div className="level-card-top">
+                <span className="level-number">
+                  {level.status === 'locked' ? (
+                    <Icon name="lock" />
+                  ) : level.status === 'completed' ? (
+                    <Icon name="check" />
+                  ) : (
+                    String(index + 1).padStart(2, '0')
+                  )}
                 </span>
+                <Badge
+                  variant={
+                    level.status === 'completed'
+                      ? 'success'
+                      : level.status === 'inProgress'
+                        ? 'primary'
+                        : 'default'
+                  }
+                >
+                  {
+                    {
+                      locked: 'Terkunci',
+                      open: 'Terbuka',
+                      inProgress: 'Sedang dikerjakan',
+                      completed: 'Selesai',
+                    }[level.status]
+                  }
+                </Badge>
+              </div>
+              <h3>{level.title}</h3>
+              <p className="muted">Latihan bertahap</p>
+              <dl className="score-pair">
+                <div>
+                  <dt>Terakhir</dt>
+                  <dd>{level.latestScore ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt>Terbaik</dt>
+                  <dd>{level.bestScore ?? '—'}</dd>
+                </div>
+              </dl>
+              {level.status === 'locked' ? (
+                <p className="locked-note">
+                  <Icon name="lock" width={16} height={16} />
+                  Selesaikan level sebelumnya dengan nilai minimal 80.
+                </p>
               ) : (
-                <PrimaryButton disabled={start.isPending} onClick={() => start.mutate(level.id)}>
-                  {level.status === 'inProgress' ? 'Lanjutkan Drill' : 'Mulai Drill'}
-                </PrimaryButton>
+                <Button
+                  fullWidth
+                  variant={level.status === 'completed' ? 'secondary' : 'primary'}
+                  disabled={start.isPending}
+                  onClick={() => start.mutate(level.id)}
+                >
+                  {start.isPending && start.variables === level.id
+                    ? 'Membuka latihan…'
+                    : level.status === 'inProgress'
+                      ? 'Lanjutkan latihan'
+                      : level.status === 'completed'
+                        ? 'Latihan lagi'
+                        : 'Mulai latihan'}
+                  <Icon name="arrow" width={18} height={18} />
+                </Button>
               )}
-            </Panel>
+            </Card>
           ))}
         </div>
+      ) : (
+        <EmptyState
+          icon={<Icon name="target" />}
+          title="Level belum tersedia"
+          description="Level latihan akan muncul setelah diterbitkan."
+        />
       )}
       {start.isError && (
-        <p role="alert" className="mt-4 text-sm text-red-700">
+        <p className="form-error" role="alert">
           {start.error.message}
         </p>
       )}

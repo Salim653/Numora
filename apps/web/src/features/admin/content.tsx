@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Brand, Button } from '@tka/ui';
+import { Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
 import {
@@ -28,7 +28,7 @@ import type {
   AdminVersionDto,
   QuestionContentDto,
 } from './generated-types';
-import { AdminNav } from './nav';
+import { AppShell } from '@/components/shell';
 
 type Workbench = Awaited<ReturnType<typeof loadAdminWorkbench>>;
 type View = 'curriculum' | 'questions' | 'videos' | 'packages' | 'reports' | 'irt' | 'audit';
@@ -47,6 +47,12 @@ const message = (error: unknown) =>
 type Run = (action: () => Promise<{ id: string }>) => Promise<boolean>;
 
 export function AdminContentScreen() {
+  const { state } = useAuth();
+  const accountKey = state.status === 'ready' ? state.profile.id : state.status;
+  return <AdminContentScreenContent key={accountKey} />;
+}
+
+function AdminContentScreenContent() {
   const { state, refresh } = useAuth();
   const token =
     state.status === 'ready' && state.profile.role === 'ADMIN' ? state.session.access_token : null;
@@ -121,7 +127,7 @@ export function AdminContentScreen() {
   }, [profileId]);
   if (!token || denied)
     return (
-      <main className="monitoring-shell">
+      <AppShell area="admin">
         <section className="monitoring-frame">
           <h1>Kelola konten</h1>
           <p role="status">
@@ -137,7 +143,7 @@ export function AdminContentScreen() {
           <Link href="/">Ke halaman masuk</Link>{' '}
           <Button onClick={() => void refresh()}>Periksa akun lagi</Button>
         </section>
-      </main>
+      </AppShell>
     );
   const current = loadedFor === profileId ? data : null;
   const pageLength = current
@@ -154,12 +160,8 @@ export function AdminContentScreen() {
               : current.audit.items.length
     : 0;
   return (
-    <main className="monitoring-shell">
+    <AppShell area="admin">
       <div className="monitoring-frame admin-content">
-        <header className="monitoring-header">
-          <Link className="brand" href="/admin"><Brand /></Link>
-          <AdminNav />
-        </header>
         <h1>Konten dan operasional</h1>
         <p>
           Data berasal dari server. Revisi soal disimpan sebagai versi baru; riwayat pengerjaan
@@ -440,7 +442,7 @@ export function AdminContentScreen() {
           </>
         )}
       </div>
-    </main>
+    </AppShell>
   );
 }
 

@@ -5,8 +5,8 @@ import { configureApplication } from './bootstrap';
 import { requireTeacherTokenPepper } from './modules/schools/teacher-token';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
   requireTeacherTokenPepper();
+  const app = await NestFactory.create(AppModule);
   configureApplication(app);
 
   const port = Number(process.env.API_PORT ?? 3001);

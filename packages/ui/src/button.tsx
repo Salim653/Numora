@@ -113,7 +113,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       style,
       ...props
     },
-    ref
+    ref,
   ) => {
     const isDisabled = disabled || loading;
 
@@ -128,7 +128,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       transition: 'all var(--transition-fast)',
       opacity: isDisabled ? 0.62 : 1,
       width: fullWidth ? '100%' : 'auto',
-      outline: 'none',
       ...style,
     };
 
@@ -163,7 +162,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {loading && <span className="sr-only">Memuat...</span>}
       </button>
     );
-  }
+  },
 );
 
 Button.displayName = 'Button';
@@ -259,7 +258,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       style,
       ...props
     },
-    ref
+    ref,
   ) => {
     const isDisabled = disabled || loading;
 
@@ -278,7 +277,6 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
           cursor: isDisabled ? 'not-allowed' : 'pointer',
           opacity: isDisabled ? 0.62 : 1,
           transition: 'all var(--transition-fast)',
-          outline: 'none',
           flexShrink: 0,
           ...style,
         }}
@@ -287,7 +285,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         {loading ? <SpinnerIcon /> : icon}
       </button>
     );
-  }
+  },
 );
 
 IconButton.displayName = 'IconButton';
@@ -303,7 +301,7 @@ export const buttonStyles = {
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: all var(--transition-fast);
-    outline: none;
+
     border: none;
     text-decoration: none;
     white-space: nowrap;

@@ -11,6 +11,7 @@ import type {
   AssessmentHistory,
 } from './types';
 import type {
+  StudentDashboardDto,
   StudentQuestionReportDto,
   StudentVideoReportDto,
   StudentVideosDto,
@@ -64,6 +65,7 @@ export async function request<T>(token: string, path: string, init?: RequestInit
 const id = encodeURIComponent;
 
 export const learningApi = {
+  dashboard: (token: string) => request<StudentDashboardDto>(token, '/students/me/dashboard'),
   catalog: (token: string) => request<Catalog>(token, '/chapters'),
   chapter: (token: string, chapterId: string) =>
     request<ChapterDetail>(token, `/chapters/${id(chapterId)}`),

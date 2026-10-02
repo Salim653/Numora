@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./tokens.css": "./src/tokens.css"
   },
   "scripts": {
     "build": "node -e \"console.log('ui: source package consumed by Next.js')\"",

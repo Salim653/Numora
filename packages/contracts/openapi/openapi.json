@@ -211,6 +211,19 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Attempt limit exceeded.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Attempt limiter unavailable."
           }
         },
         "security": [
@@ -1003,6 +1016,19 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Attempt limit exceeded.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Attempt limiter unavailable."
           }
         },
         "security": [
@@ -3196,7 +3222,8 @@
         },
         "required": [
           "id",
-          "name"
+          "name",
+          "joinCode"
         ]
       },
       "JoinClassDto": {

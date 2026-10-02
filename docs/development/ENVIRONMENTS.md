@@ -25,6 +25,8 @@ The local processes use cloud dependencies; Docker is not required for developme
 
 The student UI uses authenticated NestJS endpoints. Former standalone preview routes have been removed. Demo question content remains explicitly labeled from backend metadata; browser fixtures run only inside tests.
 
+**ENGINEERING DECISION (2 October 2026):** API startup requires server-only `TEACHER_TOKEN_PEPPER`; do not expose it through `NEXT_PUBLIC_*`. Use an environment-specific random secret of at least 32 bytes, stable across API replicas and the 72-hour token lifetime. Preserve the same pepper for outstanding short tokens issued by #26. Redis TLS and the environment/developer prefix also serve atomic teacher-verification and class-join quotas; outage returns 503 before mutation. See [onboarding/UI integration](ONBOARDING_UI_INTEGRATION_2026-10-02.md).
+
 ## Staging
 
 Purpose:

@@ -4,6 +4,8 @@ Status working tree per 1 Oktober 2026. Dokumen ini mencatat implementasi dan bu
 
 **PROPOSED — integrasi 2 Oktober 2026:** PR #25/#22/#23/#24 digabung pada branch integrasi untuk satu PR menuju main. Paket Admin, laporan Student dan snapshot IRT memakai engine canonical yang sama; jurnal gabungan menambahkan 0009 untuk metadata IRT. Review, bukti pengujian dan jalur upgrade ada pada [laporan integrasi](CORE_CONTENT_IRT_INTEGRATION_2026-10-02.md). Status merge aktual tetap mengikuti GitHub.
 
+**ENGINEERING DECISION — perluasan integrasi 2 Oktober 2026:** atas instruksi pemilik, #26/#27/#28 ditambahkan ke PR #29. Token guru baru delapan karakter memakai HMAC berversi dengan pepper server; token lama tetap berlaku sampai kedaluwarsa. Kode kelas baru enam karakter tetap dapat dipakai beberapa siswa; hanya token guru yang single-use. UI responsif mempertahankan engine canonical, isolasi cache per identitas, histori/IRT, laporan/video, dan akses PvP/peringkat sesuai availability API. Detail dan gate validasi ada pada [rekonsiliasi onboarding dan UI](ONBOARDING_UI_INTEGRATION_2026-10-02.md). Ini belum menyatakan merge ke main atau kesiapan staging.
+
 ## Fondasi dan Drill
 
 - [x] Runtime Drill memakai `assessment_packages`, `assessment_attempts`, `attempt_items`, dan `attempt_answers`. Service katalog, Drill, riwayat, dan Tryout dipisahkan.

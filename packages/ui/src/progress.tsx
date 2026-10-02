@@ -66,7 +66,8 @@ export function ProgressBar({
   style,
   ...props
 }: ProgressBarProps) {
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+  const percentage =
+    max > 0 && Number.isFinite(value) ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
   const color = variantColors[variant];
 
   return (
@@ -81,22 +82,25 @@ export function ProgressBar({
       {...props}
     >
       {showLabel && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: 'var(--text-sm)',
-          fontWeight: 'var(--font-semibold)',
-          color: 'var(--color-text)',
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 'var(--font-semibold)',
+            color: 'var(--color-text)',
+          }}
+        >
           <span>{label || `${Math.round(percentage)}%`}</span>
         </div>
       )}
       <div
         role="progressbar"
-        aria-valuenow={value}
+        aria-label={label || 'Progres'}
+        aria-valuenow={percentage}
         aria-valuemin={0}
-        aria-valuemax={max}
+        aria-valuemax={100}
         style={{
           width: '100%',
           height: sizeHeights[size],
@@ -169,7 +173,8 @@ export function ProgressRing({
   style,
   ...props
 }: ProgressRingProps) {
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+  const percentage =
+    max > 0 && Number.isFinite(value) ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (percentage / 100) * circumference;
@@ -178,6 +183,11 @@ export function ProgressRing({
   return (
     <div
       className={`numora-progress-ring ${className}`}
+      role="progressbar"
+      aria-label={label || 'Progres'}
+      aria-valuenow={percentage}
+      aria-valuemin={0}
+      aria-valuemax={100}
       style={{
         position: 'relative',
         width: size,
@@ -190,6 +200,7 @@ export function ProgressRing({
       {...props}
     >
       <svg
+        aria-hidden="true"
         width={size}
         height={size}
         style={{
@@ -215,7 +226,7 @@ export function ProgressRing({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={animated ? offset : circumference}
+          strokeDashoffset={offset}
           style={{
             transition: animated ? 'stroke-dashoffset var(--transition-slow)' : 'none',
           }}
@@ -231,12 +242,15 @@ export function ProgressRing({
             justifyContent: 'center',
           }}
         >
-          <span style={{
-            fontSize: size < 60 ? 'var(--text-xs)' : size < 100 ? 'var(--text-sm)' : 'var(--text-lg)',
-            fontWeight: 'var(--font-extrabold)',
-            color: 'var(--color-text)',
-            lineHeight: 1,
-          }}>
+          <span
+            style={{
+              fontSize:
+                size < 60 ? 'var(--text-xs)' : size < 100 ? 'var(--text-sm)' : 'var(--text-lg)',
+              fontWeight: 'var(--font-extrabold)',
+              color: 'var(--color-text)',
+              lineHeight: 1,
+            }}
+          >
             {label || `${Math.round(percentage)}%`}
           </span>
         </div>
@@ -331,37 +345,50 @@ export function StatCard({
         </div>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 'var(--space-2)',
-        }}>
-          <span style={{
-            fontSize: 'var(--text-2xl)',
-            fontWeight: 'var(--font-extrabold)',
-            color: 'var(--color-text)',
-            lineHeight: 1,
-          }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 'var(--space-2)',
+          }}
+        >
+          <span
+            style={{
+              fontSize: 'var(--text-2xl)',
+              fontWeight: 'var(--font-extrabold)',
+              color: 'var(--color-text)',
+              lineHeight: 1,
+            }}
+          >
             {value}
           </span>
           {trend && trendValue && (
-            <span style={{
-              fontSize: 'var(--text-xs)',
-              fontWeight: 'var(--font-semibold)',
-              color: trend === 'up' ? 'var(--color-success)' : trend === 'down' ? 'var(--color-danger)' : 'var(--color-text-muted)',
-            }}>
+            <span
+              style={{
+                fontSize: 'var(--text-xs)',
+                fontWeight: 'var(--font-semibold)',
+                color:
+                  trend === 'up'
+                    ? 'var(--color-success)'
+                    : trend === 'down'
+                      ? 'var(--color-danger)'
+                      : 'var(--color-text-muted)',
+              }}
+            >
               {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'} {trendValue}
             </span>
           )}
         </div>
-        <p style={{
-          fontSize: 'var(--text-sm)',
-          color: 'var(--color-text-muted)',
-          margin: 'var(--space-1) 0 0 0',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}>
+        <p
+          style={{
+            fontSize: 'var(--text-sm)',
+            color: 'var(--color-text-muted)',
+            margin: 'var(--space-1) 0 0 0',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
           {label}
         </p>
       </div>
@@ -445,12 +472,14 @@ export function StarsDisplay({
         ))}
       </span>
       {showLabel && (
-        <span style={{
-          fontSize: 'var(--text-sm)',
-          fontWeight: 'var(--font-semibold)',
-          color: 'var(--color-text-muted)',
-          marginLeft: 'var(--space-1)',
-        }}>
+        <span
+          style={{
+            fontSize: 'var(--text-sm)',
+            fontWeight: 'var(--font-semibold)',
+            color: 'var(--color-text-muted)',
+            marginLeft: 'var(--space-1)',
+          }}
+        >
           {stars}/{maxStars}
         </span>
       )}

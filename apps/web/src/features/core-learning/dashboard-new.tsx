@@ -1,337 +1,283 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/features/onboarding/auth';
-import { learningApi } from '@/features/core-learning/api';
-import {
-  StudentShell,
-  GreetingSection,
-  SectionHeader,
-  FeatureGrid,
-  ProgressCard,
-  StatCard,
-  EmptyState,
-  SkeletonCard,
-  Skeleton,
-  type FeatureItem,
-} from '@/components/shell';
-
-/* ============================================
- * NEW STUDENT DASHBOARD
- * Modern home screen inspired by reference screenshots
- * ============================================ */
+import { Badge, Card, EmptyState, Icon, SectionHeader } from '@tka/ui';
+import { AppShell } from '@/components/shell';
+import { learningApi } from './api';
+import { DataState, StudentGate } from './ui';
+import { ActivityRow, ChapterCard, ProgressSummary } from './cards';
 
 export function NewStudentDashboard() {
   return (
-    <StudentDashboardGate>
-      {(token, profile) => (
-        <StudentShell
-          userName={profile.displayName.split(' ')[0] || 'User'}
-          userXp={0}
-          userAffiliation={profile.studentAffiliation === 'SCHOOL' ? 'SEKOLAH' : 'MANDIRI'}
-        >
-          <DashboardContent token={token} profile={profile} />
-        </StudentShell>
-      )}
-    </StudentDashboardGate>
+    <AppShell>
+      <StudentGate>{(token) => <DashboardContent token={token} />}</StudentGate>
+    </AppShell>
   );
 }
 
-function StudentDashboardGate({ children }: { children: (token: string, profile: { displayName: string; studentAffiliation: string }) => React.ReactNode }) {
-  const { state, refresh } = useAuth();
-  const router = useRouter();
-
-  // Handle all non-ready states first
-  if (state.status !== 'ready') {
-    if (state.status === 'signed_out') {
-      router.replace('/');
-      return null;
-    }
-    if (state.status === 'registration') {
-      router.replace('/onboarding');
-      return null;
-    }
-    if (state.status === 'error') {
-      return (
-        <StudentShell userName="...">
-          <EmptyState
-            icon="⚠️"
-            title="Gagal memuat"
-            description={state.message || 'Terjadi kesalahan saat memuat data.'}
-            action={<button onClick={() => void refresh()}>Coba Lagi</button>}
-          />
-        </StudentShell>
-      );
-    }
-    // loading, disabled states
-    return (
-      <StudentShell userName="...">
-        <DashboardSkeleton />
-      </StudentShell>
-    );
-  }
-
-  // At this point, state.status === 'ready' and we have access to session and profile
-  if (state.profile.role !== 'STUDENT') {
-    router.replace('/');
-    return null;
-  }
-
-  const token = state.session.access_token;
-  const profile = {
-    displayName: state.profile.displayName,
-    studentAffiliation: state.profile.studentAffiliation || 'MANDIRI',
-  };
-
-  return children(token, profile);
-}
-
-function DashboardContent({ token, profile }: { token: string; profile: { displayName: string; studentAffiliation: string } }) {
-  const { data: progress, isLoading: progressLoading } = useQuery({
-    queryKey: ['student-progress'],
-    queryFn: () => learningApi.progress(token),
-    staleTime: 30000,
+function DashboardContent({ token }: { token: string }) {
+  const dashboard = useQuery({
+    queryKey: ['student-dashboard'],
+    queryFn: () => learningApi.dashboard(token),
   });
-
-  // Feature shortcuts - based on PRD, Mandiri can access Drill and PVP
-  const featureItems: FeatureItem[] = [
-    { label: 'Drill', icon: '🎯', href: '/student/learn' },
-    { label: 'TryOut', icon: '📋', href: '/student/tryout', disabled: profile.studentAffiliation !== 'SCHOOL' },
-    { label: 'Riwayat', icon: '📊', href: '/student/assessment' },
-    { label: 'PVP', icon: '⚔️', href: '/demo/pvp' },
-    { label: 'Ranking', icon: '🏆', href: '/demo/leaderboards' },
-    { label: 'Profil', icon: '👤', href: '/student/profile' },
-  ];
-
-  return (
-    <div>
-      {/* Greeting */}
-      <GreetingSection
-        name={profile.displayName.split(' ')[0] ?? profile.displayName}
-        affiliation={profile.studentAffiliation === 'SCHOOL' ? 'SEKOLAH' : 'MANDIRI'}
+  const catalog = useQuery({ queryKey: ['chapters'], queryFn: () => learningApi.catalog(token) });
+  if (dashboard.isPending || dashboard.isError)
+    return (
+      <DataState
+        pending={dashboard.isPending}
+        error={dashboard.error}
+        retry={() => void dashboard.refetch()}
       />
-
-      {/* Progress Card */}
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        {progressLoading ? (
-          <SkeletonCard />
-        ) : progress ? (
-          <ProgressCard
-            title="Progress Latihan"
-            current={progress.completedLevels}
-            total={progress.totalLevels}
-            label={`${progress.completedLevels} dari ${progress.totalLevels} level`}
-            href="/student/learn"
-          />
-        ) : (
-          <ProgressCard
-            title="Progress Latihan"
-            current={0}
-            total={20}
-            label="Mulai drill pertamamu"
-            href="/student/learn"
-          />
-        )}
-      </div>
-
-      {/* Stats Row */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 'var(--space-3)',
-        marginBottom: 'var(--space-6)'
-      }}>
-        <StatCard icon="⭐" value={progress?.completedLevels || 0} label="Level" />
-        <StatCard icon="🎯" value={progress?.latestScore ?? '-'} label="Nilai Terakhir" />
-        <StatCard icon="🔥" value="-" label="Streak" variant="gold" />
-      </div>
-
-      {/* Feature Shortcuts */}
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <SectionHeader title="Menu Utama" />
-        <FeatureGrid items={featureItems} columns={3} />
-      </div>
-
-      {/* Quick Action CTA */}
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <SectionHeader title="Mulai Belajar" />
-        <Link
-          href="/student/learn"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 'var(--space-3)',
-            padding: 'var(--space-6)',
-            background: 'var(--color-primary)',
-            color: 'white',
-            borderRadius: 'var(--radius-lg)',
-            textDecoration: 'none',
-            transition: 'all var(--transition-fast)',
-          }}
-        >
-          <span style={{ fontSize: 32 }}>🎯</span>
-          <div style={{ textAlign: 'left' }}>
-            <p style={{
-              fontSize: 'var(--text-lg)',
-              fontWeight: 'var(--font-bold)',
-              margin: 0,
-            }}>
-              Mulai Drill
-            </p>
-            <p style={{
-              fontSize: 'var(--text-sm)',
-              opacity: 0.9,
-              margin: 'var(--space-1) 0 0 0',
-            }}>
-              Pilih bab dan level untuk latihan
-            </p>
-          </div>
-          <span style={{ fontSize: 24, marginLeft: 'auto' }}>→</span>
-        </Link>
-      </div>
-
-      {/* Latest Score Summary */}
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <SectionHeader title="Nilai Drill Terakhir" />
-        <div style={{
-          padding: 'var(--space-4)',
-          background: 'var(--color-surface-raised)',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--color-border)',
-          textAlign: 'center',
-        }}>
-          {progress?.latestScore !== null ? (
-            <div>
-              <span style={{
-                fontSize: 'var(--text-4xl)',
-                fontWeight: 'var(--font-extrabold)',
-                color: 'var(--color-primary)',
-              }}>
-                {progress?.latestScore}
-              </span>
-              <p style={{
-                fontSize: 'var(--text-sm)',
-                color: 'var(--color-text-muted)',
-                margin: 'var(--space-1) 0 0 0',
-              }}>
-                dari 100 poin
-              </p>
-            </div>
-          ) : (
-            <div>
-              <span style={{ fontSize: 32, display: 'block', marginBottom: 'var(--space-2)' }}>📝</span>
-              <p style={{
-                fontSize: 'var(--text-base)',
-                fontWeight: 'var(--font-semibold)',
-                color: 'var(--color-text)',
-                margin: 0,
-              }}>
-                Belum ada Drill
-              </p>
-              <p style={{
-                fontSize: 'var(--text-sm)',
-                color: 'var(--color-text-muted)',
-                margin: 'var(--space-1) 0 0 0',
-              }}>
-                Mulai drill untuk melihat nilai
-              </p>
-            </div>
-          )}
+    );
+  const data = dashboard.data;
+  const school = data.affiliation === 'SCHOOL';
+  const progress = {
+    completedLevels: data.completedLevels,
+    totalLevels: data.availableLevels,
+    latestScore: data.latestDrillScore,
+  };
+  return (
+    <div className="home-layout">
+      <section className="home-welcome">
+        <div>
+          <span className="eyebrow">Ruang belajarmu</span>
+          <h1>
+            Halo, {data.displayName.split(' ')[0] || 'teman belajar'}{' '}
+            <span className="greeting-spark" aria-hidden="true">
+              ✦
+            </span>
+          </h1>
+          <p>Siap selangkah lebih paham hari ini?</p>
         </div>
-      </div>
-
-      {/* Join Class Banner (for Mandiri users) */}
-      {profile.studentAffiliation !== 'SCHOOL' && (
-        <div style={{
-          padding: 'var(--space-4)',
-          background: 'var(--color-info-light)',
-          borderRadius: 'var(--radius-lg)',
-          marginBottom: 'var(--space-4)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <span style={{ fontSize: 24 }}>📚</span>
-            <div style={{ flex: 1 }}>
-              <p style={{
-                fontSize: 'var(--text-base)',
-                fontWeight: 'var(--font-bold)',
-                color: 'var(--color-text)',
-                margin: 0,
-              }}>
-                Bergabung dengan Sekolah
-              </p>
-              <p style={{
-                fontSize: 'var(--text-sm)',
-                color: 'var(--color-text-muted)',
-                margin: 'var(--space-1) 0 0 0',
-              }}>
-                Gabung kelas untuk akses TryOut dan Leaderboard
-              </p>
-            </div>
+        <Badge variant="secondary">
+          <Icon name={school ? 'school' : 'user'} width={16} height={16} />{' '}
+          {school ? 'Siswa sekolah' : 'Siswa mandiri'}
+        </Badge>
+      </section>
+      <div className="home-main">
+        <section className="learning-hero">
+          <div className="hero-copy">
+            <span className="hero-kicker">MATEMATIKA · KELAS IX</span>
+            <h2>
+              Sedikit latihan.
+              <br />
+              Banyak kemajuan.
+            </h2>
+            <p>Pilih materi, berlatih sesuai levelmu, dan lihat kemajuan di setiap langkah.</p>
             <Link
-              href="/student/profile"
-              style={{
-                padding: 'var(--space-2) var(--space-4)',
-                background: 'var(--color-primary)',
-                color: 'white',
-                borderRadius: 'var(--radius-md)',
-                fontWeight: 'var(--font-semibold)',
-                fontSize: 'var(--text-sm)',
-                textDecoration: 'none',
-              }}
+              className="button-link button-light"
+              href={
+                data.activeDrill ? `/student/drill/${data.activeDrill.attemptId}` : '/student/learn'
+              }
             >
-              Gabung
+              {data.activeDrill ? 'Lanjutkan latihan' : 'Mulai latihan'}{' '}
+              <Icon name="arrow" width={19} height={19} />
             </Link>
           </div>
+          <div className="hero-art" aria-hidden="true">
+            <span className="math-chip math-chip--one">x² + y²</span>
+            <span className="hero-orbit" />
+            <img src="/figma/numora-owl-source.png" alt="" width="112" height="155" />
+            <span className="math-chip math-chip--two">÷</span>
+            <span className="hero-star">✦</span>
+          </div>
+        </section>
+        <section className="quick-section" aria-label="Akses cepat">
+          <Link href="/student/learn">
+            <span className="icon-tile accent-0">
+              <Icon name="target" />
+            </span>
+            <span>
+              <strong>Latihan</strong>
+              <small>Bab & level</small>
+            </span>
+            <Icon name="chevron" width={18} height={18} />
+          </Link>
+          <Link href="/student/tryout">
+            <span className="icon-tile accent-1">
+              <Icon name="clipboard" />
+            </span>
+            <span>
+              <strong>Tryout</strong>
+              <small>Simulasi mingguan</small>
+            </span>
+            <Icon name="chevron" width={18} height={18} />
+          </Link>
+          <Link href="/student/assessment">
+            <span className="icon-tile accent-2">
+              <Icon name="clock" />
+            </span>
+            <span>
+              <strong>Riwayat</strong>
+              <small>Hasil latihan</small>
+            </span>
+            <Icon name="chevron" width={18} height={18} />
+          </Link>
+        </section>
+        <section>
+          <SectionHeader
+            title="Mau belajar apa?"
+            subtitle="Pilih bab dan mulai latihan dengan ritmemu."
+            action={
+              <Link className="section-link" href="/student/learn">
+                Semua bab <Icon name="arrow" width={16} height={16} />
+              </Link>
+            }
+          />
+          {catalog.isPending || catalog.isError ? (
+            <DataState
+              pending={catalog.isPending}
+              error={catalog.error}
+              retry={() => void catalog.refetch()}
+            />
+          ) : catalog.data.chapters.length ? (
+            <div className="chapter-grid">
+              {[...catalog.data.chapters]
+                .sort((a, b) => a.order - b.order)
+                .slice(0, 4)
+                .map((chapter, index) => (
+                  <ChapterCard key={chapter.id} chapter={chapter} index={index} />
+                ))}
+            </div>
+          ) : (
+            <Card>
+              <EmptyState
+                icon={<Icon name="book" />}
+                title="Materi sedang disiapkan"
+                description="Bab yang sudah diterbitkan akan tampil di sini."
+              />
+            </Card>
+          )}
+        </section>
+        <section>
+          <SectionHeader
+            title="Aktivitas terakhir"
+            action={
+              <Link className="section-link" href="/student/assessment">
+                Lihat semua <Icon name="arrow" width={16} height={16} />
+              </Link>
+            }
+          />
+          {data.activities.length ? (
+            <div className="activity-list">
+              {data.activities.map((item) => (
+                <ActivityRow key={item.attemptId} item={item} />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <EmptyState
+                icon={<Icon name="clock" />}
+                title="Perjalananmu dimulai di sini"
+                description="Hasil latihan pertamamu akan tersimpan di bagian ini."
+                action={
+                  <Link className="section-link" href="/student/learn">
+                    Pilih latihan <Icon name="arrow" />
+                  </Link>
+                }
+              />
+            </Card>
+          )}
+        </section>
+      </div>
+      <aside className="home-aside">
+        <ProgressSummary progress={progress} />
+        <Card>
+          <span className="eyebrow">Status belajar</span>
+          <h2>{data.class ? data.class.name : 'User Mandiri'}</h2>
+          <p>{data.class ? data.class.schoolName : 'Belajar mandiri sesuai ritmemu.'}</p>
+          <p>Nilai Drill terbaik: {data.bestDrillScore ?? 'Belum ada'}</p>
+        </Card>
+        <section className="quick-section" aria-label="Ruang belajar lainnya">
+          <Link href="/student/pvp">
+            <Icon name="users" />
+            <span>
+              <strong>PvP</strong>
+              <small>{data.features.pvp ? 'Duel matematika' : 'Belum tersedia'}</small>
+            </span>
+          </Link>
+          <Link href="/student/leaderboards">
+            <Icon name="chart" />
+            <span>
+              <strong>Peringkat</strong>
+              <small>
+                {data.features.classLeaderboard ? 'Kelas dan PvP' : 'Lihat ketersediaan'}
+              </small>
+            </span>
+          </Link>
+        </section>
+        <HomeTryout token={token} />
+        {!school && (
+          <section className="class-invitation">
+            <span className="icon-tile accent-1">
+              <Icon name="school" />
+            </span>
+            <h2>Belajar bersama kelas</h2>
+            <p>Punya kode dari guru? Hubungkan akunmu dengan kelas.</p>
+            <Link className="section-link" href="/student/profile">
+              Gabung kelas <Icon name="arrow" width={18} height={18} />
+            </Link>
+          </section>
+        )}
+        <div className="gentle-note">
+          <Icon name="spark" />
+          <p>
+            Tidak perlu terburu-buru.
+            <br />
+            <strong>Yang penting, terus mencoba.</strong>
+          </p>
         </div>
-      )}
+      </aside>
     </div>
   );
 }
 
-function DashboardSkeleton() {
+function HomeTryout({ token }: { token: string }) {
+  const query = useQuery({
+    queryKey: ['current-tryout'],
+    queryFn: () => learningApi.currentTryout(token),
+  });
   return (
-    <div>
-      {/* Greeting skeleton */}
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <Skeleton width="70%" height={36} />
-        <div style={{ marginTop: 'var(--space-2)' }}>
-          <Skeleton width={120} height={24} />
-        </div>
-      </div>
-
-      {/* Progress skeleton */}
-      <SkeletonCard />
-
-      {/* Stats skeleton */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 'var(--space-3)',
-        marginTop: 'var(--space-6)',
-        marginBottom: 'var(--space-6)'
-      }}>
-        <Skeleton height={80} />
-        <Skeleton height={80} />
-        <Skeleton height={80} />
-      </div>
-
-      {/* Feature grid skeleton */}
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <Skeleton width={80} height={24} />
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 'var(--space-3)',
-          marginTop: 'var(--space-4)'
-        }}>
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Skeleton key={i} height={100} />
-          ))}
-        </div>
-      </div>
-    </div>
+    <section className="home-tryout">
+      <span className="icon-tile accent-1">
+        <Icon name="clipboard" />
+      </span>
+      <span className="eyebrow">Simulasi mingguan</span>
+      <h2>Tryout matematika</h2>
+      {query.isPending || query.isError ? (
+        <DataState
+          pending={query.isPending}
+          error={query.error}
+          retry={() => void query.refetch()}
+        />
+      ) : (
+        <>
+          <Badge variant={query.data.state === 'unavailable' ? 'default' : 'primary'}>
+            {!query.data.eligible
+              ? 'Memerlukan kelas'
+              : query.data.state === 'unavailable'
+                ? 'Belum tersedia'
+                : query.data.state === 'waitingIrt'
+                  ? 'Menunggu hasil'
+                  : query.data.state === 'resultReady'
+                    ? 'Hasil tersedia'
+                    : query.data.state === 'inProgress'
+                      ? 'Sedang dikerjakan'
+                      : 'Tersedia'}
+          </Badge>
+          <p>
+            {!query.data.eligible
+              ? 'Tryout tersedia untuk siswa yang bergabung dengan kelas.'
+              : query.data.state === 'unavailable'
+                ? 'Paket yang sudah diterbitkan akan muncul di sini.'
+                : 'Lihat status paket dan aktivitas Tryout kamu.'}
+          </p>
+          <Link className="section-link" href="/student/tryout">
+            Lihat Tryout <Icon name="arrow" width={18} height={18} />
+          </Link>
+        </>
+      )}
+    </section>
   );
 }

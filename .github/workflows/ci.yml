@@ -74,6 +74,12 @@ jobs:
           pnpm --filter @tka/database db:upgrade-check
           pnpm --filter @tka/database db:staging:bridge-check
 
+      - name: Install browser for E2E
+        run: pnpm --filter @tka/web exec playwright install --with-deps chromium
+
+      - name: Browser E2E
+        run: pnpm --filter @tka/web test:e2e
+
       - name: Build
         run: pnpm build
 

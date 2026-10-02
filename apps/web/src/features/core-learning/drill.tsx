@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Icon } from '@tka/ui';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -21,7 +22,7 @@ import { RecommendedVideos, ReportForm } from './support';
 export function DrillScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
   return (
-    <LearningFrame title="Drill">
+    <LearningFrame title="Drill" focus>
       <StudentGate>{(token) => <DrillData token={token} attemptId={attemptId} />}</StudentGate>
     </LearningFrame>
   );
@@ -237,19 +238,32 @@ export function ResultSummary({ result }: { result: DrillResult }) {
   return (
     <Panel className="drill-result-summary">
       <p className="text-sm font-semibold text-[var(--numora-purple)]">{result.levelTitle}</p>
-      <p className="mt-2 text-5xl font-extrabold">{result.score}</p>
+      <div className="result-score">
+        {result.score}
+        <small>dari 100</small>
+      </div>
       <p className="mt-1 text-slate-700">
         {result.correctCount} dari {result.questionCount} benar · {result.rawPoints} poin mentah
       </p>
       <p className="mt-3 font-semibold">{result.mastered ? 'Tuntas' : 'Belum tuntas'}</p>
-      {result.stars !== null && <p className="mt-1">Bintang: {result.stars}</p>}
+      {result.stars !== null && (
+        <>
+          <div className="result-stars" aria-hidden="true">
+            {Array.from({ length: 3 }, (_, index) => (
+              <Icon
+                key={index}
+                name="star"
+                fill={index < result.stars! ? 'currentColor' : 'none'}
+              />
+            ))}
+          </div>
+          <p className="mt-1">Bintang: {result.stars}</p>
+        </>
+      )}
       {result.unlockedLevelId && (
         <p className="mt-2 font-semibold text-[var(--numora-purple)]">Level berikutnya terbuka.</p>
       )}
-      <Link
-        className="mt-5 inline-block font-semibold text-[var(--numora-purple)] underline"
-        href="/student/learn"
-      >
+      <Link className="button-link mt-5" href="/student/learn">
         Kembali ke materi
       </Link>
     </Panel>

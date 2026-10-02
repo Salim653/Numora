@@ -93,7 +93,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       style,
       ...props
     },
-    ref
+    ref,
   ) => {
     const variantStyle = variantStyles[variant];
 
@@ -105,8 +105,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           borderRadius: 'var(--radius-lg)',
           overflow: 'hidden',
           width: fullWidth ? '100%' : 'auto',
-          padding: paddingValues[padding],
           ...variantStyle,
+          background: `var(--card-background, ${variantStyle.background})`,
+          padding: `var(--card-padding, ${paddingValues[padding]})`,
           ...style,
         }}
         {...(interactive ? { role: 'button', tabIndex: 0 } : {})}
@@ -115,7 +116,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         {children}
       </div>
     );
-  }
+  },
 );
 
 Card.displayName = 'Card';
@@ -154,7 +155,13 @@ export interface CardContentProps extends HTMLAttributes<HTMLDivElement> {
   padding?: CardPadding;
 }
 
-export function CardContent({ children, padding = 'md', className = '', style, ...props }: CardContentProps) {
+export function CardContent({
+  children,
+  padding = 'md',
+  className = '',
+  style,
+  ...props
+}: CardContentProps) {
   return (
     <div
       className={`numora-card__content ${className}`}
@@ -180,7 +187,13 @@ export interface CardFooterProps extends HTMLAttributes<HTMLDivElement> {
   padding?: CardPadding;
 }
 
-export function CardFooter({ children, padding = 'md', className = '', style, ...props }: CardFooterProps) {
+export function CardFooter({
+  children,
+  padding = 'md',
+  className = '',
+  style,
+  ...props
+}: CardFooterProps) {
   return (
     <div
       className={`numora-card__footer ${className}`}

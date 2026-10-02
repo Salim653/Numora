@@ -12,11 +12,12 @@ integration('learning-only demo fixtures', () => {
     const [state] = await client<{ packages: number; items: number; profiles: number }[]>`
       SELECT
         (SELECT count(*)::int FROM assessment_packages
-         WHERE level_id = '00000000-0000-4000-8000-000000000102' AND assessment_type = 'DRILL') AS packages,
+         WHERE id IN ('00000000-0000-4000-8000-000000000501', '00000000-0000-4000-8000-000000000502')
+           AND assessment_type = 'DRILL') AS packages,
         (SELECT count(*)::int FROM package_items pi
          JOIN assessment_packages p ON p.id = pi.package_id
          JOIN question_versions v ON v.id = pi.question_version_id
-         WHERE p.level_id = '00000000-0000-4000-8000-000000000102'
+         WHERE p.id IN ('00000000-0000-4000-8000-000000000501', '00000000-0000-4000-8000-000000000502')
            AND p.assessment_type = 'DRILL') AS items,
         (SELECT count(*)::int FROM users WHERE auth_user_id IN
           ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000003')) AS profiles`;

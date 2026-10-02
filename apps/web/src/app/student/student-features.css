@@ -1,109 +1,3 @@
-.student-app {
-  min-height: 100vh;
-  background: var(--numora-ivory);
-  color: var(--color-text);
-  font-family: 'Nunito Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
-}
-
-.student-sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  z-index: 20;
-  display: flex;
-  width: 256px;
-  flex-direction: column;
-  padding: 28px 18px;
-  border-right: 1px solid var(--color-border);
-  background: #fffdf8;
-}
-
-.student-brand,
-.student-mobile-brand {
-  display: flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 11px;
-  color: var(--color-text);
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-}
-
-.student-brand-mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  flex: none;
-  place-items: center;
-  border-radius: 15px;
-  background: var(--numora-purple);
-  color: white;
-  font-size: 23px;
-  font-weight: 900;
-  transform: rotate(-6deg);
-}
-
-.student-brand-subtitle {
-  display: block;
-  margin-top: 1px;
-  color: var(--color-muted);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.student-sidebar-label {
-  margin: 56px 14px 14px;
-  color: var(--color-muted);
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.15em;
-}
-
-.student-nav {
-  display: grid;
-  gap: 7px;
-}
-.student-nav-link {
-  display: flex;
-  min-height: 48px;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 14px;
-  border-radius: 14px;
-  color: var(--color-muted);
-  font-weight: 800;
-  text-decoration: none;
-}
-.student-nav-link:hover {
-  background: #f7f0ff;
-  color: var(--numora-purple);
-}
-.student-nav-link.is-active {
-  background: #efe3fc;
-  color: var(--numora-purple);
-}
-.student-nav-icon {
-  width: 22px;
-  text-align: center;
-  font-size: 22px;
-  line-height: 1;
-}
-
-.student-sidebar-note {
-  margin-top: auto;
-  padding: 17px;
-  border: 1px dashed #d9c4eb;
-  border-radius: 18px;
-  background: #faf5ff;
-  color: var(--color-muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-.student-sidebar-note p {
-  margin: 10px 0 0;
-}
 .student-pill {
   display: inline-flex;
   min-height: 28px;
@@ -117,37 +11,6 @@
   font-weight: 900;
   letter-spacing: 0.08em;
   white-space: nowrap;
-}
-
-.student-main {
-  min-height: 100vh;
-  margin-left: 256px;
-}
-.student-topbar {
-  display: flex;
-  min-height: 74px;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
-  padding: 14px 40px;
-  border-bottom: 1px solid var(--color-border);
-  background: #fffdf8;
-}
-.student-mobile-brand {
-  display: none;
-}
-.student-topbar-caption {
-  color: var(--color-muted);
-  font-size: 13px;
-  font-weight: 700;
-}
-.student-content {
-  width: min(100%, 1320px);
-  margin: 0 auto;
-  padding: 36px 40px 64px;
-}
-.student-bottom-nav {
-  display: none;
 }
 
 .student-eyebrow {
@@ -167,7 +30,7 @@
 .student-subtitle {
   max-width: 720px;
   margin: 0;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.6;
 }
@@ -179,7 +42,7 @@
 }
 .student-section-note {
   margin: 5px 0 0;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -193,7 +56,7 @@
   padding: 24px;
 }
 .student-muted {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
 }
 .student-divider {
   height: 1px;
@@ -279,7 +142,7 @@
   border: 0;
   border-radius: 11px;
   background: transparent;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font: inherit;
   font-size: 13px;
   font-weight: 800;
@@ -300,7 +163,7 @@
 }
 .student-footnote {
   margin: 0;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -447,7 +310,7 @@
 }
 .student-metric-label {
   margin: 18px 0 7px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 12px;
   font-weight: 800;
 }
@@ -458,7 +321,7 @@
   letter-spacing: -0.03em;
 }
 .student-metric-value small {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 700;
 }
@@ -507,13 +370,13 @@
 .student-feature-list small {
   display: block;
   margin-top: 3px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 11px;
   line-height: 1.4;
 }
 .student-activity-list time {
   margin-left: auto;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 11px;
   white-space: nowrap;
 }
@@ -622,7 +485,7 @@
 }
 .student-difficulty small {
   margin-top: 2px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 .student-difficulty > span:last-child {
@@ -717,7 +580,7 @@
   font-size: 14px;
 }
 .student-player-row small {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 11px;
 }
 .student-avatar {
@@ -737,7 +600,7 @@
   color: #803710;
 }
 .student-vs {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 13px;
   font-weight: 900;
 }
@@ -770,7 +633,7 @@
 }
 .student-timer small {
   margin-top: 2px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 10px;
   font-weight: 800;
 }
@@ -807,7 +670,7 @@
 }
 .student-opponent-status small {
   margin-top: 2px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 11px;
 }
 .student-opponent-status .student-pill {
@@ -883,7 +746,7 @@
 }
 .student-question-footer p {
   margin: 0;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -902,7 +765,7 @@
   margin-top: 13px;
 }
 .student-match-stat span {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
 }
 .student-match-stat strong {
   text-align: right;
@@ -929,7 +792,7 @@
 .student-reconnect p {
   max-width: 440px;
   margin: 0 0 19px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -960,7 +823,7 @@
 .student-result-card > p {
   max-width: 500px;
   margin: 5px 0 0;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -987,7 +850,7 @@
 }
 .student-example-score small {
   max-width: 160px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 10px;
   line-height: 1.4;
 }
@@ -1015,7 +878,7 @@
 .student-leaderboard-intro p {
   max-width: 600px;
   margin: 0;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -1035,13 +898,13 @@
   font-size: 12px;
 }
 .student-period-card small {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 11px;
   line-height: 1.4;
 }
 .student-fixture-controls {
   width: fit-content;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 .student-fixture-controls summary {
@@ -1088,7 +951,7 @@
   font-size: 13px;
 }
 .student-podium-card small {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 12px;
   font-weight: 900;
 }
@@ -1110,7 +973,7 @@
 }
 .student-ranking-number {
   width: 27px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 13px;
   font-weight: 900;
   text-align: center;
@@ -1135,7 +998,7 @@
   white-space: nowrap;
 }
 .student-ranking-list li strong small {
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 10px;
 }
 .student-own-rank {
@@ -1173,82 +1036,12 @@
 .student-empty-card p {
   max-width: 450px;
   margin: 0 0 20px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.6;
 }
 
-@media (max-width: 1020px) {
-  .student-sidebar {
-    width: 210px;
-  }
-  .student-main {
-    margin-left: 210px;
-  }
-  .student-content {
-    padding-inline: 25px;
-  }
-  .student-topbar {
-    padding-inline: 25px;
-  }
-}
 @media (max-width: 780px) {
-  .student-sidebar {
-    display: none;
-  }
-  .student-main {
-    margin-left: 0;
-  }
-  .student-topbar {
-    min-height: 65px;
-    justify-content: space-between;
-    padding-inline: 16px;
-  }
-  .student-mobile-brand {
-    display: flex;
-    font-size: 14px;
-  }
-  .student-mobile-brand .student-brand-mark {
-    width: 32px;
-    height: 32px;
-    border-radius: 11px;
-    font-size: 18px;
-  }
-  .student-topbar-caption {
-    display: none;
-  }
-  .student-content {
-    padding: 25px 16px 108px;
-  }
-  .student-bottom-nav {
-    position: fixed;
-    inset: auto 0 0;
-    z-index: 30;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    padding: 7px 8px max(7px, env(safe-area-inset-bottom));
-    border-top: 1px solid var(--color-border);
-    background: #fffdf9;
-    box-shadow: 0 -8px 25px rgba(47, 33, 61, 0.05);
-  }
-  .student-bottom-nav a {
-    display: grid;
-    min-height: 51px;
-    place-items: center;
-    gap: 1px;
-    border-radius: 12px;
-    color: var(--color-muted);
-    font-size: 21px;
-    text-decoration: none;
-  }
-  .student-bottom-nav a.is-active {
-    background: #f2e5fd;
-    color: var(--numora-purple);
-  }
-  .student-bottom-nav small {
-    font-size: 10px;
-    font-weight: 800;
-  }
   .student-grid-two,
   .student-grid-three {
     grid-template-columns: 1fr;
@@ -1298,50 +1091,6 @@
   }
 }
 
-.student-skip {
-  position: fixed;
-  top: -100px;
-  left: 16px;
-  z-index: 60;
-  background: white;
-  padding: 12px;
-}
-.student-skip:focus {
-  top: 12px;
-}
-.student-app :focus-visible {
-  outline: 3px solid var(--numora-purple);
-  outline-offset: 3px;
-}
-.student-app .learning-panel {
-  border-radius: 24px;
-  border-color: var(--color-border);
-  box-shadow: 0 5px 16px #39205206;
-}
-.student-app .learning-frame {
-  min-width: 0;
-}
-.student-app .student-topbar {
-  gap: 12px;
-}
-@media (max-width: 780px) {
-  .student-bottom-nav {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .student-bottom-nav a {
-    min-width: 0;
-    min-height: 56px;
-    padding: 6px 2px;
-  }
-  .student-bottom-nav small {
-    font-size: 10px;
-  }
-  .student-content {
-    padding-bottom: calc(100px + env(safe-area-inset-bottom));
-  }
-}
-
 .student-input {
   display: block;
   width: 100%;
@@ -1370,7 +1119,7 @@
 .student-difficulty-card span {
   font-size: 12px;
   margin-top: 8px;
-  color: var(--color-muted);
+  color: var(--color-text-muted);
 }
 .student-difficulty-card.is-active {
   border-color: var(--numora-purple);
@@ -1391,18 +1140,4 @@
 }
 .student-answer-option:has(input:focus-visible) {
   outline: 3px solid var(--numora-purple);
-}
-.student-app button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-.student-app .katex-display {
-  overflow-x: auto;
-  max-width: 100%;
-}
-.student-app fieldset {
-  min-width: 0;
-}
-.student-app img {
-  max-width: 100%;
 }

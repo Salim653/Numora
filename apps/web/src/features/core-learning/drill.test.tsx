@@ -10,12 +10,18 @@ const { router, auth } = vi.hoisted(() => ({
   auth: {
     state: {
       status: 'ready',
-      profile: { role: 'STUDENT', id: 'TEST-student' },
+      profile: {
+        role: 'STUDENT',
+        id: 'TEST-student',
+        displayName: 'Siswa Test',
+        studentAffiliation: 'MANDIRI',
+      },
       session: { access_token: 'TEST-token' },
     },
   },
 }));
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/student/drill/attempt/result',
   useRouter: () => router,
   useParams: () => ({ attemptId: 'attempt' }),
 }));
@@ -121,6 +127,6 @@ describe('ringkasan hasil Drill', () => {
     );
     await waitFor(() => expect(fetch).toHaveBeenLastCalledWith('TEST-second-session', 'attempt'));
     expect(screen.queryByText('80')).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Memuat' })).toBeTruthy();
+    expect(screen.getByLabelText('Memuat data')).toBeTruthy();
   });
 });

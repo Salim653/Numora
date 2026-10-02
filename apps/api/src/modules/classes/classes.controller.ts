@@ -1,5 +1,22 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiParam, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiParam,
+  ApiProperty,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { IsString, Length, Matches } from 'class-validator';
 import { ClassesService } from './classes.service';
 import { CodeAttempt, CodeAttemptGuard } from '../security/code-attempt.guard';
@@ -11,7 +28,7 @@ class ClassSummaryDto {
 }
 
 class CreatedClassDto extends ClassSummaryDto {
-  @ApiProperty() declare joinCode: string;
+  @ApiProperty({ required: true }) declare joinCode: string;
 }
 class CreateClassDto {
   @ApiProperty({ minLength: 1, maxLength: 80 })
@@ -70,13 +87,14 @@ export class ClassesController {
   @Post('join')
   @CodeAttempt('class')
   @UseGuards(CodeAttemptGuard)
-  @ApiResponse({ status: 429, description: 'Attempt limit exceeded.', headers: { 'Retry-After': { schema: { type: 'integer' } } } })
+  @ApiResponse({
+    status: 429,
+    description: 'Attempt limit exceeded.',
+    headers: { 'Retry-After': { schema: { type: 'integer' } } },
+  })
   @ApiResponse({ status: 503, description: 'Attempt limiter unavailable.' })
   @ApiCreatedResponse({ type: JoinedClassDto })
-  join(
-    @Headers('authorization') authorization: string | undefined,
-    @Body() body: JoinClassDto,
-  ) {
+  join(@Headers('authorization') authorization: string | undefined, @Body() body: JoinClassDto) {
     return this.classes.join(authorization, body.joinCode);
   }
 

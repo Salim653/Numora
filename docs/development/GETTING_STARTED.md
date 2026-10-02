@@ -47,7 +47,7 @@ Use one ignored root `.env` for development. It is loaded by root scripts. Fill 
 cp .env.example .env
 ```
 
-Required current values: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DATABASE_URL`, `REDIS_URL`, and `BULLMQ_PREFIX`. The web and API Supabase values must refer to the same development project; the API uses them to validate bearer sessions. Keep `NEXT_PUBLIC_API_URL`, `API_INTERNAL_URL`, and `CORS_ORIGINS` pointed at the local web/API processes. A public key is browser-visible; database and Redis URLs are secrets.
+Required current values: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DATABASE_URL`, `REDIS_URL`, `BULLMQ_PREFIX`, and server-only `TEACHER_TOKEN_PEPPER`. The web and API Supabase values must refer to the same development project; the API uses them to validate bearer sessions. Keep `NEXT_PUBLIC_API_URL`, `API_INTERNAL_URL`, and `CORS_ORIGINS` pointed at the local web/API processes. A public key is browser-visible; database and Redis URLs are secrets.
 
 **ENGINEERING DECISION:** `pnpm env:check` runs before `pnpm dev`. It checks required variables, matching web/API Supabase values, TLS URL settings, and rejects a `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY`. It does not test cloud connectivity or validate the database password.
 
@@ -56,6 +56,8 @@ Required current values: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLI
 After the worker connects, run `pnpm worker:probe` only against the development Redis endpoint. It explicitly enqueues one job under a `numora:dev:<your-name>` prefix; the worker should log its completion. The command rejects staging prefixes. Do not run this check until the cloud team confirms the target endpoint and prefix.
 
 Use a direct PostgreSQL connection when reachable or a session pooler for IPv4-only laptops; do not use the transaction pooler with this Postgres.js client. Append `sslmode=require` to PostgreSQL URLs, or use `sslmode=verify-full` with the provider CA. Use a Redis protocol endpoint with `rediss://`, not a REST-only URL. The cloud team should confirm BullMQ compatibility and `noeviction`. The Next.js public values are embedded at build time, so restart/rebuild after changing them.
+
+**ENGINEERING DECISION, 2 October 2026:** the API requires a stable, environment-specific `TEACHER_TOKEN_PEPPER` for eight-character teacher tokens. Generate a secret of at least 32 random bytes; never expose it through `NEXT_PUBLIC_*`. Existing short tokens require the same pepper until they expire or are reissued. Redis is also required for verification/join throttling; unavailable limiter returns 503 before a mutation. See [the integration record](ONBOARDING_UI_INTEGRATION_2026-10-02.md).
 
 Never commit real credentials.
 
