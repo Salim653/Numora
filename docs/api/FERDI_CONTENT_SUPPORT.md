@@ -1,6 +1,6 @@
 # Paket Drill, dukungan Student, dan integrasi IRT
 
-**ENGINEERING IMPLEMENTATION — 1 Oktober 2026, menunggu review FE/BE/QA.** Implementasi ini mengikuti ownership Ferdi. Aturan produk tetap mengikuti PRD v0.5; kontrak integrasi statistik belum menjadi persetujuan model Data.
+**ENGINEERING IMPLEMENTATION — 1 Oktober 2026, menunggu review FE/BE/QA.** Implementasi ini mengikuti ownership Ferdi. Aturan Drill/TryOut terbaru mengikuti [rekonsiliasi PRD fitur](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); v0.5 tetap baseline lintas fitur; kontrak integrasi statistik belum menjadi persetujuan model Data.
 
 Semua endpoint memakai `/api/v1`, Bearer Auth, UUID, JSON camelCase, dan error `application/problem+json`. Identitas actor/reporter diambil dari sesi server. Tipe frontend dihasilkan dari OpenAPI.
 
@@ -17,7 +17,7 @@ Endpoint di bawah memerlukan Admin aktif:
 | `POST /admin/content/drill-packages/{id}/publish` | Publikasi atomik dengan row lock; retry paket PUBLISHED mengembalikan ID sama.                                           |
 | `POST /admin/content/drill-packages/{id}/archive` | Mengarsipkan tanpa menghapus item/history; tidak dapat diterbitkan ulang.                                                |
 
-**PRD RULE:** Drill memiliki 10 soal PG pada cakupan MVP yang didukung. Versi konten dan penilaian yang dipakai attempt harus dipertahankan.
+**PRD RULE:** Drill memiliki 10 soal. **ENGINEERING IMPLEMENTATION:** engine/prototipe saat ini mendukung PG; PRD Drill v1.2 tidak menetapkan PG-only sebagai aturan semua konten final. Versi konten dan penilaian yang dipakai attempt harus dipertahankan.
 
 **PROPOSED — rekonsiliasi implementasi, 2 Oktober 2026, menunggu review:** draf boleh belum lengkap. Publikasi membutuhkan tepat 10 versi unik SINGLE_CHOICE dari kompetensi subbab level, ancestry/keluarga/kompetensi READY, dan review versi soal tercatat. Publisher memakai decoder konten yang sama dengan engine Student: prototype ini menerima empat opsi A–D dan teks/kunci/pembahasan valid. Policy yang dapat dimainkan saat ini adalah `DRILL_PG_DEMO`, versi 1, berstatus PUBLISHED dengan `configuration.questionType = "SINGLE_CHOICE"`. Policy lain boleh disimpan dalam draf tetapi belum dapat diterbitkan. Bobot item PG bernilai 1. Ini batas kompatibilitas engine yang ada, bukan keputusan bahwa seluruh konten final wajib memiliki empat opsi atau memakai policy demo. Konfigurasi akademik final tetap OPEN.
 
@@ -41,7 +41,7 @@ Rekomendasi mendukung pembacaan hasil canonical maupun hasil Drill kompatibilita
 
 Laporan soal mencari item canonical milik Student dan answer tersimpan, lalu mengisi FK `question_reports.attempt_answer_id`. Item tidak tersedia ditolak `404 REPORT_ITEM_NOT_FOUND`; answer belum tersimpan ditolak `409 REPORT_ANSWER_UNAVAILABLE`. ID `questionInstanceId` dari engine canonical adalah ID `attempt_items` yang dipakai form laporan. ID pertanyaan legacy yang tidak memiliki item canonical tidak diubah menjadi FK palsu. Kegagalan tampil dan dapat dicoba ulang. Admin membaca/menindaklanjuti laporan melalui API Reports yang sudah ada.
 
-**ENGINEERING IMPLEMENTATION:** category adalah teks 1–80 karakter; details opsional maksimal 2.000 karakter. Ini batas input engineering, bukan daftar kategori produk final. Jangan memasukkan PII dalam laporan. Metadata video impor juga diperiksa terhadap aturan HTTPS editor sebelum diberikan kepada Student.
+**ENGINEERING IMPLEMENTATION:** category adalah teks 1–80 karakter; details opsional maksimal 2.000 karakter. Ini batas input engineering, bukan daftar kategori produk final. Jangan memasukkan PII dalam laporan. Metadata video impor juga diperiksa terhadap aturan HTTPS editor sebelum diberikan kepada Student. **Gap terhadap Drill v1.2:** HTTPS saja belum membuktikan tujuan link YouTube; source/link yang ditampilkan harus sesuai requirement YouTube.
 
 Kedua POST laporan menerima `clientRequestId` UUID opsional. Server memakai ID itu sebagai primary key laporan dan advisory transaction lock: actor, referensi soal/mapping, category, serta details yang sama mengembalikan ID tersimpan; penggunaan ID untuk actor/referensi/isi berbeda ditolak 409. Kepemilikan attempt video tetap diperiksa pada retry, termasuk ketika mapping yang sebelumnya valid sudah diarsipkan. Form mengirim ID yang sama untuk retry isi yang sama dan ID baru setelah isi diubah. Client lama tanpa ID tetap diterima, tetapi retry client lama belum idempotent. Tidak ada migrasi tambahan untuk mekanisme ini.
 
@@ -82,3 +82,9 @@ Admin membaca parameter melalui endpoint lama; `GET /admin/irt/batches` menambah
 - Salim: verifikasi tiga peran, paket draft/invalid/unready, concurrent publication, pinned item, akses attempt orang lain, mapping video invalid, output IRT 29/30, gagal/retry, dan skor historis tetap. Tes fixture bukan bukti OAuth Google atau rilis sekolah.
 
 Pengujian database harus memakai localhost dengan NODE_ENV=test; gunakan database uji khusus, migrasi canonical, lalu TEST_DATABASE_URL. Jangan menjalankan tes pada sandbox bersama atau staging real-user.
+
+## Scope dan gap terhadap PRD fitur terbaru
+
+CRUD/publish paket Admin di dokumen ini adalah kapabilitas operasional yang sudah ada; kedua PRD fitur terbaru mengecualikan CRUD/Admin configuration UI dari scope fitur siswa dan menetapkan Curriculum sebagai pemasok konten. API ini tidak menjadi syarat baru journey siswa.
+
+TryOut v1.1 menetapkan 35 soal, tiga format, gratis semua siswa, countdown auto-submit dan release ≤3×24 jam setelah akhir batch; durasi/skala/model/XP/past access tetap TBC. Ekstraksi canonical GRADED PG dan readiness ≥30 di atas belum membuktikan dukungan PGK/initial TryOut IRT scoring atau kebijakan low-response final. Drill XP/stars/retensi dan session/fallback mengikuti DRL-OPEN, bukan formula/rentang/90 hari lama. Tidak ada endpoint/schema/runtime yang diubah oleh sinkronisasi docs ini.

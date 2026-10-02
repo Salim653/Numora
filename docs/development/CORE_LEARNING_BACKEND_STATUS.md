@@ -17,7 +17,7 @@ Status working tree per 1 Oktober 2026. Dokumen ini mencatat implementasi dan bu
 - [x] OpenAPI dan tipe frontend dihasilkan dari DTO backend.
 - [ ] E2E browser di staging untuk Admin → Guru → Siswa → Drill → progres Guru, review kode, dan persetujuan Curriculum atas soal demo.
 
-**PRD RULE:** Drill tanpa timeout tersembunyi, ambang mastery 80%, retry tanpa batas, dan akses pembahasan 90 hari. Struktur konten final tetap bergantung pada **OPEN-01/OPEN-10**.
+**PRD RULE — Drill v1.2:** count-up tanpa pause/deadline, ambang mastery 80, retry level gagal/completed, dan best score/history terpisah. **Gap:** akses 90 hari adalah perilaku implementasi lama; retensi sekarang DRL-OPEN-07. Struktur konten final tetap bergantung pada **OPEN-01/OPEN-10**.
 
 ## Job pendukung dan leaderboard
 
@@ -35,12 +35,12 @@ Status working tree per 1 Oktober 2026. Dokumen ini mencatat implementasi dan bu
 - [x] Tes PostgreSQL memakai paket dan model berlabel fixture; tes batas waktu rilis memakai `Asia/Jakarta`.
 - [ ] Publikasi paket resmi, finalisasi otomatis saat deadline, batch IRT harian, skor/model final, pesan data belum cukup, dan kebijakan keterlambatan/kegagalan batch.
 
-**OPEN-05/OPEN-12/OPEN-18:** konfigurasi paket resmi, model statistik, dan perilaku rilis final menunggu keputusan pemilik produk/Data. Admin tetap menolak publikasi Tryout dengan `TRYOUT_POLICY_OPEN`. Penskoran MCMA/Category belum diaktifkan sesuai **OPEN-04**.
+**OPEN-05/OPEN-12/OPEN-18:** konfigurasi paket resmi, model statistik, dan perilaku rilis final menunggu keputusan pemilik produk/Data. Admin tetap menolak publikasi Tryout dengan `TRYOUT_POLICY_OPEN`. Penskoran MCMA/Category belum diaktifkan; rubrik **OPEN-04** perlu dikunci, tetapi kedua format sudah wajib MVP TryOut v1.1. PG-only dan eligibility kelas merupakan gap implementasi, bukan scope final.
 
 ## Pretest
 
 - [x] Schema asesmen umum mendukung PRETEST, pin versi soal/kebijakan, dan constraint maksimal satu attempt SUBMITTED/GRADED per siswa/bab. Riwayat mendukung record Pretest.
-- [ ] Endpoint start/lewati/resume/submit, eligibility kelas, paket 20 soal, placement, dan pembaruan unlock yang mempertahankan progres lama.
+- [ ] Endpoint start/lewati/resume/submit, rekonsiliasi eligibility afiliasi/Skip, paket 20 soal tanpa XP, placement DRL-OPEN-04, dan pembaruan unlock yang mempertahankan progres lama.
 
 **OPEN-01–03:** struktur final, distribusi soal, dan placement belum disetujui. Endpoint final tidak dibuat dengan aturan placement yang diasumsikan.
 
@@ -71,3 +71,17 @@ QA staging, rollback aplikasi, observability/alert, dan penutupan keputusan OPEN
 - [x] Migrasi 0007/0008 dan rehearsal backfill data PvP historis di database uji.
 
 Bukti pengujian dan instruksi menjalankan migrasi: [Student Area Implementation](STUDENT_AREA_IMPLEMENTATION.md). Kontrak: [Student Area Contract](../api/STUDENT_AREA_CONTRACT.md). Status lokal ini belum menyatakan kesiapan staging/produksi.
+
+## Gap terhadap PRD fitur terbaru — 2 Oktober 2026
+
+Sumber: [rekonsiliasi Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). Checklist tercentang di atas adalah bukti implementasi sebelumnya, bukan acceptance baru. Tidak ada kode/migrasi/kontrak yang diubah dalam pembaruan konteks ini.
+
+- [ ] Hapus class-required sebagai policy MVP TryOut; gratis Mandiri dan Sekolah tanpa checkout.
+- [ ] Paket 35 soal; PG/PGK MCMA/Category beserta kontrak jawaban dan rubrik terverifikasi.
+- [ ] Listing Ongoing/Past, detail/tutorial/rules dan eligibility paket lampau sesuai keputusan Product.
+- [ ] Auto-finalization saat countdown 0 tanpa request browser dan race manual/auto-submit idempotent.
+- [ ] Pipeline initial IRT-weighted score pada skala TKA yang disetujui, tanpa skor parsial; release ≤3×24 jam setelah akhir batch; skor immutable setelah release.
+- [ ] Rekonsiliasi gate ≥30 implementasi dengan policy insufficient response TryOut dan baseline detail soal Admin; tidak diasumsikan universal.
+- [ ] XP Drill base/gagal/speed formula, star thresholds, retensi dan session/exit policy ditetapkan sebelum final acceptance; jangan memakai formula/rentang/90 hari lama sebagai PRD terbaru.
+- [ ] Drill <15min eligibility, warning refresh/exit, Save failed tidak Saved, YouTube/report contexts, retry fallback, best score monotonic/history seluruh attempt diverifikasi terhadap DRL-AC.
+- [ ] Seluruh 49 AC ditinjau FE/BE/Data/Curriculum/QA; keputusan OPEN ditutup oleh owner terkait, bukan otomatis oleh docs.

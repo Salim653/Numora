@@ -71,3 +71,7 @@ The source document references these assets, but they were not supplied with the
 
 - `assets/numora-logo.png` - referenced NUMORA owl brand mark; file pending from UI/UX.
 - `assets/reference-mobile-screens.png` - referenced UI/UX concept screen set; file pending from UI/UX.
+
+## Current Core Learning product baseline
+
+Before UI work, read [latest feature reconciliation](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) and [OPEN register](../product/OPEN_DECISIONS.md). Drill v1.2 and TryOut v1.1 supersede conflicting v0.5 copy/rules. TryOut is free for Mandiri and School Students, 35 questions/three formats, countdown auto-submit and batch/IRT waiting; no payment or class lock. Drill XP/star thresholds/retention and session guarantees remain TBC. Match the PRD page/component/modal/state inventories; existing Figma visuals do not close these decisions.

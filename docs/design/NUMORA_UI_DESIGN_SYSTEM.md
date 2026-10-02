@@ -33,7 +33,7 @@
 - 16. Implementation architecture for Software
 - 17. AI coding-agent contract
 - 18. Parallel UI/UX <-> Software workflow
-- 19. Product-aware UI guardrails from PRD v0.5
+- 19. Product-aware UI guardrails from latest feature PRDs
 - 20. Review checklist
 - 21. Reference assets and implementation notes
 - 22. Open items to be finalized by UI/UX
@@ -961,7 +961,7 @@ Should provide only the information needed to stay oriented:
 - save/connectivity indicator when relevant;
 - exit/back action with consequence handling.
 
-Drill in PRD v0.5 uses a count-up timer and is not time-limited. Do not implement an old fixed 20-minute countdown based on stale UI/reference material.
+Drill v1.2 uses an informational count-up timer with no pause or deadline; <15 minutes is speed-bonus eligibility only (formula TBC). Do not implement an old fixed 20-minute countdown based on stale UI/reference material.
 
 ## 10.4 ResultSummary
 
@@ -1060,7 +1060,7 @@ Do not imply that pretest is required if the PRD says optional.
 
 Treat tryout as a formal simulation while keeping NUMORA visual warmth.
 
-Current PRD rules include weekly packages and delayed result/explanation availability after IRT batch. UI must represent unavailable/pending result state clearly rather than promising instant explanation.
+TryOut v1.1 requires free MVP access for all Students, Ongoing/Past listing, detail/tutorial/rules, 35 PG/PGK MCMA/Category questions, countdown without pause and auto-submit at 0 without confirmation. Show submission success, waiting for batch end, IRT processing, released result/explanation, expired/unavailable and error/session states. Result must release within 3×24h after batch end and stay immutable; no partial score while waiting. Duration/scale/XP/past never-attempted eligibility remain TBC.
 
 ## 11.6 Leaderboard
 
@@ -1495,17 +1495,17 @@ This order minimizes rework.
 
 ---
 
-# 19. Product-aware UI guardrails from PRD v0.5
+# 19. Product-aware UI guardrails from latest feature PRDs
 
-The following product rules materially affect UI and must be respected unless a newer PRD supersedes them.
+The following guardrails follow [Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md), supplied 2 October 2026, and the remaining cross-feature v0.5 baseline. Source TBC items remain unresolved.
 
 ## 19.1 User access
 
 - Student and teacher use Google Auth.
 - User Mandiri remains a valid logged-in user and keeps history.
 - Student without a class is **not an error state**.
-- User Mandiri may use Drill and PvP room creation.
-- Pretest, current MVP tryout access, and class leaderboard depend on school affiliation/product policy.
+- User Mandiri may use Drill, free MVP TryOut, and PvP room creation.
+- Class leaderboard depends on class membership; Pretest affiliation retains the v0.5 baseline pending clarification. TryOut does not require a Class or payment.
 - Teacher verification uses school + single-use token.
 
 ## 19.2 Learning hierarchy
@@ -1518,7 +1518,7 @@ Bab -> Subbab -> Level
 
 Current baseline:
 
-- 5 levels per subbab;
+- Curriculum-defined level structure; five is the old v0.5 baseline, not a final hardcoded layout;
 - 10 questions per level.
 
 Do not embed these as visual assumptions in many components. Consume configuration/data where the implementation supports it.
@@ -1526,21 +1526,29 @@ Do not embed these as visual assumptions in many components. Consume configurati
 ## 19.3 Drill
 
 - 10 questions baseline.
-- Count-up timer; no drill time limit in v0.5.
+- Informational count-up timer; no pause or deadline. <15 minutes eligible for speed bonus, ≥15 not eligible; amount TBC.
 - Free navigation and answer changes before submit.
 - Submit confirms unanswered questions.
 - Score is 0-100.
 - `>= 80` unlocks the next level.
 - `< 80` does not revoke already-open levels.
 - Star system is motivational and is not the unlock rule.
-- Explanation remains available for 90 days.
+- Explanation only after submit; retention DRL-OPEN-07, no final 90-day assumption.
+- All star thresholds/base XP/speed formula remain TBC; do not display demo formulas as final.
+- Best score highest valid attempt, separate history; completed-level retry and no relock.
+- Honest saved/error states and refresh/exit warning reflecting actual persistence.
+- Failure-only max-three relevant YouTube videos, empty/broken-link/report states, question-report modal.
 
 ## 19.4 Tryout
 
-- Weekly package release.
+- Free MVP for all Students; no payment/class-lock UI. Monday release remains v0.5 cadence baseline; exact batch end TBC.
+- 35 questions, PG/PGK MCMA/Category, one per view with navigator.
+- Countdown no pause; manual submit confirms; auto-submit at 0 has no confirmation.
+- Ongoing/Past listing, detail/tutorial/rules; past never-attempted eligibility TBC.
 - One attempt per package per user.
 - Same package for users in the same period to support IRT validity.
-- Result/explanation waits for IRT batch according to current PRD.
+- Result/explanation only after release IRT, ≤3×24h after batch end; no partial score while processing. Released simulation score immutable.
+- XP from score only, no time bonus; conversion/duration/TKA scale/model TBC.
 
 UI needs a clear `waiting for result/IRT` state.
 
@@ -1587,7 +1595,7 @@ Use this during design review or pull-request review.
 ## Product correctness
 
 - [ ] Screen follows latest PRD.
-- [ ] No old 70% drill threshold remains if v0.5 is current.
+- [ ] No old 70% drill threshold remains; Drill v1.2 confirms 80.
 - [ ] Drill is not incorrectly locked for User Mandiri.
 - [ ] Drill is not shown as a fixed 20-minute countdown.
 - [ ] Tryout result availability matches current IRT rule.
@@ -1667,7 +1675,7 @@ NUMORA UI RULES
 - Build responsive web UI: mobile first, but do not stretch mobile mockups onto desktop.
 - Keep minimum interaction target around 44x44px and visible keyboard focus.
 - Do not copy Duolingo branding, mascot, copy, or unlicensed assets. Reuse only generic interaction/component patterns and restyle them for NUMORA.
-- PRD v0.5 guardrails while current: User Mandiri can use Drill and create PvP rooms; Drill pass threshold is >=80%; Drill timer is count-up with no fixed limit; feedback is one-way; tryout result/explanation availability follows IRT batch rules.
+- Latest PRD guardrails: Mandiri can use Drill/free MVP TryOut and create PvP rooms; Drill threshold >=80, count-up no pause/deadline; XP/stars/retention TBC. TryOut 35 PG/PGK MCMA/Category, countdown auto-submit, one attempt/package, released IRT result within 3x24h of batch end and immutable. Feedback remains one-way.
 - If UI/UX or PRD has an unresolved decision, do not invent a final rule. Use a replaceable placeholder and flag the dependency.
 ```
 

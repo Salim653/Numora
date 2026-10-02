@@ -24,7 +24,7 @@ Admin ─────────┘       │
 
 - authenticates with Google;
 - may join at most one Class;
-- may begin as Mandiri without a Class and retain Drill/PvP history when joining one;
+- may begin as Mandiri without a Class, access Drill/free MVP TryOut, and retain learning/PvP history when joining one;
 - performs Pretest/Drill/Tryout;
 - views results/progress/feedback;
 - participates in PvP;
@@ -77,3 +77,7 @@ Provide generated candidate question/variant data and consume documented analyti
 - AI-generated content is untrusted until schema validation and content review.
 - External video metadata must be stored/curated before serving as recommendation.
 - Authentication identity claims must be mapped to internal application user state before authorization.
+
+## Latest feature scope
+
+[Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) define student journeys and require Curriculum-supplied banks/packages. Admin CRUD/configuration is outside these feature PRDs; operational Admin responsibilities above remain separately scoped. Teacher observes owned-Class progress only. TryOut has no payment actor/integration on MVP; all Students are free, subject to package and attempt eligibility.

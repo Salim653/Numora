@@ -1,4 +1,4 @@
-"""Generate the Numora v0.5 shared database reference as Markdown and PDF.
+"""Generate the Numora database reference with latest Core Learning PRD context.
 
 Run with a Python environment that has reportlab installed. This is a documentation
 generator, not a database migration or an executable seed.
@@ -56,7 +56,7 @@ groups = [
         ("assessment_packages", "Ada", "id PK, family_code, package_version, name, assessment_type, chapter_id? FK, level_id? FK, variant_index?, duration_seconds?, scoring_policy_version_id? FK, release_at?, close_at?, status", "Paket PRETEST, DRILL, TRYOUT, atau PVP.", "UQ (family_code, package_version); item paket terbit tidak dimutasi; tryout satu paket aktif per periode WIB."),
         ("package_items", "Ada", "id PK, package_id FK, question_version_id FK, display_order, max_points", "Urutan soal tetap dalam paket.", "UQ (package_id, display_order); max_points > 0; FK ke versi soal konkret."),
         ("scoring_policy_versions", "Ada", "id PK, policy_code, version, configuration_json, effective_at, status", "Aturan skor historis yang diacu paket/percobaan.", "UQ (policy_code, version); PG dapat berjalan; rubrik PGK menunggu OPEN-04."),
-        ("assessment_attempts", "Ada", "id PK, student_id FK, package_id FK, assessment_type, chapter_id_at_start? FK, class_id_at_start? FK, scoring_policy_version_id? FK, started_at, deadline_at?, finished_at?, status, raw_points?, score_0_100?, stars?", "Satu sesi pretest/drill/tryout, dengan snapshot konteks.", "Pretest UQ siswa+bab; tryout UQ siswa+paket; tipe attempt wajib cocok dengan paket; skor 0..100; finalisasi idempoten."),
+        ("assessment_attempts", "Ada", "id PK, student_id FK, package_id FK, assessment_type, chapter_id_at_start? FK, class_id_at_start? FK, scoring_policy_version_id? FK, started_at, deadline_at?, finished_at?, status, raw_points?, score_0_100?, stars?", "Satu sesi pretest/drill/tryout, dengan snapshot konteks.", "Pretest UQ siswa+bab; tryout UQ siswa+paket; tipe attempt wajib cocok dengan paket; Drill skor 0..100; skala TryOut TBC (review storage); finalisasi idempoten."),
         ("attempt_items", "Ada", "id PK, attempt_id FK, package_id, package_item_id FK, question_version_id FK, display_order, max_points", "Snapshot urutan/versi soal yang diberikan ke siswa.", "UQ (attempt_id, display_order); FK komposit memastikan item berasal dari paket attempt dan versi soal cocok."),
         ("attempt_answers", "Ada", "id PK, attempt_item_id FK UQ, answer_json, saved_at, awarded_points?, graded_at?", "Jawaban tersimpan per item percobaan.", "Boleh diubah sebelum finalisasi; sesudah final dikunci; satu jawaban per item."),
         ("level_progress", "Ada", "id PK, student_id FK, level_id FK, unlocked_at?, completed_at?, unlock_source, unlocking_attempt_id? FK, completion_attempt_id? FK, latest_score?, best_score?, best_stars?", "Akses dan ketuntasan level independen dari percobaan.", "UQ (student_id, level_id); unlock >=80% drill; akses yang sudah terbuka tidak ditutup kembali."),
@@ -90,8 +90,8 @@ groups = [
 
 sections = [
     ("Aturan pemakaian", [
-        "PRD v0.5 (28 September 2026) menentukan perilaku produk. PDF BIG DATA - Data & Analytics menjadi model konseptual awal. ADR PostgreSQL, Drizzle, outbox, versioning dan XP ledger menentukan teknik. Dokumen repo yang masih v0.4 harus diselaraskan sebelum aturan lama diterapkan dalam kode.",
-        "Status Ada berarti tabel dan atribut intinya sudah didefinisikan dalam schema Drizzle serta migrasi repo. Numora-Staging sudah diverifikasi memiliki 46 tabel, tetapi Production belum dimigrasi dan aturan bisnis/API belum seluruhnya diimplementasikan. Tanda ? berarti nullable/opsional. PK/FK/UQ adalah primary key, foreign key, unique.",
+        "PRD Drill v1.2 dan TryOut v1.1, diberikan 2 Oktober 2026, menentukan aturan Core Learning terbaru; v0.5 (28 September 2026) tetap baseline lintas fitur. Sumber/rekonsiliasi: docs/product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md. PDF BIG DATA - Data & Analytics menjadi model konseptual awal. ADR PostgreSQL, Drizzle, outbox, versioning dan XP ledger menentukan teknik. Dokumen repo yang masih v0.4 harus diselaraskan sebelum aturan lama diterapkan dalam kode.",
+        "Status Ada merujuk snapshot schema/migrasi 29 September 2026, bukan audit live 2 Oktober. Snapshot lama mencatat 46 tabel Numora-Staging dan Production belum dimigrasi. Pembaruan ini hanya konteks PRD; jangan menganggap requirement baru telah diterapkan pada schema/API. Tanda ? berarti nullable/opsional. PK/FK/UQ adalah primary key, foreign key, unique.",
         "Nama tabel ini adalah kontrak fisik rancangan pada repo. Verifikasi riwayat migrasi di staging sebelum tim mulai melakukan query; constraint lintas entitas tetap memerlukan transaksi dan validasi Backend.",
     ]),
     ("Relasi dan batas transaksi", [
@@ -100,34 +100,34 @@ sections = [
         "Finalisasi asesmen harus atomik: kunci percobaan, nilai final, progres, XP ledger, analytics_outbox. Konsumsi token + afiliasi guru dan join kelas + cek satu kelas juga harus atomik. PvP finalisasi hasil + rekor + outbox harus idempoten.",
         "Aturan lintas tabel (role, pemilik kelas, status konten, validitas paket) tidak selesai dengan FK sederhana; Backend wajib validasi server-side dalam transaksi. CHECK dipakai untuk rentang/status/tanggal satu baris, UQ parsial untuk keanggotaan aktif dan pretest sekali per bab.",
     ]),
-    ("Aturan v0.5 yang memengaruhi data", [
-        "Drill: 10 soal per sesi, 5 level per subbab sebagai baseline, skor >=80 membuka level berikut; bintang 1 untuk 10-50, 2 untuk 60-90, 3 untuk 100; XP = benar x 100 + max(0, (15 - menit) x 10). Formula XP final tetap OPEN-11.",
-        "Pretest: opsional, 20 soal per bab, sekali per bab, tidak memberi XP; dapat membuka maksimal tiga level/subbab bila semua benar. Pemetaan parsial masih OPEN-01 sampai OPEN-03.",
-        "Tryout: paket baru Senin 00:00 WIB, paket sama untuk seluruh peserta pada periode sama, satu pengerjaan per siswa per paket; paket lama ditutup. Hasil/pembahasan menunggu IRT batch setelah periode berakhir (maksimum 3 x 24 jam). Pembayaran siswa Mandiri ditunda dari MVP.",
+    ("Aturan PRD terbaru yang memengaruhi data", [
+        "PRD RULE - Drill v1.2: 10 soal per sesi, count-up informasional tanpa pause/deadline; skor 0-100, >=80 unlock tanpa relock. Retry level gagal/completed, history terpisah, best score tertinggi. <15 menit eligible speed bonus; >=15 tidak. OPEN: base/XP gagal/bonus, threshold bintang, retention dan fallback variant; bukan formula/rentang/90 hari lama.",
+        "PRD RULE - Pretest: opsional, 20 soal/bab, sekali seumur hidup, tanpa XP; Skip membuka Level 1 seluruh subbab. Seluruh mapping score ke level DRL-OPEN-04; cap tiga dari v0.5 bukan mapping final. Distribusi/afiliasi/semantik Skip perlu keputusan.",
+        "PRD RULE - TryOut v1.1: gratis semua siswa termasuk Mandiri, 35 PG/PGK MCMA/Category, paket sama per batch, satu attempt/user/paket; countdown tanpa pause, 0 auto-submit. Hasil/pembahasan setelah release IRT <=3 x 24 jam dari akhir batch, skor released immutable; XP dari skor tanpa bonus. Durasi/skala/model/rubrik/XP/paket lampau TBC; rilis Senin baseline v0.5.",
         "PvP: dua siswa termasuk lintas tipe, 10 soal, server-authoritative, satu jawaban/pemain/soal, reconnect 20 detik; forfeit tidak menjadi rekor. Leaderboard kelas hanya XP drill+tryout; leaderboard global PvP memakai best valid score per kesulitan; keduanya update per jam dan arsip Rabu 23:59 WIB.",
         "Semua timestamp tahan lama disimpan sebagai timestamptz UTC; jadwal bisnis dihitung dalam Asia/Jakarta. Penilaian, soal dan paket historis tidak dihitung ulang setelah revisi.",
     ]),
     ("Alur original - kalibrasi - varian", [
         "Original yang divalidasi Curriculum menjadi baseline. Kalibrasi respons siswa menghasilkan parameter dan ketidakpastian. Generator membuat candidate dengan random seed, versi config, parameter terpakai dan relasi ke original. Candidate melewati validasi statis, uji, compare, review, lalu READY atau DRIFT/ANOMALY/NOT_ENOUGH_DATA.",
         "Perbandingan a, b, dan D hanya bermakna pada skala yang sama dengan anchor/theta yang terdokumentasi. Batas PASS/DRIFT, jumlah regenerate otomatis dan konfigurasi adjustment belum final. Candidate gagal disimpan; original dan hasil lama tidak ditulis ulang.",
-        "Demo tanpa >=30 respons valid memakai fixture berlabel DEMO atau status Data belum cukup; jangan menampilkan parameter simulasi sebagai IRT empiris yang sah.",
+        "Baseline >=30 respons berlaku untuk analisis item/detail Admin v0.5; tidak otomatis policy universal rilis TryOut. Model/low-response/release harus direkonsiliasi dengan SLA. Fixture statistik DEMO bukan IRT empiris yang sah.",
     ]),
     ("Seed demo minimum dan pemilik data", [
         "Onboarding/Data: 1 sekolah, 1 admin, 1 guru terverifikasi, 3 siswa Sekolah, 1 siswa Mandiri, 1 kelas, token belum dipakai/terpakai/kedaluwarsa. Auth ID akun yang dipakai login harus cocok dengan Supabase Auth, bukan UUID placeholder semata.",
         "Curriculum/Admin/Data-AI: 1 bab, 2 subbab, 5 level per subbab, kompetensi, original PG, sedikitnya 2 varian untuk level yang didemokan, versi soal READY dan DRAFT, kunci/pembahasan. Konten dummy ditandai DEMO dan direview sebelum dipakai UI.",
-        "Core Learning: paket pretest 20 soal, dua paket drill 10 soal untuk variasi ulang, satu paket tryout mingguan demo dengan item tetap; percobaan selesai pada nilai 70, 80, 100 dan percobaan berjalan. Spesifikasi tryout resmi menunggu OPEN-05.",
+        "Core Learning: paket pretest 20 soal, dua paket drill 10 soal untuk variasi ulang, satu paket TryOut demo 35 soal/tiga format untuk siswa Mandiri dan Sekolah, dengan item tetap; percobaan selesai pada nilai 70, 80, 100 dan percobaan berjalan. Jumlah 35/tiga format FINAL; durasi/skala/komposisi/rubrik final tetap OPEN.",
         "Monitoring: progres berbeda antarsiswa, dua feedback dengan status baca berbeda, laporan soal dan video. PvP: paket 10 soal per kesulitan yang didemokan, pertandingan selesai, disconnect/reconnect dan forfeit; periode leaderboard aktif dan arsip. Data/AI: generation run, candidate, tiga video relevan per subbab bila ada, IRT DEMO/NOT_ENOUGH_DATA.",
         "Seed harus deterministik dan idempoten, dipisah base/demo. QA membutuhkan kasus penolakan: token expired/dipakai, siswa di dua kelas, tryout paket sama dua kali, soal DRAFT, jawaban PvP ganda, guru membaca kelas lain.",
     ]),
     ("Keputusan terbuka yang tidak boleh ditebak", [
-        "OPEN-01..03 taksonomi dan pemetaan pretest; OPEN-04 rubrik PGK; OPEN-05 spesifikasi tryout resmi; OPEN-07 edge PvP; OPEN-11 formula XP final; OPEN-12 model/parameter IRT; OPEN-13 efek ban; OPEN-15 perpindahan Sekolah/Mandiri; OPEN-18 durasi batch IRT paket tryout. Untuk demo gunakan fixture/policy versi DEMO, jangan memasarkan sebagai keputusan final.",
+        "Global OPEN tetap untuk area terkait. DRL-OPEN-01..10 mencakup XP, stars, seluruh placement, session/exit, retention, events, fallback dan mastery metric. TRY-TBC-01..07 mencakup durasi, skala/rubrik/komposisi, XP, session, paket lampau, akhir batch dan model/failure. Gratis/35/tiga format/auto-submit/SLA sudah FINAL. OPEN-07 PvP, OPEN-13 ban, OPEN-15 perpindahan tetap. Untuk demo gunakan fixture/policy versi DEMO, jangan memasarkan sebagai keputusan final.",
         "Khusus desain DB: perlu keputusan apakah satu guru dapat aktif di lebih dari satu sekolah; apakah revisi paket pretest tetap menghitung kesempatan yang sama per bab; bagaimana snapshot kelas saat siswa pindah. Simpan fleksibilitas sampai keputusan ada.",
     ]),
 ]
 
 
 def write_markdown():
-    lines = ["# Numora - Acuan Database PRD v0.5", "", "29 September 2026 | Skema dan migrasi di repo | Staging termigrasi; Production belum", ""]
+    lines = ["# Numora - Acuan Database: baseline v0.5 + PRD Core Learning terbaru", "", "2 Oktober 2026 | Konteks PRD diperbarui; snapshot schema 29 September dipertahankan", ""]
     for title, bullets in sections[:3]:
         lines += [f"## {title}", ""]
         lines += [f"- {item}" for item in bullets]
@@ -141,7 +141,7 @@ def write_markdown():
         lines += [f"## {title}", ""]
         lines += [f"- {item}" for item in bullets]
         lines += [""]
-    lines += ["## Sumber", "", "- PRD_v0.5.docx.pdf (diberikan pengguna).", "- BIG DATA - Data & Analytics.pdf (diberikan pengguna).", "- Workflow_Original_Kalibrasi_Generate_Uji_Compare_Adjust_Regenerate.docx (diberikan pengguna).", "- Repo Numora: docs/adr/ADR-003, 004, 007, 008, 009 dan packages/database/src/schema.", ""]
+    lines += ["## Sumber", "", "- [Rekonsiliasi PRD Core Learning](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md).", "- [Drill v1.2](../product/sources/PRD_01_Drill_Latihan_Soal.docx.md).", "- [TryOut v1.1](../product/sources/PRD_02_Core_Learning_TryOut.docx.md).", "- PRD_v0.5.docx.pdf (diberikan pengguna).", "- BIG DATA - Data & Analytics.pdf (diberikan pengguna).", "- Workflow_Original_Kalibrasi_Generate_Uji_Compare_Adjust_Regenerate.docx (diberikan pengguna).", "- Repo Numora: docs/adr/ADR-003, 004, 007, 008, 009 dan packages/database/src/schema.", ""]
     MD.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -167,10 +167,10 @@ def page_header_footer(canvas, doc):
     canvas.line(16 * mm, h - 16 * mm, w - 16 * mm, h - 16 * mm)
     canvas.setFont("Helvetica-Bold", 8)
     canvas.setFillColor(colors.HexColor("#14365D"))
-    canvas.drawString(16 * mm, h - 13 * mm, "NUMORA  |  DATABASE REFERENCE  |  PRD v0.5")
+    canvas.drawString(16 * mm, h - 13 * mm, "NUMORA  |  DATABASE REFERENCE  |  DRILL v1.2 / TRYOUT v1.1")
     canvas.setFont("Helvetica", 7.5)
     canvas.setFillColor(colors.HexColor("#526070"))
-    canvas.drawString(16 * mm, 11 * mm, "Schema dan migrasi di repo - Staging termigrasi; Production belum")
+    canvas.drawString(16 * mm, 11 * mm, "Konteks PRD 2 Oktober 2026 - snapshot schema 29 September, bukan audit live")
     canvas.drawRightString(w - 16 * mm, 11 * mm, str(doc.page))
     canvas.restoreState()
 
@@ -180,7 +180,7 @@ def build_pdf():
     doc = BaseDocTemplate(str(PDF), pagesize=(w, h), leftMargin=16 * mm, rightMargin=16 * mm, topMargin=21 * mm, bottomMargin=17 * mm)
     frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)
     doc.addPageTemplates(PageTemplate(id="normal", frames=frame, onPage=page_header_footer))
-    flow = [para("Acuan Database Numora", "TitleN"), para("PRD v0.5 | Kamus data, constraint, alur, dan seed demo | 29 September 2026", "SmallN"), Spacer(1, 5 * mm)]
+    flow = [para("Acuan Database Numora", "TitleN"), para("Drill v1.2 / TryOut v1.1 + baseline v0.5 | Konteks 2 Oktober 2026 | Snapshot schema 29 September", "SmallN"), Spacer(1, 5 * mm)]
     for title, bullets in sections[:3]:
         flow.append(para(title, "SectionN"))
         for item in bullets:
@@ -204,7 +204,7 @@ def build_pdf():
     for title, bullets in sections[3:]:
         flow.append(KeepTogether([para(title, "SectionN"), *(para("• " + item) for item in bullets)]))
     flow.append(para("Sumber", "SectionN"))
-    for source in ["PRD_v0.5.docx.pdf", "BIG DATA - Data & Analytics.pdf", "Workflow_Original_Kalibrasi_Generate_Uji_Compare_Adjust_Regenerate.docx", "Repo Numora: ADR-003/004/007/008/009 dan packages/database/src/schema"]:
+    for source in ["docs/product/sources/PRD_01_Drill_Latihan_Soal.docx.md (Drill v1.2)", "docs/product/sources/PRD_02_Core_Learning_TryOut.docx.md (TryOut v1.1)", "docs/product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md", "PRD_v0.5.docx.pdf", "BIG DATA - Data & Analytics.pdf", "Workflow_Original_Kalibrasi_Generate_Uji_Compare_Adjust_Regenerate.docx", "Repo Numora: ADR-003/004/007/008/009 dan packages/database/src/schema"]:
         flow.append(para("• " + source))
     doc.build(flow)
 

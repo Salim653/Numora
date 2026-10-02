@@ -1,5 +1,8 @@
 # Audit integrasi MVP 0 — 30 September 2026
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
+
 Catatan historis: audit ini menggambarkan kondisi 30 September 2026. Implementasi berikutnya dan penghapusan route pratinjau dicatat di [status area siswa](STUDENT_AREA_IMPLEMENTATION.md).
 
 **Status:** audit berjalan. Dokumen ini mencatat bukti pada `main` commit `a74ca07`, pemeriksaan lokal 30 September 2026, dan pemeriksaan ulang cloud **1 Oktober 2026 WIB** setelah password database direset. Hasil cloud dapat berubah. Jangan menafsirkan CI hijau sebagai bukti alur pengguna end-to-end.

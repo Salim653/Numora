@@ -123,3 +123,7 @@ Contoh ini menunjukkan **pemilik lokasi kode**, bukan daftar fitur yang sudah se
 6. Jika penempatan baru menjadi pola tim, perbarui dokumen ini dan tautan terkait dalam PR yang sama.
 
 Panduan ini tidak menutup keputusan PRD yang masih **OPEN**. Gunakan fixture demo yang jelas atau struktur yang mudah diperluas ketika perilaku final belum disepakati.
+
+## Core Learning source update — 2 Oktober 2026
+
+Lokasi kode tetap mengikuti tabel di atas. [Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) mengubah requirement, bukan struktur folder: TryOut gratis semua siswa, 35 soal/tiga format, countdown/auto-submit/IRT release; Drill XP/stars/retensi/session policy TBC. Tempatkan perubahan eligibility di backend, kontrak PGK di shared/generated contract, finalisasi di service asesmen/worker, dan visual/state di `features/core-learning`. Admin CRUD yang ada merupakan pekerjaan operasional terpisah dari scope PRD fitur siswa.

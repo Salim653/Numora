@@ -1,6 +1,6 @@
 # Idempotency and Duplicate Protection
 
-PRD v0.5 requires refresh/retry behavior to avoid duplicate attempts, points, and PvP answers.
+Drill v1.2 DRL-AC-10 and TryOut v1.1 TRY-AC04/12/21 require one final submission/result and no duplicate history/XP. PRD v0.5 still provides the PvP/class baseline.
 
 ## Operations requiring duplicate protection
 
@@ -9,7 +9,7 @@ At minimum:
 - class join;
 - teacher token consumption;
 - start/restore assessment where refresh must not create a new attempt;
-- assessment submit;
+- assessment manual submit and TryOut deadline auto-submit through the same atomic finalization path;
 - XP ledger contribution;
 - Tryout one-attempt-per-weekly-package start;
 - PvP answer submission;
@@ -70,3 +70,7 @@ Do not rely only on frontend button disabling. Select the active shared package 
 ## Worker handlers
 
 Assume at-least-once delivery. A retried job/event must not corrupt state or duplicate ledger entries.
+
+## TryOut manual/auto-submit race
+
+**PRD RULE:** countdown 0 submits without confirmation; simultaneous manual submit, deadline job, reconnect and retry requests must preserve the same final attempt and locked answers. An expired attempt must finalize even without a new browser request. IRT processing/release retries must not overwrite an already-released score or post XP twice. Implementation mechanism remains server-owned; see [latest policy](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md).

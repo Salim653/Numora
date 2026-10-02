@@ -1,5 +1,7 @@
 # Integrasi Core Learning, Content, Student Support dan IRT
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
 **PROPOSED — hasil integrasi 2 Oktober 2026, menunggu review maintainer.** Atas pilihan koordinator, PR #25, #22, #23 dan #24 digabung berurutan pada satu branch `integrate/core-learning-content-irt` untuk PR baru menuju main. Empat head asli tetap menjadi ancestor; main dan PR lainnya belum diubah oleh integrasi lokal. Ini tidak menyatakan kesiapan rilis sekolah.
 
 ## Perilaku gabungan
@@ -12,7 +14,7 @@
 
 Publisher sebelumnya menerima policy dengan `configuration.assessmentType = DRILL` sementara engine hanya mengenali `DRILL_PG_DEMO` versi 1. Publisher kini memeriksa policy dan decoder konten yang dapat dimainkan engine. Batas prototype A–D adalah kompatibilitas implementasi sementara; bukan penutupan keputusan Curriculum atau perluasan penskoran PGK.
 
-**PRD RULE:** sepuluh soal Drill, mastery 80%, timer count-up tanpa timeout produk, histori versi tetap, dan batas akses pembahasan 90 hari dipertahankan. **OPEN:** Pretest placement, paket Tryout resmi, PvP edges, XP final, model/statistik dan kebijakan rilis IRT tetap belum diselesaikan.
+**BASELINE IMPLEMENTASI SEBELUM PRD FITUR TERBARU:** sepuluh soal Drill, mastery 80%, timer count-up tanpa timeout produk, histori versi tetap, dan batas akses pembahasan 90 hari dipertahankan. Drill v1.2 tetap menetapkan 10 soal/80/count-up, tetapi retensi sekarang DRL-OPEN-07; 90 hari bukan aturan final terbaru. **OPEN:** Pretest placement, paket Tryout resmi, PvP edges, XP final, model/statistik dan kebijakan rilis IRT tetap belum diselesaikan.
 
 ## Jalur migrasi
 

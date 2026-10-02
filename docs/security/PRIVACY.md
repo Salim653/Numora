@@ -40,10 +40,10 @@ Prefer internal IDs/pseudonymous identifiers. Generic events should not carry un
 
 ## Retention
 
-Known product retention/display rule:
+Latest retention/display context ([PRD reconciliation](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md)):
 
-- Drill explanation access: 90 days;
-- Tryout result/explanation: available after the package's IRT batch, subject to OPEN-18 timing/failure details; no fixed expiration is stated in PRD v0.5;
+- Drill explanation/history retention: DRL-OPEN-07; 90 days in v0.5/current implementation is superseded as final product authority;
+- TryOut result/explanation: only after released IRT, within 3×24h after batch end; exact failure/schedule policy remains OPEN-18. No fixed expiration is stated by TryOut v1.1;
 - leaderboard periods: archived, not deleted.
 
 Other data retention remains unresolved under OPEN-09. Do not automatically delete durable attempts/audit/XP/IRT inputs until an approved policy exists.

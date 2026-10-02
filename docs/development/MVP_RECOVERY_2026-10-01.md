@@ -1,5 +1,8 @@
 # Pemulihan integrasi dan rencana menuju MVP — 1 Oktober 2026
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
+
 **Status:** fondasi integrasi diperbaiki di branch `fix/mvp-integration-audit`. Seluruh modul PRD belum selesai. Dokumen ini melanjutkan [audit awal](MVP0_INTEGRATION_AUDIT_2026-09-30.md), membedakan hasil teruji dari pekerjaan dan keputusan yang masih diperlukan.
 
 Perubahan dipublikasikan sebagai [draft PR #17](https://github.com/ayiinee/Numora/pull/17). `main` belum diubah; integrasi ke branch utama menunggu review tim.

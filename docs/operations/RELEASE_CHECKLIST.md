@@ -69,3 +69,18 @@ Record date and approval/status from:
 - Software Engineering
 - QA
 - DevOps/Platform as applicable
+
+## Core Learning gates from latest feature PRDs
+
+[Source reconciliation and full AC references](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). Apply when releasing the respective feature; the first school trial retains its recorded Drill scope.
+
+- [ ] Drill DRL-AC-01–24 and TryOut TRY-AC01–25 mapped to reviewable evidence.
+- [ ] Free TryOut access works for Mandiri and School Students; no class/payment prerequisite.
+- [ ] TryOut 35-item packages and all PG/PGK MCMA/Category interactions/rubrics verified.
+- [ ] Countdown no pause; auto-submit at 0 works without browser requests and races safely with manual submit.
+- [ ] Waiting/processing hides score/key/explanation; result release occurs ≤3×24h after approved batch end and never changes after release.
+- [ ] Duration/TKA scale/model/low-response/batch schedule/past never-attempted eligibility finalized; no assumptions from PG demo fixtures.
+- [ ] Drill <15min bonus eligibility, irreversible unlock, best score/history, retry/fallback and failed-only max-three YouTube/report verified.
+- [ ] XP/star formulas, Pretest mapping, retention and session/exit policy finalized; legacy 90-day access/old star ranges not mislabeled PRD rules.
+- [ ] Analytics vocabulary/payload approved; no duplicate final result/XP/history/outbox contribution.
+- [ ] Curriculum supplies reviewed content; existing Admin CRUD does not expand student-feature scope or expose parameter editors.

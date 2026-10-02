@@ -56,3 +56,7 @@ Use `correlationId`/request or workflow IDs so product actions can be traced acr
 ## Late/duplicate events
 
 Assume at-least-once asynchronous processing. Consumers should deduplicate by `eventId` and use `occurredAt` rather than ingestion time for event chronology.
+
+## Core Learning measurements from latest feature PRDs
+
+[Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) add explicit retry, pretest skip, video click, detail/processing view, submission type and conditional abandonment events. Use [EVENTS](EVENTS.md) for vocabulary; exact payload schema DRL-OPEN-08 remains OPEN. Preserve all valid attempts for repeat-frequency analysis and derive best score without overwriting history. TryOut completion, batch processing and release are separate milestones; measure ≤3×24h release from batch end. XP/stars/mastery-score formula decisions and TryOut scale are unresolved; analytics must not infer them from legacy values or normalize final TryOut results to 0–100 by assumption.

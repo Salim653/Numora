@@ -30,7 +30,7 @@ The current repository is a **walking skeleton**, not a product-feature implemen
 - product UI routes;
 - resolved behavior for OPEN PRD items.
 
-Those were outside the original walking-skeleton bootstrap. The newly supplied Sprint 2 Goal now requires Google Student login, Class join, and a persisted Level-1 Drill vertical slice; see `SPRINT_2_GOAL.md`. Remaining feature order follows PRD v0.5 and team refinement.
+Those were outside the original walking-skeleton bootstrap. The newly supplied Sprint 2 Goal now requires Google Student login, Class join, and a persisted Level-1 Drill vertical slice; see `SPRINT_2_GOAL.md`. Remaining feature work follows [latest Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md), the cross-feature v0.5 baseline and team refinement; bootstrap evidence does not prove acceptance of updated features.
 
 ## Bootstrap acceptance test
 

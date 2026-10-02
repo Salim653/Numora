@@ -2,14 +2,16 @@
 
 This directory contains the shared engineering context for the TKA Mathematics SMP platform.
 
-PRD v0.5 (28 September 2026) is the team-approved product source of truth, as confirmed by the Software Engineering coordinator on 28 September 2026. The PDF still carries its earlier “draft for review” label; the source PDF was supplied outside this repository and is not yet committed here. The summaries below do not replace the complete PRD. The supplied Sprint 2 Goal PDF is also external; its older 70% threshold has been superseded by the approved PRD's 80% rule.
+Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.docx.md) dan [PRD TryOut v1.1](product/sources/PRD_02_Core_Learning_TryOut.docx.md), diberikan pada 2 Oktober 2026, menjadi sumber terbaru. Lihat [rekonsiliasi perubahan](product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). PRD v0.5 (28 September 2026) remains the cross-feature baseline, as confirmed by the Software Engineering coordinator on 28 September 2026. The PDF still carries its earlier “draft for review” label; the source PDF was supplied outside this repository and is not yet committed here. The summaries below do not replace the complete PRD. The supplied Sprint 2 Goal PDF is also external; its older 70% threshold has been superseded by the approved PRD's 80% rule.
 
 ## Product
 
-- `product/PRODUCT_CONTEXT.md` — product rules from team-approved PRD v0.5.
+- `product/PRODUCT_CONTEXT.md` — aturan PRD fitur terbaru dan baseline lintas fitur v0.5.
 - `product/PRD_MAPPING.md` — mapping from PRD sections/requirements to technical modules.
 - `product/OPEN_DECISIONS.md` — unresolved PRD items, engineering recommendations, and blockers.
 - `product/GLOSSARY.md` — canonical project vocabulary.
+- `product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md` — perubahan sumber, TBC, traceability acceptance, dan gap implementasi.
+- `product/sources/` — salinan utuh PRD Drill v1.2 dan TryOut v1.1 dari pengguna.
 
 ## Architecture
 
@@ -75,7 +77,7 @@ See `adr/README.md` and the individual ADR files.
 
 ## Status terminology
 
-- **PRD RULE** — directly stated in team-approved PRD v0.5.
+- **PRD RULE** — aturan eksplisit PRD terbaru untuk area terkait; v0.5 tetap baseline lintas fitur.
 - **ENGINEERING DECISION** — approved during technical alignment.
 - **PROPOSED** — recommendation pending approval.
 - **OPEN** — unresolved product/academic decision.

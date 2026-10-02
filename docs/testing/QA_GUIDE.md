@@ -55,18 +55,18 @@ The six-actor Cloud Development fixture and live Google flow are described in [Q
 - duplicate submit;
 - refresh/resume;
 - retry receives another variant;
-- 70% vs 80% boundary for 10-question Drill; only ≥80% unlocks under the v0.5 baseline;
-- star ranges do not replace the 80% unlock rule; score 0 display awaits clarification;
-- explanation visibility at 90-day boundary;
-- clarification around timeout must not be silently assumed.
+- 70% vs 80% boundary for 10-question Drill; only ≥80 unlocks under Drill v1.2;
+- stars do not replace the 80 unlock rule; all star thresholds await DRL-OPEN-03;
+- explanation only after submit; retention boundary tests wait for DRL-OPEN-07; legacy 90-day tests are implementation evidence only;
+- count-up no pause/no deadline; <15 minutes bonus eligible, exactly 15 minutes not eligible; formula pending.
 
 ### Tryout
 
 - one shared package for all Students in the same weekly period;
 - second start of the same package denied or resumes existing attempt;
-- Sunday 23:59 → Monday 00:00 WIB package boundary and previous-package lock;
+- Monday 00:00 WIB release remains baseline; previous packages remain visible and past never-attempted Start follows TRY-TBC-05, not blanket lock;
 - result/explanation hidden until IRT batch completes;
-- Mandiri access unavailable while payment is deferred;
+- Mandiri and School Students can access eligible TryOut free; no payment UI or class-required gate;
 - Tryout does not unlock Drill.
 
 ### PvP
@@ -89,3 +89,27 @@ The six-actor Cloud Development fixture and live Google flow are described in [Q
 ## Regression focus after PRD updates
 
 Every PRD revision requires impact check against `docs/product/PRD_MAPPING.md` and the affected acceptance suite.
+
+## Acceptance matrix — latest Core Learning PRDs
+
+Sources copied into [product/sources](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). This matrix groups all 24 Drill and 25 TryOut criteria; record concrete evidence per ID before acceptance.
+
+| IDs          | Scenario / expected behavior                                                                                                       |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| DRL-AC-01    | Locked direct URL/API cannot start; eligible level can                                                                             |
+| DRL-AC-02–04 | Lifetime one-time Pretest, 20 questions/no XP, Skip → Level 1 every subchapter; mapping pending                                    |
+| DRL-AC-05–07 | 10 one-by-one questions; count-up no pause/deadline; <15 minutes versus ≥15 bonus eligibility                                      |
+| DRL-AC-08–10 | Navigator/edit before final; confirmation; locked after final; duplicate/concurrent submit one result/history/XP                   |
+| DRL-AC-11–16 | 80 unlock, failure retry, no relock, equivalent variant, all attempts separate, best score highest and never decreases             |
+| DRL-AC-17–18 | Result score/XP/stars/progress; explanation only after submit; pending policy shown honestly                                       |
+| DRL-AC-19–21 | Failure-only relevant max-three YouTube videos, video/report modal, question/report context/category, empty/error non-blocking     |
+| DRL-AC-22–24 | Refresh/exit loss warning matches actual persistence; failed save never Saved; valid activity contribution exactly once            |
+| TRY-AC01–03  | Ongoing/Past listing and attempt status; identical package for two users in batch                                                  |
+| TRY-AC04–08  | One attempt/user/package, 35 questions, PG/MCMA/Category, one-by-one navigator and editable answers                                |
+| TRY-AC09–13  | Countdown no pause; 0 auto-submit without confirmation; manual confirm/cancel; race yields one final submission and locked answers |
+| TRY-AC14–17  | Submitted success/processing without score; release ≤3×24h from batch end; explanation gated; released score never changes         |
+| TRY-AC18–19  | Simulation result and score-derived XP without speed/duration bonus; numeric conversion awaits policy                              |
+| TRY-AC20–22  | No reattempt via direct URL/refresh/double-click/repeated/re-auth request; expired/unavailable cannot Start                        |
+| TRY-AC23–25  | Delay/error waiting without partial score; result distinguished from official TKA; all Students free/no checkout                   |
+
+Additional source-state checks: save/connection/session expiry/recovery; package detail/tutorial/rules; result load errors; report success/error; variant pool exhaustion; past never-attempted eligibility; batch insufficient/failure retry. **OPEN:** do not turn fixture durations, XP=score recommendation, old star ranges/90-day retention, max-three-level Pretest mapping, or ≥30 TryOut gate into final acceptance policy.

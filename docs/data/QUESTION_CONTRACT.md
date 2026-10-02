@@ -34,7 +34,7 @@ The data model/schema should be able to represent:
 - `MULTIPLE_CHOICE_MULTIPLE_ANSWER` (PGK MCMA)
 - `CATEGORY` (PGK Kategori)
 
-MVP scoring may initially publish/use PG only where OPEN-04 blocks PGK scoring.
+**PRD RULE — TryOut v1.1:** MVP requires PG, PGK MCMA and PGK Category, 35 questions per package. PG-only runtime is an implementation gap, not an approved final scope reduction. Rubrics/rounding remain OPEN-04; do not invent partial-credit or all-or-nothing semantics.
 
 ## Required semantic groups
 
@@ -132,6 +132,11 @@ Each concrete variant needs matching answer key and explanation.
 
 - exact taxonomy and level structure: OPEN-01;
 - PGK scoring semantics: OPEN-04;
-- number of variants/packages: OPEN-10.
+- number of variants/packages: OPEN-10; retry pool fallback DRL-OPEN-09;
+- TryOut duration, composition and TKA scale: TRY-TBC-01/02; fixed 35 questions and three supported formats are already FINAL.
 
 Schema should remain flexible without pretending these decisions are final.
+
+## Latest feature content boundary
+
+See [PRD reconciliation](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). Curriculum supplies banks/packages; Admin CRUD is outside the Drill/TryOut feature scope. A retry must preserve competency, form and difficulty; use a different equivalent package if available, without inventing fallback policy. Navigation/resume must not regenerate items inside an attempt. MCMA and Category need explicit validated answer/scoring representations, pinned rubrics and explanations; an extensible enum alone is not final support. Published results retain their original content and scoring/model versions.

@@ -1,5 +1,7 @@
 # PR #18 — generated Next.js types
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
 **ENGINEERING DECISION:** mengikuti dokumentasi Next.js yang terpasang (`next/dist/docs/01-app/03-api-reference/05-config/02-typescript.md`, bagian next-env.d.ts): file dibuat ulang oleh `next dev`, `next build`, dan `next typegen`; tidak diedit/dipertahankan sebagai sumber Git.
 
 PR awal hanya mengganti `.next/types` menjadi `.next/dev/types`. Itu sesuai output development, tetapi build akan menggantinya kembali dan menyebabkan perubahan Git berulang.
