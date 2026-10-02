@@ -5,6 +5,10 @@ import { AdminContentScreen } from './content';
 import { createQuestion, loadAdminWorkbench, updateTryoutDraft } from './content-api';
 
 const context = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/admin/content',
+  useRouter: () => ({ replace: vi.fn() }),
+}));
 vi.mock('@/features/onboarding/auth', () => ({
   useAuth: () => ({ state: context.state, refresh: vi.fn() }),
 }));
@@ -52,7 +56,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   context.state = {
     status: 'ready',
-    profile: { id: 'admin-test', role: 'ADMIN' },
+    profile: { id: 'admin-test', role: 'ADMIN', displayName: 'Admin test' },
     session: { access_token: 'test-token' },
   };
   vi.mocked(loadAdminWorkbench).mockResolvedValue(data);
@@ -64,7 +68,7 @@ describe('Admin content UI', () => {
   it('does not fetch or render administrative data for Student', () => {
     context.state = {
       status: 'ready',
-      profile: { id: 'student-test', role: 'STUDENT' },
+      profile: { id: 'student-test', role: 'STUDENT', displayName: 'Student test' },
       session: { access_token: 'student-token' },
     };
     render(<AdminContentScreen />);
@@ -134,7 +138,7 @@ describe('Admin content UI', () => {
     expect(screen.queryByLabelText('Kompetensi')).toBeNull();
     context.state = {
       status: 'ready',
-      profile: { id: 'another-admin-test', role: 'ADMIN' },
+      profile: { id: 'another-admin-test', role: 'ADMIN', displayName: 'Admin lain' },
       session: { access_token: 'expired-test' },
     };
     vi.mocked(loadAdminWorkbench).mockRejectedValueOnce(

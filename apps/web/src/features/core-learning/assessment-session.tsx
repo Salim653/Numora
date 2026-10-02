@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
+import { ProgressBar } from '@tka/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import type { DrillQuestion } from './types';
 import { MathText, Panel, PrimaryButton, Status } from './ui';
@@ -89,12 +90,22 @@ export function AssessmentSession({
           {save.isPending ? 'Menyimpan…' : saveError ? 'Belum tersimpan' : 'Tersimpan'}
         </span>
       </Panel>
+      <ProgressBar
+        value={questions.length - emptyCount}
+        max={questions.length}
+        label={`${questions.length - emptyCount} dari ${questions.length} soal dijawab`}
+        showLabel
+      />
       <Panel className="assessment-question">
         <h2 className="text-lg font-bold">
           <MathText value={question.stem} />
         </h2>
         <fieldset
-          disabled={save.isPending || submit.isPending || (!!unsaved && unsaved.questionId !== question.questionInstanceId)}
+          disabled={
+            save.isPending ||
+            submit.isPending ||
+            (!!unsaved && unsaved.questionId !== question.questionInstanceId)
+          }
           className="mt-6 space-y-3"
         >
           <legend className="sr-only">Pilihan jawaban</legend>
@@ -117,7 +128,9 @@ export function AssessmentSession({
         {answers[question.questionInstanceId] && (
           <button
             className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"
-            disabled={save.isPending || (!!unsaved && unsaved.questionId !== question.questionInstanceId)}
+            disabled={
+              save.isPending || (!!unsaved && unsaved.questionId !== question.questionInstanceId)
+            }
             onClick={() => void choose(question.questionInstanceId, null)}
           >
             Kosongkan jawaban
@@ -148,7 +161,7 @@ export function AssessmentSession({
           </button>
         ))}
       </nav>
-      <div className="flex flex-wrap justify-between gap-3">
+      <div className="assessment-actions flex flex-wrap justify-between gap-3">
         <button
           className="min-h-11 rounded-xl border border-slate-300 bg-white px-5 font-semibold disabled:opacity-50"
           disabled={index === 0}

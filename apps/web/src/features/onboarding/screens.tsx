@@ -12,7 +12,9 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="onboarding-shell">
       <div className="onboarding-frame">
-        <header className="brand"><Brand /></header>
+        <header className="brand">
+          <Brand />
+        </header>
         {children}
         <p className="page-footer">Belajar matematika, satu langkah setiap hari.</p>
       </div>
@@ -126,6 +128,11 @@ export function LoginScreen() {
             Matematika jadi lebih <em>terarah.</em>
           </h1>
           <p>Masuk untuk melanjutkan perjalanan belajar atau mendampingi siswa di NUMORA.</p>
+          <div className="auth-art" aria-hidden="true">
+            <span>x² + y²</span>
+            <img src="/figma/numora-owl-source.png" alt="" width="96" height="134" />
+            <span>✦</span>
+          </div>
         </section>
         <section className="panel login-panel" aria-label="Login NUMORA">
           <div className="panel-icon" aria-hidden="true">
@@ -178,7 +185,9 @@ export function LoginScreen() {
             </>
           )}
           <div className="demo-entry">
-            <p>Coba tampilan NUMORA tanpa akun atau backend. Semua data dalam demo bersifat fiktif.</p>
+            <p>
+              Coba tampilan NUMORA tanpa akun atau backend. Semua data dalam demo bersifat fiktif.
+            </p>
             <Link className="secondary-button demo-entry-link" href="/demo/student">
               Jelajahi demo Siswa, PvP, dan peringkat
             </Link>
@@ -187,8 +196,11 @@ export function LoginScreen() {
                 <Link className="demo-entry-admin" href="/admin/preview">
                   Lihat pratinjau Admin (development)
                 </Link>
-                {process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://pkamenfnwmoeisccnrnk.supabase.co' && (
-                  <Link className="demo-entry-admin" href="/qa/login">Masuk dengan akun QA Development</Link>
+                {process.env.NEXT_PUBLIC_SUPABASE_URL ===
+                  'https://pkamenfnwmoeisccnrnk.supabase.co' && (
+                  <Link className="demo-entry-admin" href="/qa/login">
+                    Masuk dengan akun QA Development
+                  </Link>
                 )}
               </>
             )}
@@ -435,12 +447,17 @@ export function TeacherVerificationScreen() {
     if (!accessToken || state.status !== 'ready' || state.profile.role !== 'TEACHER') return;
     let active = true;
     getSchools(accessToken).then(
-      (result) => { if (active) setSchools(result.items); },
+      (result) => {
+        if (active) setSchools(result.items);
+      },
       (cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : 'Sekolah belum dapat dimuat.');
+        if (active)
+          setError(cause instanceof Error ? cause.message : 'Sekolah belum dapat dimuat.');
       },
     );
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [accessToken, revision, state.status, state]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -464,11 +481,17 @@ export function TeacherVerificationScreen() {
         <span className="eyebrow">Akses Guru</span>
         <h1>Verifikasi sekolah</h1>
         <p>Pilih sekolah lalu masukkan token sekali pakai dari Admin. Token berlaku 3×24 jam.</p>
-        {state.status === 'ready' && state.profile.role === 'TEACHER' && !state.profile.teacherVerified ? (
+        {state.status === 'ready' &&
+        state.profile.role === 'TEACHER' &&
+        !state.profile.teacherVerified ? (
           <>
-            {schools === null && !error ? <p role="status">Memuat sekolah…</p> : (
+            {schools === null && !error ? (
+              <p role="status">Memuat sekolah…</p>
+            ) : (
               <form onSubmit={(event) => void submit(event)}>
-                <label className="field-label" htmlFor="teacher-school">Sekolah</label>
+                <label className="field-label" htmlFor="teacher-school">
+                  Sekolah
+                </label>
                 <select
                   className="text-input"
                   id="teacher-school"
@@ -477,10 +500,16 @@ export function TeacherVerificationScreen() {
                   required
                 >
                   <option value="">Pilih sekolah</option>
-                  {schools?.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}
+                  {schools?.map((school) => (
+                    <option key={school.id} value={school.id}>
+                      {school.name}
+                    </option>
+                  ))}
                 </select>
                 {schools?.length === 0 && <p role="status">Belum ada sekolah aktif.</p>}
-                <label className="field-label" htmlFor="teacher-token">Token verifikasi</label>
+                <label className="field-label" htmlFor="teacher-token">
+                  Token verifikasi
+                </label>
                 <input
                   className="text-input"
                   id="teacher-token"
@@ -490,22 +519,44 @@ export function TeacherVerificationScreen() {
                   onChange={(event) => setToken(event.target.value)}
                   required
                 />
-                {error && <p className="form-error" role="alert">{error}</p>}
-                <Button className="primary-button" type="submit" disabled={busy || !schools?.length}>
+                {error && (
+                  <p className="form-error" role="alert">
+                    {error}
+                  </p>
+                )}
+                <Button
+                  className="primary-button"
+                  type="submit"
+                  disabled={busy || !schools?.length}
+                >
                   {busy ? 'Memverifikasi…' : 'Verifikasi dan lanjutkan'}
                 </Button>
               </form>
             )}
             {error && schools === null && (
-              <Button className="secondary-button" onClick={() => { setError(''); setRevision((n) => n + 1); }}>
+              <Button
+                className="secondary-button"
+                onClick={() => {
+                  setError('');
+                  setRevision((n) => n + 1);
+                }}
+              >
                 Coba lagi
               </Button>
             )}
-            <div className="form-logout"><LogoutButton /></div>
+            <div className="form-logout">
+              <LogoutButton />
+            </div>
           </>
         ) : state.status === 'error' ? (
-          <Notice title="Akun belum dapat diperiksa" message={state.message ?? 'Coba lagi.'} retry={() => void refresh()} />
-        ) : <p role="status">Memeriksa akses…</p>}
+          <Notice
+            title="Akun belum dapat diperiksa"
+            message={state.message ?? 'Coba lagi.'}
+            retry={() => void refresh()}
+          />
+        ) : (
+          <p role="status">Memeriksa akses…</p>
+        )}
       </section>
     </Shell>
   );

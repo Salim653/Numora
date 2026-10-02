@@ -73,7 +73,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       id: providedId,
       ...props
     },
-    ref
+    ref,
   ) => {
     const generatedId = useId();
     const id = providedId || generatedId;
@@ -104,7 +104,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             }}
           >
             {label}
-            {props.required && <span aria-hidden="true" style={{ color: 'var(--color-danger)', marginLeft: '2px' }}>*</span>}
+            {props.required && (
+              <span aria-hidden="true" style={{ color: 'var(--color-danger)', marginLeft: '2px' }}>
+                *
+              </span>
+            )}
           </label>
         )}
 
@@ -141,14 +145,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             style={{
               width: '100%',
               height: sizes.height,
-              padding: leftIcon ? `0 14px 0 ${sizes.height}` : rightIcon ? `0 ${sizes.height} 0 14px` : sizes.padding,
+              padding: leftIcon
+                ? `0 14px 0 ${sizes.height}`
+                : rightIcon
+                  ? `0 ${sizes.height} 0 14px`
+                  : sizes.padding,
               fontSize: sizes.fontSize,
               fontFamily: 'var(--font-sans)',
               color: 'var(--color-text)',
               background: 'var(--color-surface-raised)',
               border: `2px solid ${hasError ? 'var(--color-danger)' : 'var(--color-border)'}`,
               borderRadius: 'var(--radius-md)',
-              outline: 'none',
               transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
               opacity: disabled ? 0.62 : 1,
             }}
@@ -187,7 +194,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = 'Input';
@@ -218,7 +225,6 @@ const textareaStyle: React.CSSProperties = {
   background: 'var(--color-surface-raised)',
   border: '2px solid var(--color-border)',
   borderRadius: 'var(--radius-md)',
-  outline: 'none',
   resize: 'vertical',
   transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
   lineHeight: 'var(--leading-relaxed)',
@@ -249,7 +255,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       id: providedId,
       ...props
     },
-    ref
+    ref,
   ) => {
     const generatedId = useId();
     const id = providedId || generatedId;
@@ -278,7 +284,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             }}
           >
             {label}
-            {props.required && <span aria-hidden="true" style={{ color: 'var(--color-danger)', marginLeft: '2px' }}>*</span>}
+            {props.required && (
+              <span aria-hidden="true" style={{ color: 'var(--color-danger)', marginLeft: '2px' }}>
+                *
+              </span>
+            )}
           </label>
         )}
 
@@ -311,7 +321,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Textarea.displayName = 'Textarea';
@@ -369,7 +379,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       id: providedId,
       ...props
     },
-    ref
+    ref,
   ) => {
     const generatedId = useId();
     const id = providedId || generatedId;
@@ -399,7 +409,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             }}
           >
             {label}
-            {props.required && <span aria-hidden="true" style={{ color: 'var(--color-danger)', marginLeft: '2px' }}>*</span>}
+            {props.required && (
+              <span aria-hidden="true" style={{ color: 'var(--color-danger)', marginLeft: '2px' }}>
+                *
+              </span>
+            )}
           </label>
         )}
 
@@ -419,7 +433,6 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             background: 'var(--color-surface-raised)',
             border: `2px solid ${hasError ? 'var(--color-danger)' : 'var(--color-border)'}`,
             borderRadius: 'var(--radius-md)',
-            outline: 'none',
             cursor: disabled ? 'not-allowed' : 'pointer',
             appearance: 'none',
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23675B72' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
@@ -458,7 +471,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Select.displayName = 'Select';
@@ -491,17 +504,8 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
  */
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   (
-    {
-      label,
-      helper,
-      disabled,
-      fullWidth = false,
-      className = '',
-      style,
-      id: providedId,
-      ...props
-    },
-    ref
+    { label, helper, disabled, fullWidth = false, className = '', style, id: providedId, ...props },
+    ref,
   ) => {
     const generatedId = useId();
     const id = providedId || generatedId;
@@ -561,7 +565,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
 Checkbox.displayName = 'Checkbox';

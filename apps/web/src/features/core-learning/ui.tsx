@@ -1,75 +1,49 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import katex from 'katex';
 import type { ReactNode } from 'react';
-import { Brand } from '@tka/ui';
+import { Button, Card, Icon, Skeleton } from '@tka/ui';
+import { StudentLayout } from '@/components/shell';
 import { destination, useAuth } from '@/features/onboarding/auth';
 import { LearningApiError } from './api';
 import { LearningProvider } from './provider';
+import { ApiProblem } from '@/lib/api';
 
-export function LearningFrame({ title, children }: { title: string; children: ReactNode }) {
-  const pathname = usePathname();
-  const links = [
-    { href: '/student', label: 'Beranda' },
-    { href: '/student/learn', label: 'Latihan' },
-    { href: '/student/assessment', label: 'Progres' },
-    { href: '/student/tryout', label: 'TryOut' },
-  ];
+export function LearningFrame({
+  title,
+  children,
+  focus = false,
+}: {
+  title: string;
+  children: ReactNode;
+  focus?: boolean;
+}) {
   return (
-    <main className="learning-shell">
-      <header className="learning-header">
-        <Link href="/student" aria-label="NUMORA, ke beranda"><Brand /></Link>
-        <span className="learning-xp" title="XP belum tersedia">✦ XP —</span>
-        <nav aria-label="Navigasi Siswa" className="learning-nav">
-          {links.map((link) => (
-            <Link key={link.href} href={link.href}
-              aria-current={pathname === link.href || (link.href !== '/student' && pathname.startsWith(`${link.href}/`)) ? 'page' : undefined}>
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
-      <div className="learning-content">
-        <h1 className="learning-title">{title}</h1>
-        {children}
-      </div>
-    </main>
+    <StudentLayout title={title} hideBottomNav={focus}>
+      {children}
+    </StudentLayout>
   );
 }
 
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return (
-    <section
-      className={`learning-panel ${className}`}
-    >
-      {children}
-    </section>
-  );
+  return <Card className={`learning-panel ${className}`}>{children}</Card>;
 }
 
-export function PrimaryButton({
-  children,
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      className="learning-primary-button"
-      {...props}
-    >
-      {children}
-    </button>
-  );
+export function PrimaryButton({ children, ...props }: React.ComponentProps<typeof Button>) {
+  return <Button {...props}>{children}</Button>;
 }
 
 export function Status({ children, title = 'Perhatian' }: { children: ReactNode; title?: string }) {
   return (
-    <Panel>
-      <h2 className="font-bold">{title}</h2>
-      <div className="mt-2 text-sm text-slate-700">{children}</div>
+    <Panel className="status-card">
+      <span className="icon-tile">
+        <Icon name="info" />
+      </span>
+      <h2>{title}</h2>
+      <div className="status-copy">{children}</div>
     </Panel>
   );
 }
@@ -79,12 +53,20 @@ export function DataState({
   pending,
   retry,
 }: {
-  error: unknown;
+  error?: unknown;
   pending: boolean;
-  retry: () => void;
+  retry?: () => void;
 }) {
-  if (pending) return <Status title="Memuat">Mengambil data belajar…</Status>;
-  const status = error instanceof LearningApiError ? error.status : 0;
+  if (pending)
+    return (
+      <div className="loading-stack" aria-label="Memuat data">
+        <Skeleton height={24} width="45%" />
+        <Skeleton height={120} />
+        <Skeleton height={80} />
+      </div>
+    );
+  const status =
+    error instanceof LearningApiError || error instanceof ApiProblem ? error.status : 0;
   const message = error instanceof Error ? error.message : 'Data belum dapat dimuat.';
   return (
     <Status
@@ -99,9 +81,15 @@ export function DataState({
       }
     >
       <p>{message}</p>
-      <button className="mt-3 font-semibold text-[var(--numora-purple)] underline" onClick={retry}>
-        Coba lagi
-      </button>
+      {status === 401 ? (
+        <Link className="button-link" href="/">
+          Masuk kembali
+        </Link>
+      ) : (
+        <Button variant="secondary" onClick={retry}>
+          Coba lagi
+        </Button>
+      )}
     </Status>
   );
 }

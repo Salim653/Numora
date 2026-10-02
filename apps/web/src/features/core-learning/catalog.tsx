@@ -1,422 +1,275 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { learningApi } from './api';
-import { useAuth } from '@/features/onboarding/auth';
-import { LearningProvider } from './provider';
+import { Badge, Button, Card, EmptyState, Icon, Input, ProgressBar, SectionHeader } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
-
-/* ============================================
- * SHARED GATE COMPONENT
- * ============================================ */
-
-function StudentGate({ children }: { children: (token: string) => React.ReactNode }) {
-  const { state, refresh } = useAuth();
-
-  if (state.status === 'loading') {
-    return (
-      <StudentLayout title="Memuat...">
-        <div style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--color-text-muted)' }}>
-          Memuat...
-        </div>
-      </StudentLayout>
-    );
-  }
-
-  if (state.status === 'error') {
-    return (
-      <StudentLayout title="Error">
-        <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
-          <p style={{ color: 'var(--color-danger)' }}>{state.message}</p>
-          <button onClick={() => void refresh()} style={{ marginTop: 'var(--space-4)' }}>
-            Coba Lagi
-          </button>
-        </div>
-      </StudentLayout>
-    );
-  }
-
-  if (state.status === 'ready' && state.profile.role === 'STUDENT') {
-    return <LearningProvider key={state.session.access_token}>{children(state.session.access_token)}</LearningProvider>;
-  }
-
-  return null;
-}
-
-/* ============================================
- * CATALOG SCREEN - Chapter listing page
- * ============================================ */
+import { learningApi } from './api';
+import { DataState, StudentGate } from './ui';
+import { ChapterCard } from './cards';
 
 export function CatalogScreen() {
   return (
-    <StudentGate>
-      {(token) => (
-        <StudentLayout title="Pilih Bab">
-          <CatalogContent token={token} />
-        </StudentLayout>
-      )}
-    </StudentGate>
+    <StudentLayout title="Belajar matematika" subtitle="Satu bab, satu langkah lebih paham.">
+      <StudentGate>{(token) => <CatalogContent token={token} />}</StudentGate>
+    </StudentLayout>
   );
 }
-
 function CatalogContent({ token }: { token: string }) {
-  const query = useQuery({
-    queryKey: ['chapters'],
-    queryFn: () => learningApi.catalog(token),
-  });
-
-  if (query.isPending) {
+  const [search, setSearch] = useState('');
+  const query = useQuery({ queryKey: ['chapters'], queryFn: () => learningApi.catalog(token) });
+  if (query.isPending || query.isError)
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              height: 80,
-              background: 'var(--color-surface-raised)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--color-border)',
-            }}
-          />
-        ))}
-      </div>
+      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
-  }
-
-  if (query.isError) {
-    return (
-      <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
-        <p style={{ color: 'var(--color-danger)', marginBottom: 'var(--space-4)' }}>Gagal memuat data</p>
-        <button
-          onClick={() => void query.refetch()}
-          style={{
-            padding: 'var(--space-2) var(--space-4)',
-            background: 'var(--color-primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 'var(--radius-md)',
-            cursor: 'pointer',
-            fontWeight: 600,
-          }}
-        >
-          Coba Lagi
-        </button>
-      </div>
+  const chapters = [...query.data.chapters].sort((a, b) => a.order - b.order);
+  const visible = chapters
+    .map((chapter, index) => ({ chapter, index }))
+    .filter(({ chapter }) =>
+      chapter.title.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
     );
-  }
-
-  if (!query.data.chapters.length) {
-    return (
-      <div style={{
-        textAlign: 'center',
-        padding: 'var(--space-12)',
-        background: 'var(--color-surface-raised)',
-        borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--color-border)',
-      }}>
-        <span style={{ fontSize: 48, display: 'block', marginBottom: 'var(--space-4)' }}>📚</span>
-        <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text)', margin: '0 0 var(--space-2) 0' }}>
-          Materi Belum Tersedia
-        </h3>
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: 0 }}>
-          Bab belum diterbitkan. Cek kembali nanti.
-        </p>
-      </div>
-    );
-  }
-
-  const sortedChapters = [...query.data.chapters].sort((a, b) => a.order - b.order);
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      {sortedChapters.map((chapter) => (
-        <Link
-          key={chapter.id}
-          href={`/student/learn/${chapter.id}`}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: 'var(--space-4)',
-            background: 'var(--color-surface-raised)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-lg)',
-            textDecoration: 'none',
-            transition: 'all var(--transition-fast)',
-          }}
-        >
-          <h3 style={{
-            fontSize: 'var(--text-base)',
-            fontWeight: 700,
-            color: 'var(--color-text)',
-            margin: 0,
-          }}>
-            {chapter.title}
-          </h3>
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--color-text-muted)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </Link>
-      ))}
+    <div className="page-stack">
+      <div className="catalog-intro">
+        <div>
+          <Badge variant="secondary">TKA Matematika · Kelas IX</Badge>
+          <h2>Temukan materi belajarmu</h2>
+          <p>Pilih bab, jelajahi subbab, lalu berlatih dari level yang terbuka.</p>
+        </div>
+        <span className="catalog-math" aria-hidden="true">
+          a² + b²
+        </span>
+      </div>
+      <div className="catalog-toolbar">
+        <Input
+          label="Cari bab"
+          type="search"
+          placeholder="Ketik nama bab…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          leftIcon={<Icon name="search" />}
+        />
+        <span className="muted">{chapters.length} bab tersedia</span>
+      </div>
+      {visible.length ? (
+        <div className="chapter-grid catalog-grid">
+          {visible.map(({ chapter, index }) => (
+            <ChapterCard key={chapter.id} chapter={chapter} index={index} />
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={<Icon name="book" />}
+            title={chapters.length ? 'Bab tidak ditemukan' : 'Materi sedang disiapkan'}
+            description={
+              chapters.length
+                ? 'Coba kata kunci yang lain.'
+                : 'Bab yang diterbitkan akan muncul di sini.'
+            }
+          />
+        </Card>
+      )}
     </div>
   );
 }
 
-/* ============================================
- * CHAPTER SCREEN - Subchapter listing
- * ============================================ */
-
 export function ChapterScreen() {
   const { chapterId } = useParams<{ chapterId: string }>();
-
   return (
-    <StudentGate>
-      {(token) => (
-        <StudentLayout
-          title="Pilih Subbab"
-          backHref="/student/learn"
-        >
-          <ChapterContent token={token} chapterId={chapterId} />
-        </StudentLayout>
-      )}
-    </StudentGate>
+    <StudentLayout title="Jelajahi subbab" backHref="/student/learn">
+      <StudentGate>{(token) => <ChapterContent token={token} chapterId={chapterId} />}</StudentGate>
+    </StudentLayout>
   );
 }
-
 function ChapterContent({ token, chapterId }: { token: string; chapterId: string }) {
   const query = useQuery({
     queryKey: ['chapter', chapterId],
     queryFn: () => learningApi.chapter(token, chapterId),
   });
-
-  if (query.isPending) {
+  if (query.isPending || query.isError)
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        {[1, 2, 3].map((i) => (
-          <div key={i} style={{ height: 72, background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }} />
-        ))}
-      </div>
+      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
-  }
-
-  if (query.isError) {
-    return (
-      <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
-        <p style={{ color: 'var(--color-danger)', marginBottom: 'var(--space-4)' }}>Gagal memuat data</p>
-        <button onClick={() => void query.refetch()}>Coba Lagi</button>
-      </div>
-    );
-  }
-
-  if (!query.data.subchapters.length) {
-    return (
-      <div style={{ textAlign: 'center', padding: 'var(--space-12)', background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-lg)' }}>
-        <span style={{ fontSize: 48, display: 'block', marginBottom: 'var(--space-4)' }}>📖</span>
-        <p>Belum ada subbab pada bab ini.</p>
-      </div>
-    );
-  }
-
-  const sortedSubchapters = [...query.data.subchapters].sort((a, b) => a.order - b.order);
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      {sortedSubchapters.map((subchapter) => (
-        <Link
-          key={subchapter.id}
-          href={`/student/learn/${chapterId}/${subchapter.id}`}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: 'var(--space-4)',
-            background: 'var(--color-surface-raised)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-lg)',
-            textDecoration: 'none',
-          }}
-        >
-          <div>
-            <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>
-              {subchapter.title}
-            </h3>
-          </div>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </Link>
-      ))}
+    <div className="page-stack">
+      <div className="catalog-intro">
+        <div>
+          <span className="eyebrow">Bab matematika</span>
+          <h2>{query.data.chapter.title}</h2>
+          <p>{query.data.subchapters.length} subbab · Pilih topik yang ingin kamu latih.</p>
+        </div>
+        <span className="icon-tile accent-0">
+          <Icon name="book" />
+        </span>
+      </div>
+      <SectionHeader title="Materi dalam bab ini" />
+      {query.data.subchapters.length ? (
+        <div className="subchapter-list">
+          {[...query.data.subchapters]
+            .sort((a, b) => a.order - b.order)
+            .map((sub, index) => (
+              <Link
+                className="subchapter-row"
+                key={sub.id}
+                href={`/student/learn/${chapterId}/${sub.id}`}
+              >
+                <span className={`subchapter-number accent-${index % 4}`}>
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div className="row-copy">
+                  <h3>{sub.title}</h3>
+                  <p>Lihat level dan progres latihan</p>
+                </div>
+                <Icon name="arrow" />
+              </Link>
+            ))}
+        </div>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={<Icon name="book" />}
+            title="Subbab belum tersedia"
+            description="Materi pada bab ini sedang disiapkan."
+          />
+        </Card>
+      )}
     </div>
   );
 }
 
-/* ============================================
- * SUBCHAPTER SCREEN - Level selection
- * ============================================ */
-
 export function SubchapterScreen() {
   const { chapterId, subchapterId } = useParams<{ chapterId: string; subchapterId: string }>();
-  const router = useRouter();
-
   return (
-    <StudentGate>
-      {(token) => (
-        <StudentLayout
-          title="Pilih Level"
-          backHref={`/student/learn/${chapterId}`}
-        >
-          <SubchapterContent token={token} subchapterId={subchapterId} router={router} />
-        </StudentLayout>
-      )}
-    </StudentGate>
+    <StudentLayout title="Langkah belajarmu" backHref={`/student/learn/${chapterId}`}>
+      <StudentGate>
+        {(token) => <SubchapterContent token={token} subchapterId={subchapterId} />}
+      </StudentGate>
+    </StudentLayout>
   );
 }
-
-function SubchapterContent({ token, subchapterId, router }: { token: string; subchapterId: string; router: ReturnType<typeof useRouter> }) {
+function SubchapterContent({ token, subchapterId }: { token: string; subchapterId: string }) {
+  const router = useRouter();
   const query = useQuery({
     queryKey: ['subchapter', subchapterId],
     queryFn: () => learningApi.subchapter(token, subchapterId),
   });
-
-  const startMutation = useMutation({
+  const start = useMutation({
     mutationFn: (levelId: string) => learningApi.start(token, levelId),
     onSuccess: (attempt) => router.push(`/student/drill/${attempt.id}`),
   });
-
-  if (query.isPending) {
+  if (query.isPending || query.isError)
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 'var(--space-3)' }}>
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} style={{ height: 120, background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }} />
-        ))}
-      </div>
+      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
-  }
-
-  if (query.isError) {
-    return (
-      <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
-        <p style={{ color: 'var(--color-danger)' }}>Gagal memuat data</p>
-        <button onClick={() => void query.refetch()}>Coba Lagi</button>
-      </div>
-    );
-  }
-
-  if (!query.data.levels.length) {
-    return (
-      <div style={{ textAlign: 'center', padding: 'var(--space-12)', background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-lg)' }}>
-        <span style={{ fontSize: 48, display: 'block', marginBottom: 'var(--space-4)' }}>🎯</span>
-        <p>Belum ada level pada subbab ini.</p>
-      </div>
-    );
-  }
-
-  const sortedLevels = [...query.data.levels].sort((a, b) => a.order - b.order);
-
+  const levels = [...query.data.levels].sort((a, b) => a.order - b.order);
+  const completed = levels.filter((level) => level.status === 'completed').length;
   return (
-    <div>
-      {/* Subchapter Title */}
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-4)' }}>
-        {query.data.subchapter.title}
-      </p>
-
-      {/* Level Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 'var(--space-3)' }}>
-        {sortedLevels.map((level, index) => {
-          const isLocked = level.status === 'locked';
-          const isCompleted = level.status === 'completed';
-          const isInProgress = level.status === 'inProgress';
-
-          return (
-            <div
-              key={level.id}
-              style={{
-                padding: 'var(--space-4)',
-                background: isLocked ? 'var(--color-surface)' : 'var(--color-surface-raised)',
-                border: `1px solid ${isLocked ? 'var(--color-border-light)' : 'var(--color-border)'}`,
-                borderRadius: 'var(--radius-lg)',
-                textAlign: 'center',
-                opacity: isLocked ? 0.6 : 1,
-              }}
-            >
-              {/* Level Number */}
-              <div style={{
-                width: 48,
-                height: 48,
-                margin: '0 auto var(--space-3)',
-                display: 'grid',
-                placeItems: 'center',
-                background: isLocked ? 'var(--color-border-light)' : isCompleted ? 'var(--color-success-light)' : 'var(--color-primary-light)',
-                borderRadius: '50%',
-                fontSize: 20,
-                fontWeight: 800,
-                color: isLocked ? 'var(--color-text-muted)' : isCompleted ? 'var(--color-success)' : 'var(--color-primary)',
-              }}>
-                {isLocked ? '🔒' : index + 1}
-              </div>
-
-              {/* Level Title */}
-              <p style={{
-                fontSize: 'var(--text-sm)',
-                fontWeight: 700,
-                color: 'var(--color-text)',
-                margin: '0 0 var(--space-1)',
-              }}>
-                {level.title}
-              </p>
-
-              {/* Score if available */}
-              {level.latestScore !== null && (
-                <p style={{
-                  fontSize: 'var(--text-xs)',
-                  color: 'var(--color-text-muted)',
-                  margin: 0,
-                }}>
-                  Nilai: {level.latestScore}
-                </p>
-              )}
-
-              {/* Action Button */}
-              {!isLocked && (
-                <button
-                  onClick={() => startMutation.mutate(level.id)}
-                  disabled={startMutation.isPending}
-                  style={{
-                    marginTop: 'var(--space-3)',
-                    width: '100%',
-                    padding: 'var(--space-2)',
-                    background: isInProgress ? 'var(--color-info)' : 'var(--color-primary)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: 'var(--text-xs)',
-                    fontWeight: 700,
-                    cursor: startMutation.isPending ? 'not-allowed' : 'pointer',
-                    opacity: startMutation.isPending ? 0.7 : 1,
-                  }}
-                >
-                  {isInProgress ? 'Lanjutkan' : isCompleted ? 'Ulangi' : 'Mulai'}
-                </button>
-              )}
-            </div>
-          );
-        })}
+    <div className="page-stack">
+      <div className="catalog-intro">
+        <div>
+          <span className="eyebrow">Subbab</span>
+          <h2>{query.data.subchapter.title}</h2>
+          <p>Latihan dengan ritmemu. Nilai minimal 80 membuka level berikutnya.</p>
+          {levels.length > 0 && (
+            <ProgressBar
+              value={completed}
+              max={levels.length}
+              showLabel
+              label={`${completed} dari ${levels.length} level selesai`}
+            />
+          )}
+        </div>
+        <span className="icon-tile accent-2">
+          <Icon name="target" />
+        </span>
       </div>
-
-      {startMutation.isError && (
-        <p style={{ color: 'var(--color-danger)', marginTop: 'var(--space-4)', textAlign: 'center' }}>
-          {startMutation.error.message}
+      <SectionHeader
+        title="Pilih level latihan"
+        subtitle="Nilai terakhir dan terbaik tersimpan di setiap level."
+      />
+      {levels.length ? (
+        <div className="level-grid">
+          {levels.map((level, index) => (
+            <Card key={level.id} className={`level-card level-card--${level.status}`}>
+              <div className="level-card-top">
+                <span className="level-number">
+                  {level.status === 'locked' ? (
+                    <Icon name="lock" />
+                  ) : level.status === 'completed' ? (
+                    <Icon name="check" />
+                  ) : (
+                    String(index + 1).padStart(2, '0')
+                  )}
+                </span>
+                <Badge
+                  variant={
+                    level.status === 'completed'
+                      ? 'success'
+                      : level.status === 'inProgress'
+                        ? 'primary'
+                        : 'default'
+                  }
+                >
+                  {
+                    {
+                      locked: 'Terkunci',
+                      open: 'Terbuka',
+                      inProgress: 'Sedang dikerjakan',
+                      completed: 'Selesai',
+                    }[level.status]
+                  }
+                </Badge>
+              </div>
+              <h3>{level.title}</h3>
+              <p className="muted">Latihan bertahap</p>
+              <dl className="score-pair">
+                <div>
+                  <dt>Terakhir</dt>
+                  <dd>{level.latestScore ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt>Terbaik</dt>
+                  <dd>{level.bestScore ?? '—'}</dd>
+                </div>
+              </dl>
+              {level.status === 'locked' ? (
+                <p className="locked-note">
+                  <Icon name="lock" width={16} height={16} />
+                  Selesaikan level sebelumnya dengan nilai minimal 80.
+                </p>
+              ) : (
+                <Button
+                  fullWidth
+                  variant={level.status === 'completed' ? 'secondary' : 'primary'}
+                  disabled={start.isPending}
+                  onClick={() => start.mutate(level.id)}
+                >
+                  {start.isPending && start.variables === level.id
+                    ? 'Membuka latihan…'
+                    : level.status === 'inProgress'
+                      ? 'Lanjutkan latihan'
+                      : level.status === 'completed'
+                        ? 'Latihan lagi'
+                        : 'Mulai latihan'}
+                  <Icon name="arrow" width={18} height={18} />
+                </Button>
+              )}
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={<Icon name="target" />}
+          title="Level belum tersedia"
+          description="Level latihan akan muncul setelah diterbitkan."
+        />
+      )}
+      {start.isError && (
+        <p className="form-error" role="alert">
+          {start.error.message}
         </p>
       )}
     </div>

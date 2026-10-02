@@ -50,12 +50,12 @@ const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: st
   },
   success: {
     bg: 'var(--color-success-light)',
-    text: 'var(--color-success)',
+    text: 'var(--color-text)',
     border: 'var(--color-success)',
   },
   warning: {
     bg: 'var(--color-warning-light)',
-    text: 'var(--color-warning)',
+    text: 'var(--color-text)',
     border: 'var(--color-warning)',
   },
   danger: {
@@ -122,7 +122,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       style,
       ...props
     },
-    ref
+    ref,
   ) => {
     const colors = variantStyles[variant];
     const sizes = sizeStyles[size];
@@ -163,7 +163,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
         {!dot && children}
       </span>
     );
-  }
+  },
 );
 
 Badge.displayName = 'Badge';
@@ -229,7 +229,8 @@ export interface LevelBadgeProps extends Omit<BadgeProps, 'variant' | 'children'
 export function LevelBadge({ level, total, ...props }: LevelBadgeProps) {
   return (
     <Badge variant="secondary" {...props}>
-      Level {level}{total ? `/${total}` : ''}
+      Level {level}
+      {total ? `/${total}` : ''}
     </Badge>
   );
 }
@@ -258,7 +259,8 @@ export interface XPBadgeProps extends Omit<BadgeProps, 'variant' | 'children'> {
 export function XPBadge({ xp, showPlus, ...props }: XPBadgeProps) {
   return (
     <Badge variant="gold" {...props}>
-      ✦ {showPlus ? '+' : ''}{xp} XP
+      ✦ {showPlus ? '+' : ''}
+      {xp} XP
     </Badge>
   );
 }
@@ -285,7 +287,7 @@ export interface StarBadgeProps extends Omit<BadgeProps, 'variant' | 'children'>
  * ```
  */
 export function StarBadge({ stars, maxStars = 3, ...props }: StarBadgeProps) {
-  const starIcons = Array.from({ length: maxStars }, (_, i) => i < stars ? '★' : '☆').join('');
+  const starIcons = Array.from({ length: maxStars }, (_, i) => (i < stars ? '★' : '☆')).join('');
 
   return (
     <Badge variant="gold" {...props}>
