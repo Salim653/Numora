@@ -467,7 +467,6 @@ function TeacherVerificationContent() {
       await verifyTeacher(accessToken, schoolId, token.trim());
       setToken('');
       await refresh();
-      router.replace('/teacher');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Verifikasi belum berhasil.');
       setBusy(false);
