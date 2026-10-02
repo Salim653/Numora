@@ -8,6 +8,8 @@ Hambatan utama: Level 2 tidak memiliki paket terbit di database Development; Try
 
 Ini adalah review engineering dan **PROPOSED backlog**, bukan persetujuan rilis, perubahan aturan produk, atau penetapan keputusan OPEN. Pengguna mengonfirmasi pembagian lama tetap berlaku dan anggota yang tersedia hanya Ferdi, Aini, Farel, aliwafa, Avicenna, dan Salim.
 
+**Rincian pelaksanaan terbaru:** [Joblist rekonsiliasi 16 pekerjaan lama dan 22 pekerjaan berurutan](MVP_JOBLIST_2026-10-02.md) mencatat bagian yang sudah selesai teknis, sisa pekerjaan, requirement yang diganti PRD terbaru, dependency dan bukti selesai per owner. Gunakan dokumen itu untuk rincian antrean; bagian 8–9 di laporan ini mempertahankan usulan awal. Snapshot audit, hasil tes dan angka database di bawah tetap historis pada waktu pemeriksaannya.
+
 ## 2. Sumber, baseline, dan batas pemeriksaan
 
 Urutan acuan:
