@@ -377,7 +377,9 @@ test('Mandiri Tryout starts and resumes without a class, then waits for released
   await expect(page.getByRole('button', { name: 'Mulai TryOut' })).toHaveCount(0);
   state = 'waitingIrt';
   await page.reload();
-  await expect(page.getByRole('status')).toContainText('pembahasan belum tersedia');
+  await expect(
+    page.getByRole('status').filter({ hasText: 'pembahasan belum tersedia' }),
+  ).toBeVisible();
   await expect(page.getByRole('link', { name: 'Lihat hasil simulasi' })).toHaveCount(0);
   state = 'resultReady';
   await page.reload();
