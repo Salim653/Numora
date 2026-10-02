@@ -42,6 +42,18 @@ Backend determines Student affiliation, weekly package selection at Monday 00:00
 
 **OPEN / remaining work:** automatic finalization without another browser request, daily IRT model execution, batch schedule/model/failure policy (**OPEN-12/OPEN-18**), Pretest package/placement (**OPEN-01–03**, **DRL-OPEN-04**), and XP (**OPEN-11**) are not complete. The ≤3×24h release requirement is already FINAL. Official Tryout publishing stays unavailable until the remaining approved product configuration and release tests are supplied.
 
+## JOB-12 history additions - 2 October 2026
+
+**ENGINEERING DECISION - implementation requested by Aini, awaiting review:** history reuses `GET /students/me/assessment-results`. Optional UUID query `levelId` filters by the level pinned at attempt start; keep the same filter when supplying `cursor`. Omitting both queries returns the first page. The response remains `{ records, nextCursor }`, at most 20 records sorted by `finishedAt DESC, attemptId DESC`. PostgreSQL timestamp precision is retained at the cursor boundary, including microseconds. A foreign, missing, cancelled, unfinished, non-history, or wrong-filter cursor returns 404 `CURSOR_NOT_FOUND`; malformed UUID queries return 400. A filter without matching history returns an empty page.
+
+Records add optional nullable `chapterId`, `chapterTitle`, `subchapterId`, `subchapterTitle`, `levelId`, and `levelTitle`. Chapter/level IDs come from attempt snapshots; taxonomy labels resolve from current preserved taxonomy and are not immutable historical labels. Archived content/package/level does not hide completed history or recalculate stored scores. All valid retries remain separate; latest/best level scores still come from the existing level/progress contract, with best score monotonic.
+
+Optional `xpState` / `starsState` are `pending` or `notApplicable`. Numeric XP posting/formula remains JOB-11/OPEN-11; Drill star thresholds remain DRL-OPEN-03. Pretest marks both not applicable; TryOut marks stars not applicable. These fields do not mean zero reward or grant a new policy. Existing stored scoring facts are preserved and are not rewritten by this read endpoint.
+
+The shared `ActivityRow` displays taxonomy/level context and pending reward text. Waiting TryOut records hide score and have no result link; ready Drill/TryOut records link to their existing result routes. Pretest remains a non-link row until its lifecycle/result route exists. The history view retains earlier pages on next-page failure and retries with the same cursor. OpenAPI/generated types remain authoritative; additions are optional for compatibility with existing consumers.
+
+**OPEN:** numeric rewards, retention limits, Pretest lifecycle and final TryOut release policy are not resolved by JOB-12. The existing released-IRT gate is reused without alteration. History persistence is independent of the legacy Drill explanation expiry; no new retention/deletion policy is introduced.
+
 ## Target contract against latest PRDs — 2 October 2026
 
 **Status:** the endpoint tables above describe the existing generated contract, not full acceptance of [Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). This update does not regenerate OpenAPI or invent new endpoint signatures.

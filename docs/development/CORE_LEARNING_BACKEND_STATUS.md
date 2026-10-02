@@ -37,6 +37,16 @@ Status working tree per 1 Oktober 2026. Dokumen ini mencatat implementasi dan bu
 
 **OPEN-05/OPEN-12/OPEN-18:** konfigurasi paket resmi, model statistik, dan perilaku rilis final menunggu keputusan pemilik produk/Data. Admin tetap menolak publikasi Tryout dengan `TRYOUT_POLICY_OPEN`. Penskoran MCMA/Category belum diaktifkan; rubrik **OPEN-04** perlu dikunci, tetapi kedua format sudah wajib MVP TryOut v1.1. PG-only dan eligibility kelas merupakan gap implementasi, bukan scope final.
 
+## Penilaian dan history - JOB-12
+
+**ENGINEERING DECISION - permintaan Aini, 2 Oktober 2026:** implementasi history dikerjakan pada branch `feat/job-12-assessment-history` dari baseline `origin/main` SHA `33410fb`, terpisah dari PR JOB-07 dan commit worker/Redis lokal. Endpoint history existing ditambah filter UUID `levelId` opsional; cursor harus berasal dari pengguna dan result set/filter yang sama. Boundary timestamp memakai presisi PostgreSQL, sehingga selesai pada waktu sama maupun selisih mikrodetik tidak terlewat. Tidak ada endpoint atau migrasi baru.
+
+Record menampilkan ID bab/level snapshot serta label taxonomy saat ini, subbab/level dan status `xpState`/`starsState` pending/notApplicable. Label taxonomy bukan snapshot nama historis. Skor tersimpan tidak dihitung ulang; completed history tetap terbaca setelah archive. UI minimum menggunakan generated types, mempertahankan score 0, konteks level dan pesan reward belum tersedia. Waiting TryOut tidak mendapat link hasil; Pretest tidak mendapat link ke route yang belum ada. Existing level/progress tetap menjadi sumber latest/best; retry lebih rendah tidak mengganti best atau menghapus history.
+
+**Bukti lokal - 2 Oktober 2026:** suite learning berjalan pada PostgreSQL terisolasi localhost dengan fixture DEMO/TEST: 7 file, 17 tes lulus tanpa skipped. Tes UI/API: 19 lulus; Chromium E2E history mobile 390 px: 1 lulus, mencakup score 0, waiting tanpa link, pagination error/retry dan tanpa overflow. Lint, typecheck, build, repository checks, validasi kontrak dan generated-type freshness lulus. Bukti ini tidak menggantikan review atau acceptance login Google nyata.
+
+**Batas:** review/QA staging masih diperlukan. Rumus reward/threshold bintang/retensi, Pretest lifecycle, dan final model/release TryOut tetap OPEN; gate IRT existing tidak diganti. Kontrak dan query semantics: [Core Learning Frontend Contract](../api/CORE_LEARNING_FRONTEND_CONTRACT.md#job-12-history-additions---2-october-2026).
+
 ## Pretest
 
 - [x] Schema asesmen umum mendukung PRETEST, pin versi soal/kebijakan, dan constraint maksimal satu attempt SUBMITTED/GRADED per siswa/bab. Riwayat mendukung record Pretest.

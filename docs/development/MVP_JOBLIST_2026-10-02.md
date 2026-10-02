@@ -216,6 +216,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-12 — Lengkapi Penilaian/history dan acceptance hasil tersimpan
 
+- **Status implementasi - 2 Oktober 2026:** backend history dan UI minimum dikerjakan dalam branch terpisah dari JOB-07. Query `levelId` opsional, cursor dibatasi pada result set pengguna/filter, dan timestamp PostgreSQL tetap presisi; record mendapat konteks bab/subbab/level serta status reward pending/notApplicable. Skor 0 dan retry terpisah tetap tersimpan; waiting TryOut/Pretest tanpa route tidak menampilkan tautan hasil. Bukti dan batas acceptance ada pada [status backend](CORE_LEARNING_BACKEND_STATUS.md#penilaian-dan-history---job-12). Review/QA staging dan integrasi numeric rewards/Pretest/final IRT masih tersisa; JOB-12 tidak menutup keputusan OPEN.
+
 - **Owner:** Avicenna frontend; Aini query/contract; Ferdi result coordination; Salim ownership/history tests. **Asal:** LAMA-04,15.
 - **Kerjakan:** reuse history API/pagination; tampilkan latest/best dan seluruh attempt, konteks level/jenis aktivitas, pending XP/star, TryOut waiting/released serta Pretest result route hanya ketika API tersedia. Akses pembahasan mengikuti approved retention; preserved result tidak hilang karena explanation policy berubah.
 - **Output:** per-level history/context dan UI loading/empty/page-error/access states; contract additions minimal bila diperlukan.
