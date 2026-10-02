@@ -5,6 +5,10 @@ import { createClient } from '@supabase/supabase-js';
 
 const ref = 'pkamenfnwmoeisccnrnk';
 const names = ['admin', 'teacherA', 'teacherB', 'studentA', 'studentB', 'studentC'];
+const rotatePasswords = process.argv.includes('--rotate-passwords');
+if (process.argv.slice(2).some((argument) => argument !== '--rotate-passwords')) {
+  throw new Error('Only --rotate-passwords is supported.');
+}
 const root = resolve(import.meta.dirname, '../../..');
 const vault = resolve(root, '.qa-seed');
 const file = resolve(vault, 'accounts.json');
@@ -28,8 +32,11 @@ const accounts = existing?.accounts ?? Object.fromEntries(names.map((name) => [n
   password: randomBytes(24).toString('base64url'),
   id: null,
 }]));
+if (rotatePasswords) {
+  for (const name of names) accounts[name].password = randomBytes(24).toString('base64url');
+}
 const save = async () => writeFile(file, JSON.stringify({ projectRef: ref, accounts }, null, 2), { mode: 0o600 });
-if (!existing) await save();
+if (!existing || rotatePasswords) await save();
 
 const admin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -51,7 +58,14 @@ for (const name of names) {
     throw new Error('QA vault is invalid.');
   if (account.id) {
     const { data, error } = await admin.auth.admin.getUserById(account.id);
-    if (error || data.user?.email !== account.email) throw new Error(`Existing ${name} Auth account changed.`);
+    if (error || data.user?.email !== account.email || data.user.app_metadata?.numora_qa !== true)
+      throw new Error(`Existing ${name} Auth account changed.`);
+    if (rotatePasswords) {
+      const { error: updateError } = await admin.auth.admin.updateUserById(account.id, {
+        password: account.password,
+      });
+      if (updateError) throw new Error(`Could not rotate ${name} password: ${updateError.message}`);
+    }
     continue;
   }
   const prior = existingUsers.find((user) => user.email === account.email);
@@ -60,6 +74,12 @@ for (const name of names) {
       throw new Error(`${name} email belongs to a non-QA account.`);
     account.id = prior.id;
     await save();
+    if (rotatePasswords) {
+      const { error: updateError } = await admin.auth.admin.updateUserById(prior.id, {
+        password: account.password,
+      });
+      if (updateError) throw new Error(`Could not rotate ${name} password: ${updateError.message}`);
+    }
     continue;
   }
   const { data, error } = await admin.auth.admin.createUser({
