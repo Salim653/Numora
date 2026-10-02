@@ -26,6 +26,7 @@
     "db:seed:learning": "dotenv -e .env -- pnpm --filter @tka/database db:seed:learning",
     "db:seed:qa": "dotenv -e .env -- pnpm --filter @tka/database db:seed:qa",
     "qa:accounts": "dotenv -e .env -- pnpm --filter @tka/api qa:accounts",
+    "qa:accounts:rotate": "dotenv -e .env -- pnpm --filter @tka/api qa:accounts:rotate",
     "qa:smoke": "dotenv -e .env -- pnpm --filter @tka/api qa:smoke",
     "db:studio": "dotenv -e .env -- pnpm --filter @tka/database db:studio",
     "worker:probe": "dotenv -e .env -- pnpm --filter @tka/worker worker:probe",
