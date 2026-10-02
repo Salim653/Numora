@@ -447,15 +447,245 @@
         ]
       }
     },
+    "/api/v1/chapters/{chapterId}/pretest": {
+      "get": {
+        "operationId": "LearningController_pretestStatus",
+        "parameters": [
+          {
+            "name": "chapterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PretestStatusDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/assessments/pretest/attempts": {
+      "post": {
+        "operationId": "LearningController_startPretest",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartPretestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PretestAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/pretest-attempts/{attemptId}": {
+      "get": {
+        "operationId": "LearningController_pretestAttempt",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PretestAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/pretest-attempts/{attemptId}/answers/{questionInstanceId}": {
+      "patch": {
+        "operationId": "LearningController_savePretestAnswer",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "questionInstanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDrillAnswerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedAnswerDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/pretest-attempts/{attemptId}/submit": {
+      "post": {
+        "operationId": "LearningController_submitPretest",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PretestResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/pretest-attempts/{attemptId}/result": {
+      "get": {
+        "operationId": "LearningController_pretestResult",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PretestResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
     "/api/v1/students/me/assessment-results": {
       "get": {
         "operationId": "LearningController_history",
         "parameters": [
           {
             "name": "cursor",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -3632,36 +3862,38 @@
           "latestScore"
         ]
       },
-      "AssessmentHistoryDto": {
+      "PretestStatusDto": {
         "type": "object",
         "properties": {
-          "records": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AssessmentRecordDto"
-            }
+          "state": {
+            "type": "string",
+            "enum": [
+              "available",
+              "inProgress",
+              "completed"
+            ]
           },
-          "nextCursor": {
+          "attemptId": {
             "type": "string",
             "format": "uuid",
             "nullable": true
           }
         },
         "required": [
-          "records",
-          "nextCursor"
+          "state",
+          "attemptId"
         ]
       },
-      "StartDrillDto": {
+      "StartPretestDto": {
         "type": "object",
         "properties": {
-          "levelId": {
+          "chapterId": {
             "type": "string",
             "format": "uuid"
           }
         },
         "required": [
-          "levelId"
+          "chapterId"
         ]
       },
       "OptionDto": {
@@ -3707,6 +3939,193 @@
           "selectedOptionId"
         ]
       },
+      "PretestAttemptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chapterTitle": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "inProgress",
+              "completed"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DrillQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "chapterId",
+          "chapterTitle",
+          "status",
+          "startedAt",
+          "isDemo",
+          "questions"
+        ]
+      },
+      "SaveDrillAnswerDto": {
+        "type": "object",
+        "properties": {
+          "optionId": {
+            "type": "string",
+            "nullable": true,
+            "description": "A-D for demo; null clears the answer."
+          }
+        },
+        "required": [
+          "optionId"
+        ]
+      },
+      "SavedAnswerDto": {
+        "type": "object",
+        "properties": {
+          "questionInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "selectedOptionId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "questionInstanceId",
+          "selectedOptionId"
+        ]
+      },
+      "PretestPlacementDto": {
+        "type": "object",
+        "properties": {
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subchapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "levelNumber": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "levelId",
+          "subchapterId",
+          "levelNumber"
+        ]
+      },
+      "PretestResultDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chapterTitle": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "rawPoints": {
+            "type": "number"
+          },
+          "correctCount": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "xp": {
+            "type": "number",
+            "enum": [
+              0
+            ]
+          },
+          "placementState": {
+            "type": "string",
+            "enum": [
+              "placed",
+              "pendingPolicy"
+            ]
+          },
+          "unlockedLevels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PretestPlacementDto"
+            }
+          }
+        },
+        "required": [
+          "attemptId",
+          "chapterId",
+          "chapterTitle",
+          "score",
+          "rawPoints",
+          "correctCount",
+          "questionCount",
+          "xp",
+          "placementState",
+          "unlockedLevels"
+        ]
+      },
+      "AssessmentHistoryDto": {
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentRecordDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "records",
+          "nextCursor"
+        ]
+      },
+      "StartDrillDto": {
+        "type": "object",
+        "properties": {
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "levelId"
+        ]
+      },
       "DrillAttemptDto": {
         "type": "object",
         "properties": {
@@ -3750,36 +4169,6 @@
           "startedAt",
           "isDemo",
           "questions"
-        ]
-      },
-      "SaveDrillAnswerDto": {
-        "type": "object",
-        "properties": {
-          "optionId": {
-            "type": "string",
-            "nullable": true,
-            "description": "A-D for demo; null clears the answer."
-          }
-        },
-        "required": [
-          "optionId"
-        ]
-      },
-      "SavedAnswerDto": {
-        "type": "object",
-        "properties": {
-          "questionInstanceId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "selectedOptionId": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": [
-          "questionInstanceId",
-          "selectedOptionId"
         ]
       },
       "ReviewedQuestionDto": {
