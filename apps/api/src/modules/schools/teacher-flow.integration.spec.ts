@@ -1,14 +1,15 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import {
+  assessmentAttempts,
+  assessmentPackages,
   closeDatabaseConnection,
   chapters,
-  drillAttempts,
-  drillPackages,
   getDatabase,
   levelProgress,
   levels,
+  scoringPolicyVersions,
   subchapters,
   teacherVerificationTokens,
   users,
@@ -103,12 +104,24 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
     const [level] = await db.insert(levels).values({
       subchapterId: subchapter!.id, description: 'Level 1', levelNumber: 1, status: 'READY',
     }).returning({ id: levels.id });
-    const [drillPackage] = await db.insert(drillPackages).values({
-      levelId: level!.id, variantSet: 1, publishedAt: new Date(),
-    }).returning({ id: drillPackages.id });
-    await db.insert(drillAttempts).values({
-      studentId: identities.student, levelId: level!.id, packageId: drillPackage!.id,
-      status: 'COMPLETED', completedAt: new Date(), score: 0,
+    const [policy] = await db.select({ id: scoringPolicyVersions.id })
+      .from(scoringPolicyVersions)
+      .where(and(
+        eq(scoringPolicyVersions.policyCode, 'DRILL_PG_DEMO'),
+        eq(scoringPolicyVersions.version, 1),
+      )).limit(1);
+    const [drillPackage] = await db.insert(assessmentPackages).values({
+      familyCode: `MONITORING-${suffix}`, packageVersion: 1, name: `Monitoring ${suffix}`,
+      assessmentType: 'DRILL', chapterId: chapter!.id, levelId: level!.id,
+      variantIndex: 1, isDemo: true, scoringPolicyVersionId: policy!.id,
+      releaseAt: new Date(), status: 'PUBLISHED',
+    }).returning({ id: assessmentPackages.id });
+    await db.insert(assessmentAttempts).values({
+      studentId: identities.student, packageId: drillPackage!.id,
+      assessmentType: 'DRILL', chapterIdAtStart: chapter!.id, levelIdAtStart: level!.id,
+      scoringPolicyVersionId: policy!.id, status: 'GRADED',
+      startedAt: new Date(Date.now() - 1000), finishedAt: new Date(),
+      rawPoints: '0', score0To100: '0',
     });
     await db.insert(levelProgress).values({
       studentId: identities.student, levelId: level!.id, unlockedAt: new Date(), latestScore: 0,

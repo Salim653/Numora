@@ -4,7 +4,7 @@ import {
   presentActiveQuestion,
   scoreDrill,
   selectDrillPackage,
-} from './learning.service';
+} from './drill.policy';
 
 describe('Drill domain policy', () => {
   it('keeps 7/10 locked and unlocks at 8/10, independently of stars', () => {

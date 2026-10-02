@@ -1,5 +1,5 @@
-import { DashboardScreen } from '@/features/core-learning/catalog';
+import { DashboardScreen } from '@/features/core-learning/dashboard';
 
-export default function Page() {
+export default function StudentPage() {
   return <DashboardScreen />;
 }

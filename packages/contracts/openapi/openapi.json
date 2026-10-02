@@ -259,6 +259,41 @@
         ]
       }
     },
+    "/api/v1/students/me/dashboard": {
+      "get": {
+        "operationId": "LearningController_dashboard",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentDashboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
     "/api/v1/chapters": {
       "get": {
         "operationId": "LearningController_catalog",
@@ -384,6 +419,41 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StudentProgressDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/students/me/assessment-results": {
+      "get": {
+        "operationId": "LearningController_history",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentHistoryDto"
                 }
               }
             }
@@ -590,6 +660,235 @@
         ],
         "tags": [
           "core-learning"
+        ]
+      }
+    },
+    "/api/v1/tryout/packages/current": {
+      "get": {
+        "operationId": "TryoutController_current",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentTryoutDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts": {
+      "post": {
+        "operationId": "TryoutController_start",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartTryoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts/{attemptId}": {
+      "get": {
+        "operationId": "TryoutController_attempt",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts/{attemptId}/answers/{questionInstanceId}": {
+      "patch": {
+        "operationId": "TryoutController_saveAnswer",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "questionInstanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDrillAnswerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedAnswerDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts/{attemptId}/submit": {
+      "post": {
+        "operationId": "TryoutController_submit",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutSubmitDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts/{attemptId}/result": {
+      "get": {
+        "operationId": "TryoutController_result",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
         ]
       }
     },
@@ -2138,6 +2437,221 @@
           "admin-irt"
         ]
       }
+    },
+    "/api/v1/pvp/availability": {
+      "get": {
+        "operationId": "PvpController_availability",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PvpAvailabilityDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pvp"
+        ]
+      }
+    },
+    "/api/v1/pvp/classmates": {
+      "get": {
+        "operationId": "PvpController_classmates",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentPeersDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pvp"
+        ]
+      }
+    },
+    "/api/v1/pvp/invitations": {
+      "get": {
+        "operationId": "PvpController_invites",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PvpInvitesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pvp"
+        ]
+      }
+    },
+    "/api/v1/pvp/matches/{matchId}": {
+      "get": {
+        "operationId": "PvpController_result",
+        "parameters": [
+          {
+            "name": "matchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PvpSnapshotDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pvp"
+        ]
+      }
+    },
+    "/api/v1/leaderboards/pvp": {
+      "get": {
+        "operationId": "LeaderboardsController_pvp",
+        "parameters": [
+          {
+            "name": "difficulty",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "easy",
+                "medium",
+                "hard"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "leaderboards"
+        ]
+      }
+    },
+    "/api/v1/leaderboards/class": {
+      "get": {
+        "operationId": "LeaderboardsController_class",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "leaderboards"
+        ]
+      }
     }
   },
   "info": {
@@ -2350,6 +2864,190 @@
           "items"
         ]
       },
+      "DashboardClassDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "schoolName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "schoolName"
+        ]
+      },
+      "AssessmentRecordDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "activity": {
+            "type": "string",
+            "enum": [
+              "drill",
+              "pretest",
+              "tryout"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resultState": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "waitingIrt"
+            ]
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "attemptId",
+          "activity",
+          "title",
+          "submittedAt",
+          "resultState",
+          "score"
+        ]
+      },
+      "DashboardDrillDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string"
+          },
+          "levelId": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "attemptId",
+          "levelId",
+          "title"
+        ]
+      },
+      "StudentFeaturesDto": {
+        "type": "object",
+        "properties": {
+          "drill": {
+            "type": "boolean"
+          },
+          "tryout": {
+            "type": "boolean"
+          },
+          "pretest": {
+            "type": "boolean"
+          },
+          "pvp": {
+            "type": "boolean"
+          },
+          "classLeaderboard": {
+            "type": "boolean"
+          },
+          "pendingPolicies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "drill",
+          "tryout",
+          "pretest",
+          "pvp",
+          "classLeaderboard",
+          "pendingPolicies"
+        ]
+      },
+      "StudentDashboardDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "affiliation": {
+            "type": "string",
+            "enum": [
+              "MANDIRI",
+              "SCHOOL"
+            ]
+          },
+          "class": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DashboardClassDto"
+              }
+            ]
+          },
+          "completedLevels": {
+            "type": "number"
+          },
+          "availableLevels": {
+            "type": "number"
+          },
+          "latestDrillScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "bestDrillScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "activities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentRecordDto"
+            }
+          },
+          "activeDrill": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DashboardDrillDto"
+              }
+            ]
+          },
+          "features": {
+            "$ref": "#/components/schemas/StudentFeaturesDto"
+          }
+        },
+        "required": [
+          "displayName",
+          "affiliation",
+          "class",
+          "completedLevels",
+          "availableLevels",
+          "latestDrillScore",
+          "bestDrillScore",
+          "activities",
+          "activeDrill",
+          "features"
+        ]
+      },
       "ChapterDto": {
         "type": "object",
         "properties": {
@@ -2503,6 +3201,26 @@
           "completedLevels",
           "totalLevels",
           "latestScore"
+        ]
+      },
+      "AssessmentHistoryDto": {
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentRecordDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "records",
+          "nextCursor"
         ]
       },
       "StartDrillDto": {
@@ -2671,6 +3389,31 @@
           "explanation"
         ]
       },
+      "RecommendedVideoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "url",
+          "source"
+        ]
+      },
       "DrillResultDto": {
         "type": "object",
         "properties": {
@@ -2724,6 +3467,12 @@
             "items": {
               "$ref": "#/components/schemas/ReviewedQuestionDto"
             }
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendedVideoDto"
+            }
           }
         },
         "required": [
@@ -2739,7 +3488,185 @@
           "unlockedLevelId",
           "isDemo",
           "explanationState",
+          "questions",
+          "recommendations"
+        ]
+      },
+      "CurrentTryoutDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "releaseAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "unavailable",
+              "open",
+              "inProgress",
+              "waitingIrt",
+              "resultReady"
+            ]
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "questionCount": {
+            "type": "number",
+            "nullable": true
+          },
+          "durationSeconds": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "StartTryoutDto": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "packageId"
+        ]
+      },
+      "TryoutAttemptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageTitle": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "inProgress",
+              "submitted"
+            ]
+          },
+          "deadlineAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DrillQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "packageId",
+          "packageTitle",
+          "status",
+          "deadlineAt",
           "questions"
+        ]
+      },
+      "TryoutSubmitDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "waitingIrt"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "TryoutReviewedQuestionDto": {
+        "type": "object",
+        "properties": {
+          "questionInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "selectedOptionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "correctOptionId": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "questionInstanceId",
+          "stem",
+          "selectedOptionId",
+          "correctOptionId",
+          "explanation"
+        ]
+      },
+      "TryoutResultDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageTitle": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "correctCount": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "explanation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutReviewedQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "attemptId",
+          "packageTitle",
+          "score",
+          "correctCount",
+          "questionCount",
+          "explanation"
         ]
       },
       "ClassDto": {
@@ -4038,6 +4965,351 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "PvpAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "reasonCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "available",
+          "reasonCode",
+          "message"
+        ]
+      },
+      "StudentPeerDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "studentId",
+          "displayName"
+        ]
+      },
+      "StudentPeersDto": {
+        "type": "object",
+        "properties": {
+          "classmates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentPeerDto"
+            }
+          }
+        },
+        "required": [
+          "classmates"
+        ]
+      },
+      "PvpInviteDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "matchId": {
+            "type": "string"
+          },
+          "roomCode": {
+            "type": "string"
+          },
+          "senderName": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "matchId",
+          "roomCode",
+          "senderName",
+          "expiresAt"
+        ]
+      },
+      "PvpInvitesDto": {
+        "type": "object",
+        "properties": {
+          "invites": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PvpInviteDto"
+            }
+          }
+        },
+        "required": [
+          "invites"
+        ]
+      },
+      "PvpPlayerDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "slot": {
+            "type": "number"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "connectionStatus": {
+            "type": "string"
+          },
+          "reconnectDeadlineAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "points": {
+            "type": "number"
+          },
+          "result": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "studentId",
+          "displayName",
+          "slot",
+          "ready",
+          "connectionStatus",
+          "reconnectDeadlineAt",
+          "points",
+          "result"
+        ]
+      },
+      "PvpQuestionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionDto"
+            }
+          },
+          "deadlineAt": {
+            "type": "string"
+          },
+          "durationSeconds": {
+            "type": "number"
+          },
+          "answered": {
+            "type": "boolean"
+          },
+          "selectedOptionId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "order",
+          "stem",
+          "options",
+          "deadlineAt",
+          "durationSeconds",
+          "answered",
+          "selectedOptionId"
+        ]
+      },
+      "PvpSnapshotDto": {
+        "type": "object",
+        "properties": {
+          "matchId": {
+            "type": "string"
+          },
+          "roomCode": {
+            "type": "string"
+          },
+          "creatorStudentId": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "WAITING",
+              "READY",
+              "RUNNING",
+              "FINISHED",
+              "CANCELLED"
+            ]
+          },
+          "serverTime": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "recordEligible": {
+            "type": "boolean"
+          },
+          "endReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PvpPlayerDto"
+            }
+          },
+          "question": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PvpQuestionDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "matchId",
+          "roomCode",
+          "creatorStudentId",
+          "difficulty",
+          "status",
+          "serverTime",
+          "isDemo",
+          "recordEligible",
+          "endReason",
+          "players",
+          "question"
+        ]
+      },
+      "LeaderboardPeriodDto": {
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string"
+          },
+          "endsAt": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "startsAt",
+          "endsAt",
+          "timezone"
+        ]
+      },
+      "LeaderboardEntryDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "points": {
+            "type": "number"
+          },
+          "rank": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "studentId",
+          "displayName",
+          "points",
+          "rank"
+        ]
+      },
+      "LeaderboardDto": {
+        "type": "object",
+        "properties": {
+          "policyPending": {
+            "type": "boolean"
+          },
+          "reasonCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "className": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "points",
+              "xp"
+            ]
+          },
+          "period": {
+            "$ref": "#/components/schemas/LeaderboardPeriodDto"
+          },
+          "updatedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntryDto"
+            }
+          },
+          "ownEntry": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LeaderboardEntryDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "policyPending",
+          "reasonCode",
+          "className",
+          "unit",
+          "period",
+          "updatedAt",
+          "entries",
+          "ownEntry"
         ]
       }
     }

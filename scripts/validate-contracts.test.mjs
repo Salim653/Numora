@@ -29,3 +29,14 @@ test('valid JSON with an invalid schema or unresolved reference fails the gate',
     await rm(folder, { recursive: true, force: true });
   }
 });
+
+test('PvP contract validates commands, acknowledges errors, and rejects client scores', async () => {
+  const validators = await loadContractValidators();
+  const validate = validators.get(join('packages/contracts/websocket', 'pvp-events.schema.json'));
+  const base = { event: 'answer:submit', eventVersion: '1', sentAt: '2026-10-01T00:00:00Z', requestId: '00000000-0000-4000-8000-000000000001', payload: { matchId: '00000000-0000-4000-8000-000000000002', questionId: '00000000-0000-4000-8000-000000000003', optionId: 'A' } };
+  assert.equal(validate(base), true);
+  assert.equal(validate({ ...base, payload: { ...base.payload, score: 150 } }), false);
+  assert.equal(validate({ ...base, eventVersion: '2' }), false);
+  assert.equal(validate({ ...base, requestId: null }), false);
+  assert.equal(validate({ ...base, event: 'command:acknowledged', payload: { ok: false, error: { status: 409, code: 'PVP_POLICY_OPEN', detail: 'PvP belum tersedia.' } } }), true);
+});

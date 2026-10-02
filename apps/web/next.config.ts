@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  distDir: process.env.NUMORA_WEB_DIST_DIR ?? '.next',
   transpilePackages: ['@tka/ui'],
   agentRules: false,
   async redirects() {

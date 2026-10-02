@@ -10,6 +10,8 @@ import { ContentModule } from './modules/content/content.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { IrtModule } from './modules/irt/irt.module';
+import { PvpModule } from './modules/pvp/pvp.module';
+import { LeaderboardsModule } from './modules/leaderboards/leaderboards.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { IrtModule } from './modules/irt/irt.module';
     AdminModule,
     ReportsModule,
     IrtModule,
+    PvpModule,
+    LeaderboardsModule,
   ],
 })
 export class AppModule {}

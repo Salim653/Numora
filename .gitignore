@@ -4,6 +4,10 @@ node_modules/
 
 # builds
 .next/
+.next-*/
+playwright-report/
+test-results/
+.tmp/
 dist/
 coverage/
 .turbo/

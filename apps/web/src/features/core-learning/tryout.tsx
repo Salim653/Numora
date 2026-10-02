@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { learningApi, LearningApiError } from './api';
 import type { TryoutAttempt } from './types';
 import { AssessmentSession } from './assessment-session';
@@ -49,10 +49,11 @@ function CurrentTryout({ token }: { token: string }) {
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   const current = query.data;
-  if (current.state === 'unavailable')
+  if (current.state === 'unavailable' || !current.id || !current.releaseAt)
     return (
       <Status title="Paket belum tersedia">TryOut yang dapat dikerjakan belum diterbitkan.</Status>
     );
+  const packageId = current.id;
   return (
     <Panel>
       <p className="text-sm font-semibold text-[var(--numora-purple)]">Paket berjalan</p>
@@ -66,10 +67,10 @@ function CurrentTryout({ token }: { token: string }) {
         }).format(new Date(current.releaseAt))}{' '}
         WIB
       </p>
-      {current.questionCount !== null && (
+      {current.questionCount != null && (
         <p className="mt-1 text-sm text-slate-700">{current.questionCount} soal</p>
       )}
-      {current.durationSeconds !== null && (
+      {current.durationSeconds != null && (
         <p className="mt-1 text-sm text-slate-700">
           Durasi paket: {Math.ceil(current.durationSeconds / 60)} menit
         </p>
@@ -80,7 +81,7 @@ function CurrentTryout({ token }: { token: string }) {
         </p>
       )}
       {current.eligible && current.state === 'open' && (
-        <PrimaryButton disabled={start.isPending} onClick={() => start.mutate(current.id)}>
+        <PrimaryButton disabled={start.isPending} onClick={() => start.mutate(packageId)}>
           {start.isPending ? 'Memulai…' : 'Mulai TryOut'}
         </PrimaryButton>
       )}
@@ -150,6 +151,7 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
 
 function TryoutForm({ attempt, token }: { attempt: TryoutAttempt; token: string }) {
   const router = useRouter();
+  const client = useQueryClient();
   const deadline = attempt.deadlineAt
     ? new Intl.DateTimeFormat('id-ID', {
         dateStyle: 'medium',
@@ -170,7 +172,11 @@ function TryoutForm({ attempt, token }: { attempt: TryoutAttempt; token: string 
         learningApi.saveTryoutAnswer(token, attempt.id, questionId, optionId)
       }
       onSubmit={() => learningApi.submitTryout(token, attempt.id)}
-      onSubmitted={() => router.push('/student/tryout')}
+      onSubmitted={() => {
+        for (const key of ['current-tryout', 'student-dashboard', 'assessment-history'])
+          void client.invalidateQueries({ queryKey: [key] });
+        router.push('/student/tryout');
+      }}
     />
   );
 }

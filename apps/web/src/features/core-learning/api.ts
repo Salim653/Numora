@@ -23,7 +23,7 @@ export class LearningApiError extends Error {
   }
 }
 
-async function request<T>(token: string, path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(token: string, path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`${baseUrl}${path}`, {

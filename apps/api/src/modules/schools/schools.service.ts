@@ -121,11 +121,12 @@ export class SchoolsService {
     if (!school)
       throw new NotFoundException({ code: 'SCHOOL_NOT_FOUND', detail: 'Sekolah tidak tersedia.' });
     const token = randomBytes(32).toString('base64url');
-    const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    const createdAt = new Date();
+    const expiresAt = new Date(createdAt.getTime() + 72 * 60 * 60 * 1000);
     const result = await db.transaction(async (tx) => {
       const [created] = await tx
         .insert(teacherVerificationTokens)
-        .values({ schoolId, tokenHash: hashToken(token), createdByUserId: adminId, expiresAt })
+        .values({ schoolId, tokenHash: hashToken(token), createdByUserId: adminId, createdAt, expiresAt })
         .returning({ id: teacherVerificationTokens.id });
       await tx.insert(auditLogs).values({
         actorUserId: adminId,
@@ -233,7 +234,8 @@ export class SchoolsService {
   async reissueToken(authorization: string | undefined, schoolId: string, tokenId: string) {
     const adminId = await this.role(authorization, 'ADMIN');
     const token = randomBytes(32).toString('base64url');
-    const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    const createdAt = new Date();
+    const expiresAt = new Date(createdAt.getTime() + 72 * 60 * 60 * 1000);
     const { db } = getDatabase();
     const issued = await db.transaction(async (tx) => {
       const [revoked] = await tx.update(teacherVerificationTokens)
@@ -249,7 +251,7 @@ export class SchoolsService {
           code: 'TOKEN_NOT_REVOCABLE', detail: 'Token sudah dipakai, dicabut, atau tidak ditemukan.',
         });
       const [created] = await tx.insert(teacherVerificationTokens)
-        .values({ schoolId, tokenHash: hashToken(token), createdByUserId: adminId, expiresAt })
+        .values({ schoolId, tokenHash: hashToken(token), createdByUserId: adminId, createdAt, expiresAt })
         .returning({ id: teacherVerificationTokens.id });
       await tx.insert(auditLogs).values({
         actorUserId: adminId, action: 'teacher_token_reissued',

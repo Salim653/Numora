@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { learningApi } from './api';
 import { joinClass } from '@/lib/api';
 import { useAuth } from '@/features/onboarding/auth';
@@ -13,80 +13,9 @@ function sortByOrder<T extends { order: number }>(items: T[]) {
   return [...items].sort((a, b) => a.order - b.order);
 }
 
-export function DashboardScreen() {
-  return <StudentGate>{(token) => <DashboardContent token={token} />}</StudentGate>;
-}
-
-function DashboardContent({ token }: { token: string }) {
-  const areas = [
-    {
-      number: '01',
-      title: 'Practice & Drill',
-      description: 'Pilih bab, subbab, dan level. Kerjakan latihan dan lanjutkan progresmu.',
-      href: '/student/learn',
-      action: 'Jelajahi latihan',
-      background: 'bg-[var(--numora-pearl)]',
-    },
-    {
-      number: '02',
-      title: 'TryOut',
-      description: 'Lihat paket mingguan dan kerjakan simulasi saat tersedia untuk kelasmu.',
-      href: '/student/tryout',
-      action: 'Lihat TryOut',
-      background: 'bg-white',
-    },
-    {
-      number: '03',
-      title: 'Penilaian',
-      description: 'Buka hasil Drill tersimpan dan status penilaian TryOut setelah proses IRT.',
-      href: '/student/assessment',
-      action: 'Lihat hasil',
-      background: 'bg-white',
-    },
-  ];
-  return (
-    <LearningFrame title="Beranda belajar">
-      <section className="mb-6 overflow-hidden rounded-3xl bg-[var(--numora-purple)] px-6 py-8 text-white sm:px-10 sm:py-10">
-        <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--numora-ivory)]">
-          Ruang belajar siswa
-        </p>
-        <h2 className="mt-3 max-w-xl text-3xl font-extrabold leading-tight sm:text-4xl">
-          Belajar bertahap, lihat kemajuanmu.
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-white/90 sm:text-base">
-          Mulai dari latihan per level, ikuti TryOut saat paket tersedia, lalu lihat hasil yang
-          sudah diproses.
-        </p>
-      </section>
-      <StudentGate>{(token) => <JoinClassPanel token={token} />}</StudentGate>
-      <div className="grid gap-4 md:grid-cols-3">
-        {areas.map((area) => (
-          <Link
-            key={area.number}
-            href={area.href}
-            className={`group flex min-h-64 flex-col rounded-2xl border border-slate-200 p-6 shadow-sm transition hover:-translate-y-1 hover:border-[var(--numora-purple)] hover:shadow-md ${area.background}`}
-          >
-            <span className="text-sm font-extrabold text-[var(--numora-purple)]">
-              {area.number}
-            </span>
-            <h2 className="mt-5 text-xl font-extrabold">{area.title}</h2>
-            <p className="mt-3 flex-1 text-sm leading-6 text-slate-700">{area.description}</p>
-            <span className="mt-5 font-semibold text-[var(--numora-purple)] group-hover:underline">
-              {area.action} <span aria-hidden="true">→</span>
-            </span>
-          </Link>
-        ))}
-      </div>
-      <section className="mt-8" aria-label="Ringkasan progres">
-        <h2 className="mb-4 text-xl font-bold">Progresmu</h2>
-        <DashboardData token={token} />
-      </section>
-    </LearningFrame>
-  );
-}
-
-function JoinClassPanel({ token }: { token: string }) {
+export function JoinClassPanel({ token }: { token: string }) {
   const { state, refresh } = useAuth();
+  const queryClient = useQueryClient();
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -100,6 +29,7 @@ function JoinClassPanel({ token }: { token: string }) {
       await joinClass(token, joinCode.trim());
       setJoinCode('');
       await refresh();
+      await queryClient.invalidateQueries();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Belum dapat bergabung.');
     } finally {
@@ -107,10 +37,17 @@ function JoinClassPanel({ token }: { token: string }) {
     }
   }
   return (
-    <form className="mb-6 rounded-2xl border border-slate-200 bg-white p-6" onSubmit={(event) => void submit(event)}>
+    <form
+      className="mb-6 rounded-2xl border border-slate-200 bg-white p-6"
+      onSubmit={(event) => void submit(event)}
+    >
       <h2 className="text-xl font-bold">Gabung Class</h2>
-      <p className="mt-2 text-sm text-slate-700">Masukkan kode dari Guru untuk terafiliasi dengan sekolah.</p>
-      <label className="mt-4 block text-sm font-semibold" htmlFor="student-join-code">Kode Class</label>
+      <p className="mt-2 text-sm text-slate-700">
+        Masukkan kode dari Guru untuk terafiliasi dengan sekolah.
+      </p>
+      <label className="mt-4 block text-sm font-semibold" htmlFor="student-join-code">
+        Kode Class
+      </label>
       <input
         id="student-join-code"
         className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 px-4 sm:max-w-sm"
@@ -119,40 +56,17 @@ function JoinClassPanel({ token }: { token: string }) {
         maxLength={32}
         required
       />
-      {error && <p className="mt-2 text-red-700" role="alert">{error}</p>}
+      {error && (
+        <p className="mt-2 text-red-700" role="alert">
+          {error}
+        </p>
+      )}
       <div className="mt-4">
-        <PrimaryButton type="submit" disabled={busy}>{busy ? 'Bergabung…' : 'Gabung Class'}</PrimaryButton>
+        <PrimaryButton type="submit" disabled={busy}>
+          {busy ? 'Bergabung…' : 'Gabung Class'}
+        </PrimaryButton>
       </div>
     </form>
-  );
-}
-
-function DashboardData({ token }: { token: string }) {
-  const query = useQuery({
-    queryKey: ['student-progress'],
-    queryFn: () => learningApi.progress(token),
-  });
-  if (query.isPending || query.isError)
-    return (
-      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
-    );
-  return (
-    <Panel>
-      <p className="text-sm font-semibold text-[var(--numora-purple)]">Progres belajar</p>
-      <h2 className="mt-2 text-xl font-bold">Lanjutkan belajar matematika</h2>
-      <p className="mt-2 text-slate-700">
-        {query.data.completedLevels} dari {query.data.totalLevels} level selesai.
-      </p>
-      {query.data.latestScore !== null && (
-        <p className="mt-1 text-slate-700">Nilai Drill terakhir: {query.data.latestScore}</p>
-      )}
-      <Link
-        className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[var(--numora-purple)] px-5 font-semibold text-white"
-        href="/student/learn"
-      >
-        Lihat materi
-      </Link>
-    </Panel>
   );
 }
 

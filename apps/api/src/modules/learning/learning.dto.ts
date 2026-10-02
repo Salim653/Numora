@@ -83,6 +83,12 @@ export class ReviewedQuestionDto extends DrillQuestionDto {
   @ApiProperty() correctOptionId!: string;
   @ApiProperty() explanation!: string;
 }
+export class RecommendedVideoDto {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty() title!: string;
+  @ApiProperty({ format: 'uri' }) url!: string;
+  @ApiProperty() source!: string;
+}
 export class DrillResultDto {
   @ApiProperty({ format: 'uuid' }) attemptId!: string;
   @ApiProperty({ format: 'uuid' }) levelId!: string;
@@ -97,4 +103,19 @@ export class DrillResultDto {
   @ApiProperty() isDemo!: boolean;
   @ApiProperty({ enum: ['available', 'expired'] }) explanationState!: string;
   @ApiProperty({ type: [ReviewedQuestionDto] }) questions!: ReviewedQuestionDto[];
+  @ApiProperty({ type: [RecommendedVideoDto] }) recommendations!: RecommendedVideoDto[];
+}
+
+export class AssessmentRecordDto {
+  @ApiProperty({ format: 'uuid' }) attemptId!: string;
+  @ApiProperty({ enum: ['drill', 'pretest', 'tryout'] }) activity!: string;
+  @ApiProperty() title!: string;
+  @ApiProperty({ format: 'date-time' }) submittedAt!: string;
+  @ApiProperty({ enum: ['ready', 'waitingIrt'] }) resultState!: string;
+  @ApiProperty({ type: Number, nullable: true }) score!: number | null;
+}
+
+export class AssessmentHistoryDto {
+  @ApiProperty({ type: [AssessmentRecordDto] }) records!: AssessmentRecordDto[];
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) nextCursor!: string | null;
 }

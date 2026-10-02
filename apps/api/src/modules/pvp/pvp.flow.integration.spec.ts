@@ -1,0 +1,175 @@
+import { randomUUID } from 'node:crypto';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import {
+  analyticsOutbox,
+  closeDatabaseConnection,
+  getDatabase,
+  pvpAnswers,
+  pvpMatches,
+  pvpMatchQuestions,
+  xpLedger,
+} from '@tka/database';
+import { and, eq } from 'drizzle-orm';
+import { PvpEngineService } from './pvp-engine.service';
+import { pvpFixture } from './pvp.test-fixture';
+
+const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
+integration('PvP PostgreSQL engine with TEST ONLY policy', () => {
+  let fixture: Awaited<ReturnType<typeof pvpFixture>>;
+  let engine: PvpEngineService;
+  let now: Date;
+  beforeAll(async () => {
+    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    fixture = await pvpFixture();
+    engine = new PvpEngineService(fixture.policy);
+    now = new Date();
+    vi.spyOn(engine, 'now').mockImplementation(() => now);
+  });
+  afterAll(async () => closeDatabaseConnection());
+  const s = (index: number) => fixture.students[index]!.id;
+  async function start() {
+    const room = await engine.create(s(0), 'easy', randomUUID());
+    await engine.join(s(1), room.roomCode);
+    await engine.ready(s(0), room.matchId);
+    return engine.ready(s(1), room.matchId);
+  }
+  it('serializes concurrent join and create retries, permits Mandiri, and enforces ownership', async () => {
+    const key = randomUUID();
+    const created = await Promise.all([
+      engine.create(s(0), 'easy', key),
+      engine.create(s(0), 'easy', key),
+    ]);
+    expect(created[0]!.matchId).toBe(created[1]!.matchId);
+    const room = created[0]!;
+    const joined = await Promise.allSettled([
+      engine.join(s(1), room.roomCode),
+      engine.join(s(2), room.roomCode),
+    ]);
+    expect(joined.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const snapshot = await engine.snapshot(s(0), room.matchId);
+    expect(snapshot.players).toHaveLength(2);
+    const rejected = joined[0]!.status === 'rejected' ? s(1) : s(2);
+    await expect(engine.snapshot(rejected, room.matchId)).rejects.toMatchObject({ status: 403 });
+    expect(JSON.stringify(snapshot)).not.toMatch(/answerKey|correctOptionId|explanation|email/);
+    await engine.leave(s(0), room.matchId);
+  });
+  it('keeps answers immutable, rejects late answers, and advances only from server state', async () => {
+    const match = await start();
+    const question = match.question!;
+    const same = randomUUID();
+    await Promise.all([
+      engine.answer(s(0), match.matchId, question.id, 'A', same),
+      engine.answer(s(0), match.matchId, question.id, 'A', same),
+    ]);
+    await engine.answer(s(0), match.matchId, question.id, 'B', same);
+    const own = await engine.snapshot(s(0), match.matchId);
+    expect(own.question!.answered).toBe(true);
+    expect(own.question!.selectedOptionId).toBe('A');
+    const rows = await getDatabase()
+      .db.select()
+      .from(pvpAnswers)
+      .where(eq(pvpAnswers.matchQuestionId, question.id));
+    expect(rows).toHaveLength(1);
+    now = new Date(question.deadlineAt);
+    await expect(
+      engine.answer(s(1), match.matchId, question.id, 'A', randomUUID()),
+    ).rejects.toMatchObject({ response: { code: 'ANSWER_TOO_LATE' } });
+    await Promise.all([engine.tick(match.matchId), engine.tick(match.matchId)]);
+    const advanced = await engine.snapshot(s(0), match.matchId);
+    expect(advanced.question!.order).toBe(2);
+    expect(advanced.players[0]!.points).toBe(150);
+    expect(advanced.players[1]!.points).toBe(0);
+    await engine.answer(s(0), match.matchId, question.id, 'B', same);
+    await engine.leave(s(0), match.matchId);
+    expect((await engine.snapshot(s(1), match.matchId)).recordEligible).toBe(false);
+  });
+  it('finalizes ten questions once with atomic outbox and pinned content, without class XP', async () => {
+    let match = await start();
+    for (let order = 1; order <= 10; order++) {
+      const q = match.question!;
+      expect(q.order).toBe(order);
+      await Promise.all([
+        engine.answer(s(0), match.matchId, q.id, 'A', randomUUID()),
+        engine.answer(s(1), match.matchId, q.id, 'B', randomUUID()),
+      ]);
+      match = await engine.snapshot(s(0), match.matchId);
+    }
+    await Promise.all([engine.tick(match.matchId), engine.tick(match.matchId)]);
+    expect(match.status).toBe('FINISHED');
+    expect(match.recordEligible).toBe(true);
+    expect(match.players.map((p) => [p.points, p.result])).toEqual([
+      [1500, 'WIN'],
+      [0, 'LOSS'],
+    ]);
+    const { db } = getDatabase();
+    expect(
+      await db
+        .select()
+        .from(analyticsOutbox)
+        .where(
+          and(
+            eq(analyticsOutbox.entityId, match.matchId),
+            eq(analyticsOutbox.eventName, 'pvp_match_completed'),
+          ),
+        ),
+    ).toHaveLength(1);
+    const questions = await db
+      .select()
+      .from(pvpMatchQuestions)
+      .where(eq(pvpMatchQuestions.matchId, match.matchId));
+    expect(questions.every((q) => !!q.questionVersionId)).toBe(true);
+    expect(
+      await db
+        .select()
+        .from(xpLedger)
+        .where(eq(xpLedger.studentId, s(0))),
+    ).toHaveLength(0);
+  });
+  it('handles reconnect at 20 seconds, dual disconnect and restart without leaderboard records', async () => {
+    const match = await start();
+    await engine.disconnect(s(0), match.matchId);
+    now = new Date(now.getTime() + 19_999);
+    expect((await engine.reconnect(s(0), match.matchId)).players[0]!.connectionStatus).toBe(
+      'CONNECTED',
+    );
+    await engine.disconnect(s(0), match.matchId);
+    now = new Date(now.getTime() + 20_000);
+    await engine.tick(match.matchId);
+    const forfeited = await engine.snapshot(s(0), match.matchId);
+    expect(forfeited.endReason).toBe('FORFEIT');
+    expect(forfeited.recordEligible).toBe(false);
+    const both = await start();
+    await engine.disconnect(s(0), both.matchId);
+    await engine.disconnect(s(1), both.matchId);
+    now = new Date(now.getTime() + 20_000);
+    await engine.tick(both.matchId);
+    expect((await engine.snapshot(s(0), both.matchId)).status).toBe('CANCELLED');
+    const interrupted = await start();
+    await engine.recoverAfterRestart();
+    const cancelled = await engine.snapshot(s(0), interrupted.matchId);
+    expect(cancelled.endReason).toBe('SERVER_RESTARTED');
+    expect(cancelled.recordEligible).toBe(false);
+    expect(cancelled.players.every((p) => p.result !== 'WIN')).toBe(true);
+    expect(
+      (
+        await getDatabase()
+          .db.select()
+          .from(pvpMatches)
+          .where(eq(pvpMatches.id, interrupted.matchId))
+      )[0]!.scoringPolicyVersionId,
+    ).toBe(fixture.policy.policyVersionId);
+  });
+  it('limits invitations to current classmates and expires fixture invitations', async () => {
+    const room = await engine.create(s(0), 'easy', randomUUID());
+    await expect(engine.invite(s(0), room.matchId, s(2))).rejects.toMatchObject({ status: 403 });
+    const invite = await engine.invite(s(0), room.matchId, s(1));
+    expect((await engine.invite(s(0), room.matchId, s(1))).inviteId).toBe(invite.inviteId);
+    now = new Date(now.getTime() + 60_000);
+    await expect(engine.respondInvite(s(1), invite.inviteId, true)).rejects.toMatchObject({
+      response: { code: 'INVITE_CLOSED' },
+    });
+    const retry = await engine.invite(s(0), room.matchId, s(1));
+    expect((await engine.respondInvite(s(1), retry.inviteId, true))!.players).toHaveLength(2);
+    await engine.leave(s(0), room.matchId);
+  });
+});

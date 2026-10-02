@@ -5,6 +5,10 @@ export default tseslint.config(
     ignores: [
       "**/dist/**",
       "**/.next/**",
+      "**/.next-*/**",
+      "**/test-results/**",
+      "**/playwright-report/**",
+      "**/.tmp/**",
       "**/coverage/**",
       "**/node_modules/**",
       "**/.turbo/**",

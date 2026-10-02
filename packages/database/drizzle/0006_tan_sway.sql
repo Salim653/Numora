@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "assessment_packages_published_tryout_release_uq" ON "assessment_packages" USING btree ("release_at") WHERE "assessment_packages"."assessment_type" = 'TRYOUT' and "assessment_packages"."status" = 'PUBLISHED';--> statement-breakpoint
+ALTER TABLE "assessment_packages" ADD CONSTRAINT "assessment_packages_published_tryout_release_ck" CHECK ("assessment_packages"."assessment_type" <> 'TRYOUT' or "assessment_packages"."status" <> 'PUBLISHED' or "assessment_packages"."release_at" is not null);

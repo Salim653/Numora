@@ -1,49 +1,23 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import katex from 'katex';
 import type { ReactNode } from 'react';
-import { destination, useAuth } from '@/features/onboarding/auth';
 import { LearningApiError } from './api';
-import { LearningProvider } from './provider';
+import { useStudentToken } from './student-session';
 
 export function LearningFrame({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-4 py-6 sm:px-8 sm:py-10">
-      <header className="mb-7 flex flex-wrap items-center justify-between gap-3">
-        <Link className="text-lg font-extrabold text-[var(--numora-purple)]" href="/student">
-          NUMORA
-        </Link>
-        <nav
-          aria-label="Navigasi Student"
-          className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold"
-        >
-          <Link className="hover:underline" href="/student">
-            Beranda
-          </Link>
-          <Link className="hover:underline" href="/student/learn">
-            Practice & Drill
-          </Link>
-          <Link className="hover:underline" href="/student/tryout">
-            TryOut
-          </Link>
-          <Link className="hover:underline" href="/student/assessment">
-            Penilaian
-          </Link>
-        </nav>
-      </header>
-      <h1 className="mb-6 text-2xl font-extrabold sm:text-3xl">{title}</h1>
+    <div className="learning-frame">
+      <h1 className="student-page-title mb-6">{title}</h1>
       {children}
-    </main>
+    </div>
   );
 }
 
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <section
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ${className}`}
+      className={`learning-panel rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ${className}`}
     >
       {children}
     </section>
@@ -106,30 +80,7 @@ export function DataState({
 }
 
 export function StudentGate({ children }: { children: (token: string) => ReactNode }) {
-  const { state, refresh } = useAuth();
-  const router = useRouter();
-  useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/');
-    if (state.status === 'registration') router.replace('/onboarding');
-    if (state.status === 'ready' && state.profile.role !== 'STUDENT')
-      router.replace(destination(state.profile));
-  }, [router, state]);
-  if (state.status === 'ready' && state.profile.role === 'STUDENT') {
-    const token = state.session.access_token;
-    return <LearningProvider key={token}>{children(token)}</LearningProvider>;
-  }
-  if (state.status === 'error')
-    return (
-      <Status title="Sesi belum siap">
-        <p>{state.message}</p>
-        <button className="mt-3 underline" onClick={() => void refresh()}>
-          Periksa lagi
-        </button>
-      </Status>
-    );
-  if (state.status === 'disabled')
-    return <Status title="Akun tidak aktif">Akses akun ini sedang tidak tersedia.</Status>;
-  return <Status title="Memeriksa akses">Mohon tunggu…</Status>;
+  return children(useStudentToken());
 }
 
 export function MathText({ value }: { value: string }) {

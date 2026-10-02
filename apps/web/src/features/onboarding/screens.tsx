@@ -182,17 +182,9 @@ export function LoginScreen() {
               )}
             </>
           )}
-          <div className="demo-entry">
-            <p>Coba tampilan NUMORA tanpa akun atau backend. Semua data dalam demo bersifat fiktif.</p>
-            <Link className="secondary-button demo-entry-link" href="/demo/student">
-              Jelajahi demo Siswa, PvP, dan peringkat
-            </Link>
-            {process.env.NODE_ENV === 'development' && (
-              <Link className="demo-entry-admin" href="/admin/preview">
-                Lihat pratinjau Admin (development)
-              </Link>
-            )}
-          </div>
+          {process.env.NODE_ENV === 'development' && (
+            <Link className="text-button" href="/admin/preview">Lihat pratinjau Admin (development)</Link>
+          )}
           <p className="helper">Role dipilih sekali setelah login pertama.</p>
         </section>
       </div>

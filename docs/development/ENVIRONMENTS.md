@@ -23,7 +23,7 @@ Preferred local stack:
 
 The local processes use cloud dependencies; Docker is not required for development. Developer credentials must not grant staging schema migration or seed access. A development branch must not copy real-user staging data.
 
-The `/demo/*` UI previews use fictional local fixtures and do not read Cloud product tables. They do not determine which Supabase project serves Development or Staging.
+The student UI uses authenticated NestJS endpoints. Former standalone preview routes have been removed. Demo question content remains explicitly labeled from backend metadata; browser fixtures run only inside tests.
 
 ## Staging
 
