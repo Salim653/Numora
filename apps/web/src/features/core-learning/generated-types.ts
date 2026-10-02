@@ -29,14 +29,6 @@ export type RecommendedVideoDto = { "id": string; "title": string; "url": string
 
 export type DrillResultDto = { "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": (ReviewedQuestionDto)[]; "recommendations": (RecommendedVideoDto)[]; };
 
-export type PretestStatusDto = { "state": "available" | "inProgress" | "completed"; "attemptId": string | null; };
-
-export type PretestAttemptDto = { "id": string; "chapterId": string; "chapterTitle": string; "status": "inProgress" | "completed"; "startedAt": string; "isDemo": boolean; "questions": (DrillQuestionDto)[]; };
-
-export type PretestPlacementDto = { "levelId": string; "subchapterId": string; "levelNumber": number; };
-
-export type PretestResultDto = { "attemptId": string; "chapterId": string; "chapterTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "xp": 0; "placementState": "placed" | "pendingPolicy"; "unlockedLevels": (PretestPlacementDto)[]; };
-
 export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "pretest" | "tryout"; "title": string; "isDemo": boolean; "submittedAt": string; "resultState": "ready" | "waitingIrt"; "score": number | null; };
 
 export type AssessmentHistoryDto = { "records": (AssessmentRecordDto)[]; "nextCursor": string | null; };
