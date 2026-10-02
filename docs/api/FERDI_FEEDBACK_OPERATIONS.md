@@ -12,7 +12,7 @@
 | GET `/admin/users` dan `/admin/users/{userId}` | List/detail; search ≤100, role STUDENT/TEACHER/ADMIN, status ACTIVE/DISABLED | Admin aktif |
 | GET `/admin/classes` dan `/admin/classes/{classId}` | List/detail; search ≤100, schoolId, teacherId, state active/archived | Admin aktif |
 
-Pagination feedback/Admin: limit 1–100 default 50, offset ≥0, nextOffset hanya jika ada baris tambahan. Urutan sentAt/id atau createdAt/id stabil; dataset yang berubah concurrent tetap memiliki keterbatasan offset pagination. Search parameterized, wildcard literal di-escape.
+Pagination feedback/Admin: limit 1–100 default 20, offset 0–1.000.000, nextOffset hanya jika ada baris tambahan. Urutan sentAt/id atau createdAt/id stabil; dataset yang berubah concurrent tetap memiliki keterbatasan offset pagination. Search parameterized, wildcard literal di-escape.
 
 Body feedback setelah trim harus 1–1000 karakter non-whitespace. clientRequestId wajib, memakai primary key UUID existing dan advisory transaction lock. Actor/class/student/body sama mengembalikan ID awal; reuse berbeda 409. Read memakai row lock dan tidak menimpa timestamp pertama. Verifikasi membership/class dikunci saat create. Browser tidak boleh mengirim teacherId/reporterId.
 

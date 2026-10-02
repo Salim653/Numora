@@ -7,6 +7,7 @@ import { AppShell } from '@/components/shell';
 import { learningApi } from './api';
 import { DataState, StudentGate } from './ui';
 import { ActivityRow, ChapterCard, ProgressSummary } from './cards';
+import { FeedbackOverview } from './feedback-overview';
 
 export function NewStudentDashboard() {
   return (
@@ -83,6 +84,7 @@ function DashboardContent({ token }: { token: string }) {
             <span className="hero-star">✦</span>
           </div>
         </section>
+        <FeedbackOverview token={token} />
         <section className="quick-section" aria-label="Akses cepat">
           <Link href="/student/learn">
             <span className="icon-tile accent-0">
@@ -255,7 +257,7 @@ function HomeTryout({ token }: { token: string }) {
         <>
           <Badge variant={query.data.state === 'unavailable' ? 'default' : 'primary'}>
             {!query.data.eligible
-              ? 'Memerlukan kelas'
+              ? 'Belum tersedia untuk akun ini'
               : query.data.state === 'unavailable'
                 ? 'Belum tersedia'
                 : query.data.state === 'waitingIrt'
@@ -268,7 +270,7 @@ function HomeTryout({ token }: { token: string }) {
           </Badge>
           <p>
             {!query.data.eligible
-              ? 'Tryout tersedia untuk siswa yang bergabung dengan kelas.'
+              ? 'Tryout gratis untuk siswa Mandiri dan Sekolah. Ketersediaan akun mengikuti status server.'
               : query.data.state === 'unavailable'
                 ? 'Paket yang sudah diterbitkan akan muncul di sini.'
                 : 'Lihat status paket dan aktivitas Tryout kamu.'}

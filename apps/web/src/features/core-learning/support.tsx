@@ -3,6 +3,7 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { learningApi } from './api';
+import { recordLearningInteraction } from './learning-interactions';
 import { DataState, Panel, PrimaryButton } from './ui';
 
 export const QUESTION_REPORT_CATEGORIES = [
@@ -156,6 +157,13 @@ export function RecommendedVideos({ token, attemptId }: { token: string; attempt
         <Panel key={video.mappingId}>
           <a
             href={video.url}
+            onClick={() =>
+              void recordLearningInteraction(token, {
+                eventName: 'video_clicked',
+                attemptId,
+                mappingId: video.mappingId,
+              }).catch(() => {})
+            }
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center font-semibold text-[var(--numora-purple)] underline"

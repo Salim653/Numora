@@ -52,6 +52,32 @@ const result: DrillResult = {
 };
 
 describe('ringkasan hasil Drill', () => {
+  it.each([false, true])(
+    'starts a direct retry for mastered=%s using the same server level and a new server attempt',
+    async (mastered) => {
+      vi.spyOn(learningApi, 'result').mockResolvedValue({ ...result, mastered });
+      vi.spyOn(learningApi, 'videos').mockResolvedValue({ items: [] });
+      const start = vi
+        .spyOn(learningApi, 'start')
+        .mockResolvedValue({
+          id: 'retry-attempt',
+          levelId: 'level',
+          levelTitle: 'Level 1',
+          status: 'inProgress',
+          startedAt: new Date().toISOString(),
+          isDemo: true,
+          questions: [],
+        });
+      render(
+        <StudentAccess>
+          <ResultScreen />
+        </StudentAccess>,
+      );
+      fireEvent.click(await screen.findByRole('button', { name: 'Ulangi level ini' }));
+      await waitFor(() => expect(router.push).toHaveBeenCalledWith('/student/drill/retry-attempt'));
+      expect(start).toHaveBeenCalledWith('TEST-token', 'level');
+    },
+  );
   it('mengikuti status tuntas dan unlock dari API, bukan menghitungnya dari skor', () => {
     const view = render(<ResultSummary result={result} />);
     expect(screen.getByText('Belum tuntas')).toBeTruthy();
