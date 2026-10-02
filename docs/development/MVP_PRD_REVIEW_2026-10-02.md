@@ -8,7 +8,7 @@ Hambatan utama: Level 2 tidak memiliki paket terbit di database Development; Try
 
 Ini adalah review engineering dan **PROPOSED backlog**, bukan persetujuan rilis, perubahan aturan produk, atau penetapan keputusan OPEN. Pengguna mengonfirmasi pembagian lama tetap berlaku dan anggota yang tersedia hanya Ferdi, Aini, Farel, aliwafa, Avicenna, dan Salim.
 
-**Rincian pelaksanaan terbaru:** [Joblist rekonsiliasi 16 pekerjaan lama dan 22 pekerjaan berurutan](MVP_JOBLIST_2026-10-02.md) mencatat bagian yang sudah selesai teknis, sisa pekerjaan, requirement yang diganti PRD terbaru, dependency dan bukti selesai per owner. Gunakan dokumen itu untuk rincian antrean; bagian 8–9 di laporan ini mempertahankan usulan awal. Snapshot audit, hasil tes dan angka database di bawah tetap historis pada waktu pemeriksaannya.
+**Rincian pelaksanaan terbaru:** [Joblist rekonsiliasi 16 pekerjaan lama dan 22 pekerjaan berurutan](MVP_JOBLIST_2026-10-02.md) mencatat bagian yang sudah selesai teknis, sisa pekerjaan, requirement terbaru, dependency dan bukti selesai per owner. **Klarifikasi pengguna 2 Oktober:** sembilan task profil/auth/role/afiliasi/join/monitoring/visibility/diagnosis Level 2/regression pada gambar sedang dikerjakan Farel; ia menjadi DRI tunggal task aktif tersebut. Gunakan joblist dan [OWNERSHIP](OWNERSHIP.md) untuk antrean/handoff saat ini. Bagian 8–9 laporan ini mempertahankan usulan awal dan tidak lagi menjadi acuan aktif pada penugasan yang bertumpang tindih. Snapshot audit, hasil tes dan angka database di bawah tetap historis pada waktu pemeriksaannya.
 
 ## 2. Sumber, baseline, dan batas pemeriksaan
 
@@ -188,6 +188,8 @@ Temuan GAP-03/04/05/06 adalah ketidaksesuaian runtime dengan rule yang sudah FIN
 Akses gratis semua Student adalah rule FINAL TryOut §1/2/16 yang tetap harus diuji walaupun daftar AC tidak memiliki satu ID khusus untuk afiliasi. Retensi, kategori laporan, event dan detail/tutorial juga harus ditelusuri ke bagian PRD terkait. Jumlah AC bukan ukuran seluruh scope MVP; tidak diberikan persentase kemajuan tanpa bobot dan acceptance evidence yang disepakati.
 
 ## 8. Pembagian enam anggota
+
+**Catatan supersession ownership:** bagian ini adalah usulan awal sebelum pengguna mengklarifikasi sembilan pekerjaan aktif Farel. Penugasan yang bertumpang tindih diganti oleh [joblist terbaru](MVP_JOBLIST_2026-10-02.md) dan [klarifikasi ownership](OWNERSHIP.md). Gunakan kedua dokumen tersebut untuk pelaksana aktif dan handoff; hasil audit di laporan ini tetap historis.
 
 **Dasar:** [ownership lama](OWNERSHIP.md) dan konfirmasi pengguna bahwa pembagian itu tetap berlaku. Aini = Qurotul A'ini; aliwafa = Abdullah Ali Wafa. Farel sebelumnya menggantikan Wafa. **PROPOSED penyesuaian agar tidak tumpang tindih:** aliwafa kembali sebagai pelaksana UI onboarding/monitoring; Farel memimpin PM/integrasi browser dan koordinasi release. Tidak mengubah ownership historis pada file aslinya.
 
