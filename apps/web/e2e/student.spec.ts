@@ -318,7 +318,7 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
     await fixtures(page);
     await page.goto('/student');
     await page.getByRole('link', { name: 'Buka profil' }).click();
-    await page.getByLabel('Kode kelas').fill(joinCode);
+    await page.getByLabel('Kode kelas').fill(` ${joinCode} `);
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
     await expect(page.getByText('Terhubung dengan kelas', { exact: true })).toBeVisible();
     await page.goto('/student');
@@ -378,7 +378,7 @@ for (const verificationToken of ['QAAB2345', 'Ab_cd-'.repeat(6)]) {
     await fixtures(page, 'TEACHER', false);
     await page.goto('/teacher/verification-required');
     await page.getByLabel('Sekolah', { exact: true }).selectOption(chapterId);
-    await page.getByLabel('Token verifikasi').fill(verificationToken);
+    await page.getByLabel('Token verifikasi').fill(` ${verificationToken} `);
     const request = page.waitForRequest((request) =>
       request.url().endsWith('/teacher-verifications'),
     );

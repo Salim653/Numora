@@ -137,7 +137,7 @@ function ProfileContent({ token }: { token: string }) {
                 autoCapitalize="characters"
                 spellCheck={false}
                 value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value)}
+                onChange={(e) => setJoinCode(e.target.value.trim())}
                 placeholder="Kode dari guru"
                 required
                 autoComplete="off"

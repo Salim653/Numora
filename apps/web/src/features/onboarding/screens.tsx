@@ -519,7 +519,7 @@ function TeacherVerificationContent() {
                   type="password"
                   autoComplete="off"
                   value={token}
-                  onChange={(event) => setToken(event.target.value)}
+                  onChange={(event) => setToken(event.target.value.trim())}
                   required
                 />
                 {error && (

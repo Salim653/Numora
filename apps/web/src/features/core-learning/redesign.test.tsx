@@ -122,17 +122,20 @@ describe('responsive learning composition', () => {
     await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/'));
     expect(learningApi.dashboard).not.toHaveBeenCalled();
   });
-  it('joins a class through the existing API then refreshes authoritative account affiliation', async () => {
-    vi.mocked(joinClass).mockResolvedValue({
-      class: { id: 'class-test', name: 'IX Fiktif' },
-      joined: true,
-    });
-    renderStudent(<ProfileScreen />);
-    fireEvent.change(screen.getByLabelText(/Kode kelas/), { target: { value: ' TEST-CODE ' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Gabung kelas' }));
-    await waitFor(() => expect(joinClass).toHaveBeenCalledWith('test-token', 'TEST-CODE'));
-    await waitFor(() => expect(context.refresh).toHaveBeenCalledOnce());
-  });
+  it.each(['TEST-CODE', 'QA2345'])(
+    'joins class %s after trimming pasted spaces then refreshes authoritative account affiliation',
+    async (joinCode) => {
+      vi.mocked(joinClass).mockResolvedValue({
+        class: { id: 'class-test', name: 'IX Fiktif' },
+        joined: true,
+      });
+      renderStudent(<ProfileScreen />);
+      fireEvent.change(screen.getByLabelText(/Kode kelas/), { target: { value: ` ${joinCode} ` } });
+      fireEvent.click(screen.getByRole('button', { name: 'Gabung kelas' }));
+      await waitFor(() => expect(joinClass).toHaveBeenCalledWith('test-token', joinCode));
+      await waitFor(() => expect(context.refresh).toHaveBeenCalledOnce());
+    },
+  );
   it('shows a class access action rather than a start action for an ineligible Tryout', async () => {
     renderStudent(<TryoutScreen />);
     const link = await screen.findByRole('link', { name: 'Gabung kelas' });
