@@ -8,7 +8,9 @@ import { ProfileScreen } from './profile';
 import { TryoutScreen } from './tryout';
 import { SubchapterScreen } from './catalog';
 import { TeacherDashboardScreen } from '@/features/monitoring/teacher-screens';
-import { learningApi } from './api';
+import { learningApi, request } from './api';
+import { FeedbackOverview } from './feedback-overview';
+import { LeaderboardsScreen } from './leaderboards';
 import { getTeacherClasses, joinClass } from '@/lib/api';
 import { destination } from '@/features/onboarding/destination';
 
@@ -32,6 +34,7 @@ vi.mock('@/features/onboarding/auth', () => ({
 }));
 vi.mock('./api', async (original) => ({
   ...(await original<object>()),
+  request: vi.fn(),
   learningApi: {
     dashboard: vi.fn(),
     progress: vi.fn(),
@@ -87,17 +90,69 @@ beforeEach(() => {
   vi.mocked(learningApi.catalog).mockResolvedValue({ chapters: [] });
   vi.mocked(learningApi.assessmentHistory).mockResolvedValue({ records: [], nextCursor: null });
   vi.mocked(learningApi.currentTryout).mockResolvedValue({ state: 'unavailable', eligible: false });
+  vi.mocked(request).mockResolvedValue({ unreadCount: 0, latest: [] });
 });
 afterEach(cleanup);
 function renderStudent(children: React.ReactNode) {
   return render(<StudentAccess>{children}</StudentAccess>);
 }
 describe('responsive learning composition', () => {
+  it('shows persisted feedback previews and leaves the inbox read state unchanged', async () => {
+    vi.mocked(request).mockResolvedValue({
+      unreadCount: 1,
+      latest: [
+        {
+          id: 'feedback-test',
+          teacherName: 'Guru Test',
+          body: '<script>Pesan Guru</script>',
+          sentAt: '2026-10-01T00:00:00Z',
+          readAt: null,
+        },
+      ],
+    });
+    renderStudent(<FeedbackOverview token="test-token" />);
+    expect(await screen.findByText('1 catatan belum dibaca.')).toBeTruthy();
+    expect(screen.getByText('<script>Pesan Guru</script>')).toBeTruthy();
+    expect(document.querySelector('script')).toBeNull();
+    expect(request).toHaveBeenCalledOnce();
+    expect(request).toHaveBeenCalledWith('test-token', '/students/me/feedback/summary');
+  });
+  it('keeps ranks hidden when policy is pending, even if provisional rows are returned', async () => {
+    vi.mocked(request).mockResolvedValue({
+      policyPending: true,
+      entries: [
+        { studentId: 'rank-test', displayName: 'Provisional student', rank: 1, points: 999 },
+      ],
+      ownEntry: { rank: 37, points: 500 },
+      unit: 'points',
+      period: { startsAt: '2026-10-01T00:00:00Z', endsAt: '2026-10-08T00:00:00Z' },
+      updatedAt: null,
+    });
+    renderStudent(<LeaderboardsScreen />);
+    await screen.findByText('Peringkat belum tersedia');
+    expect(screen.queryByText('Provisional student')).toBeNull();
+    expect(screen.queryByText('#37')).toBeNull();
+  });
+  it('renders top/self positions from the server without calculating ties or excluding a self rank outside the top twenty', async () => {
+    vi.mocked(request).mockResolvedValue({
+      policyPending: false,
+      entries: [{ studentId: 'rank-test', displayName: 'Server student', rank: 2, points: 100 }],
+      ownEntry: { rank: 37, points: 50 },
+      unit: 'points',
+      period: { startsAt: '2026-10-01T00:00:00Z', endsAt: '2026-10-08T00:00:00Z' },
+      updatedAt: '2026-10-02T01:00:00Z',
+    });
+    renderStudent(<LeaderboardsScreen />);
+    await screen.findByText('Server student');
+    expect(screen.getByText('#37')).toBeTruthy();
+    expect(screen.getByText('2', { selector: 'td' })).toBeTruthy();
+  });
   it('mounts Home with its query provider and truthful empty states, including a zero score', async () => {
     renderStudent(<NewStudentDashboard />);
     await screen.findByText('0 / 100');
     expect(screen.getByText('Materi sedang disiapkan')).toBeTruthy();
-    expect(await screen.findByText('Memerlukan kelas')).toBeTruthy();
+    expect(await screen.findByText('Belum tersedia untuk akun ini')).toBeTruthy();
+    expect(screen.getByText(/Tryout gratis untuk siswa Mandiri dan Sekolah/)).toBeTruthy();
     expect(screen.queryByRole('progressbar')).toBeNull();
     expect(screen.queryByText('XP')).toBeNull();
     expect(document.querySelector('a[href^="/demo"]')).toBeNull();
@@ -136,10 +191,11 @@ describe('responsive learning composition', () => {
       await waitFor(() => expect(context.refresh).toHaveBeenCalledOnce());
     },
   );
-  it('shows a class access action rather than a start action for an ineligible Tryout', async () => {
+  it('keeps unavailable TryOut honest without requiring class membership', async () => {
     renderStudent(<TryoutScreen />);
-    const link = await screen.findByRole('link', { name: 'Gabung kelas' });
-    expect(link.getAttribute('href')).toBe('/student/profile');
+    const link = await screen.findByRole('link', { name: 'Latihan dulu' });
+    expect(link.getAttribute('href')).toBe('/student/learn');
+    expect(screen.queryByText(/Bergabung dengan kelas.*akses Tryout/)).toBeNull();
     expect(screen.queryByRole('button', { name: /Mulai TryOut/ })).toBeNull();
   });
   it('mounts Teacher queries under a provider and rejects a Student account', async () => {

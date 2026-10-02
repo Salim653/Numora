@@ -102,6 +102,22 @@ async function fixtures(
           pendingPolicies: ['OPEN-07', 'OPEN-11'],
         },
       };
+    else if (path === '/students/me/feedback/summary')
+      data = {
+        unreadCount: 1,
+        latest: [
+          {
+            id: questionId,
+            classId: chapterId,
+            studentId,
+            teacherName: 'Guru fixture',
+            body: 'Catatan persisted fixture: lanjutkan latihan persamaan.',
+            sentAt: '2026-10-01T00:00:00Z',
+            readAt: null,
+          },
+        ],
+      };
+    else if (path === '/students/me/learning-interactions') data = { state: 'policyPending' };
     else if (path === '/chapters')
       data = { chapters: [{ id: chapterId, title: 'Aljabar fixture', order: 1 }] };
     else if (path === `/chapters/${chapterId}`)
@@ -263,7 +279,7 @@ async function fixtures(
     return route.fulfill({ json: data });
   });
 }
-for (const width of [320, 390, 768, 1440])
+for (const width of [320, 360, 390, 768, 1440])
   test(`student routes at ${width}px use real-data boundaries and accessible navigation`, async ({
     page,
   }, testInfo) => {
@@ -294,7 +310,7 @@ for (const width of [320, 390, 768, 1440])
     await page.getByRole('button', { name: 'Kirim Drill' }).click();
     await expect(page.getByText('Tuntas', { exact: true })).toBeVisible();
     for (const [label, text] of [
-      ['Tryout', 'Tryout untuk siswa sekolah'],
+      ['Tryout', 'Paket TryOut belum tersedia'],
       ['Progres', 'Menunggu hasil'],
       ['PvP', 'PvP belum tersedia'],
       ['Peringkat', 'Peringkat belum tersedia'],
@@ -369,6 +385,161 @@ test('signed-out login offers Google authentication without removed demo destina
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
   await expect(page.locator('a[href^="/demo/"]')).toHaveCount(0);
+});
+
+test('Drill result retry uses its server level and navigates to a new server attempt', async ({
+  page,
+}) => {
+  await fixtures(page);
+  const newId = '77777777-7777-4777-8777-777777777777';
+  const attempt = {
+    id: newId,
+    levelId,
+    levelTitle: 'TEST retry',
+    status: 'inProgress',
+    startedAt: new Date().toISOString(),
+    isDemo: true,
+    questions: [
+      {
+        questionInstanceId: questionId,
+        stem: 'TEST retry question',
+        options: [
+          { id: 'A', text: '2' },
+          { id: 'B', text: '3' },
+        ],
+        selectedOptionId: null,
+      },
+    ],
+  };
+  await page.route('http://localhost:3301/api/v1/assessments/drill/attempts', (route) =>
+    route.fulfill({ json: attempt }),
+  );
+  await page.route(`http://localhost:3301/api/v1/assessment-attempts/${newId}`, (route) =>
+    route.fulfill({ json: attempt }),
+  );
+  await page.goto(`/student/drill/${attemptId}/result`);
+  const starting = page.waitForRequest((request) =>
+    request.url().endsWith('/assessments/drill/attempts'),
+  );
+  await page.getByRole('button', { name: 'Ulangi level ini' }).click();
+  expect((await starting).postDataJSON()).toEqual({ levelId });
+  await expect(page).toHaveURL(new RegExp(`/student/drill/${newId}$`));
+  await expect(page.getByText('TEST retry question')).toBeVisible();
+});
+
+test('failed Drill save warns before refresh and can recover without claiming Saved prematurely', async ({
+  page,
+}) => {
+  await fixtures(page);
+  let failed = false;
+  await page.route(
+    `http://localhost:3301/api/v1/assessment-attempts/${attemptId}/answers/${questionId}`,
+    (route) => {
+      if (!failed) {
+        failed = true;
+        return route.abort('internetdisconnected');
+      }
+      return route.fallback();
+    },
+  );
+  await page.goto(`/student/drill/${attemptId}`);
+  await page.getByRole('radio').first().check();
+  await expect(page.getByText('Belum tersimpan', { exact: true })).toBeVisible();
+  const warning = page.waitForEvent('dialog');
+  const reload = page.reload({ timeout: 5000 }).catch(() => null);
+  const dialog = await warning;
+  expect(dialog.type()).toBe('beforeunload');
+  await dialog.dismiss();
+  await reload;
+  await expect(page.getByRole('radio').first()).toBeChecked();
+  await page.getByRole('button', { name: 'Coba simpan lagi' }).click();
+  await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('radio').first()).toBeChecked();
+});
+
+test('TEST ONLY TryOut with 35 PG questions preserves countdown on reload and recovers a lost auto-submit acknowledgement', async ({
+  page,
+}) => {
+  await fixtures(page);
+  const options = [
+    { id: 'A', text: '2' },
+    { id: 'B', text: '3' },
+  ];
+  const ids = Array.from(
+    { length: 35 },
+    (_, index) => `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`,
+  );
+  const answers = new Map<string, string | null>();
+  let deadline = 0;
+  let submitted = false;
+  let submits = 0;
+  let dialogs = 0;
+  page.on('dialog', (dialog) => {
+    dialogs++;
+    void dialog.dismiss();
+  });
+  await page.route(`http://localhost:3301/api/v1/tryout/attempts/${attemptId}`, (route) => {
+    deadline ||= Date.now() + 12_000;
+    return route.fulfill({
+      json: {
+        id: attemptId,
+        packageId: chapterId,
+        packageTitle: 'TEST ONLY countdown',
+        status: submitted ? 'submitted' : 'inProgress',
+        serverTime: new Date().toISOString(),
+        deadlineAt: new Date(deadline).toISOString(),
+        questions: submitted
+          ? []
+          : ids.map((id, index) => ({
+              questionInstanceId: id,
+              stem: `TEST question ${index + 1}`,
+              options,
+              selectedOptionId: answers.get(id) ?? null,
+            })),
+      },
+    });
+  });
+  await page.route(
+    `http://localhost:3301/api/v1/tryout/attempts/${attemptId}/answers/*`,
+    (route) => {
+      const id = new URL(route.request().url()).pathname.split('/').at(-1)!;
+      const { optionId } = route.request().postDataJSON();
+      answers.set(id, optionId);
+      return route.fulfill({ json: { questionInstanceId: id, selectedOptionId: optionId } });
+    },
+  );
+  await page.route(`http://localhost:3301/api/v1/tryout/attempts/${attemptId}/submit`, (route) => {
+    submits++;
+    submitted = true;
+    return route.abort('connectionreset');
+  });
+  await page.route(`http://localhost:3301/api/v1/tryout/attempts/${attemptId}/result`, (route) =>
+    route.fulfill({
+      status: 409,
+      json: { code: 'TRYOUT_RESULT_PENDING', detail: 'TEST result not released' },
+    }),
+  );
+  await page.goto(`/student/tryout/${attemptId}`);
+  await expect(
+    page.getByRole('navigation', { name: 'Navigasi soal' }).getByRole('button'),
+  ).toHaveCount(35);
+  await page.getByRole('radio').first().check();
+  await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+  const before = (await page.getByRole('timer').innerText()).split(':').map(Number);
+  const beforeSeconds = before[0]! * 60 + before[1]!;
+  await page.reload();
+  await expect(page.getByRole('radio').first()).toBeChecked();
+  const after = (await page.getByRole('timer').innerText()).split(':').map(Number);
+  expect(after[0]! * 60 + after[1]!).toBeLessThanOrEqual(beforeSeconds);
+  await expect(page.getByRole('heading', { name: 'Jawaban sudah dikirim' })).toBeVisible({
+    timeout: 20_000,
+  });
+  expect(submits).toBe(1);
+  expect(dialogs).toBe(0);
+  await page.goto(`/student/tryout/${attemptId}/result`);
+  await expect(page.getByRole('heading', { name: 'Menunggu hasil IRT' })).toBeVisible();
+  await expect(page.getByText('80', { exact: true })).toHaveCount(0);
 });
 
 for (const verificationToken of ['QAAB2345', 'Ab_cd-'.repeat(6)]) {

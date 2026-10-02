@@ -29,6 +29,13 @@ function usePvpSocket(enabled: boolean, matchId?: string) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [connected, setConnected] = useState(false);
+  const sending = useRef(false);
+  const pending = useRef<{
+    event: Command;
+    payload: Record<string, unknown>;
+    requestId: string;
+  } | null>(null);
+  const [uncertain, setUncertain] = useState(false);
   useEffect(() => {
     if (!enabled) return;
     const url = new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1');
@@ -79,38 +86,69 @@ function usePvpSocket(enabled: boolean, matchId?: string) {
     };
   }, [enabled, matchId, token, client]);
   async function command(event: Command, payload: Record<string, unknown>) {
+    if (sending.current) return;
     if (!socket.current?.connected) {
       setError('Koneksi PvP belum siap.');
       return;
     }
+    if (
+      pending.current &&
+      (pending.current.event !== event ||
+        JSON.stringify(pending.current.payload) !== JSON.stringify(payload))
+    ) {
+      setError('Periksa permintaan sebelumnya sebelum mengirim tindakan lain.');
+      return;
+    }
+    pending.current ??= { event, payload, requestId: crypto.randomUUID() };
+    sending.current = true;
     setBusy(true);
     setError('');
     try {
-      const ack = (await socket.current
-        .timeout(7000)
-        .emitWithAck(event, {
-          event,
-          eventVersion: '1',
-          requestId: crypto.randomUUID(),
-          sentAt: new Date().toISOString(),
-          payload,
-        })) as Ack;
+      const ack = (await socket.current.timeout(7000).emitWithAck(event, {
+        event,
+        eventVersion: '1',
+        requestId: pending.current.requestId,
+        sentAt: new Date().toISOString(),
+        payload,
+      })) as Ack;
       if (!ack.payload.ok) {
+        pending.current = null;
+        setUncertain(false);
         setError(ack.payload.error?.detail ?? 'Permintaan belum berhasil.');
         return;
       }
+      pending.current = null;
+      setUncertain(false);
       if (ack.payload.state) {
         setState(ack.payload.state);
         if (!matchId) router.push(`/student/pvp/${ack.payload.state.matchId}`);
       }
       await client.invalidateQueries({ queryKey: ['pvp-invitations'] });
     } catch {
+      setUncertain(true);
       setError('Jawaban server belum diterima. Sambungkan lagi untuk memeriksa state tersimpan.');
     } finally {
+      sending.current = false;
       setBusy(false);
     }
   }
-  return { state, error, busy, connected, command, reconnect: () => socket.current?.connect() };
+  return {
+    state,
+    error,
+    busy,
+    connected,
+    uncertain,
+    command,
+    retry: () => {
+      if (pending.current) void command(pending.current.event, pending.current.payload);
+    },
+    reconnect: () => {
+      if (socket.current?.connected) {
+        setState(null);
+        void client.invalidateQueries({ queryKey: ['pvp-match', matchId] });
+      } else socket.current?.connect();
+    },
+  };
 }
 
 function PvpHeading() {
@@ -193,7 +231,7 @@ export function PvpScreen() {
                       onClick={() => setDifficulty(d)}
                     >
                       <strong>{['Mudah', 'Sedang', 'Sulit'][i]}</strong>
-                      <span>{[30, 45, 60][i]} detik / soal</span>
+                      <span>Waktu mengikuti paket server</span>
                     </button>
                   ))}
                 </div>
@@ -284,6 +322,15 @@ export function PvpScreen() {
           {socket.error}
         </p>
       )}
+      {socket.uncertain && (
+        <button
+          className="student-button student-button-outline"
+          disabled={socket.busy || !socket.connected}
+          onClick={socket.retry}
+        >
+          Periksa permintaan sebelumnya
+        </button>
+      )}
     </div>
   );
 }
@@ -312,6 +359,32 @@ export function PvpMatchScreen() {
   const [link, setLink] = useState('');
   const [notice, setNotice] = useState('');
   const [remaining, setRemaining] = useState(0);
+  const [reconnectRemaining, setReconnectRemaining] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!snapshot) return;
+    const server = Date.parse(snapshot.serverTime);
+    const received = performance.now();
+    const tick = () =>
+      setReconnectRemaining(
+        Object.fromEntries(
+          snapshot.players
+            .filter((p) => p.connectionStatus === 'DISCONNECTED' && p.reconnectDeadlineAt)
+            .map((p) => [
+              p.studentId,
+              Math.max(
+                0,
+                Math.ceil(
+                  (Date.parse(p.reconnectDeadlineAt!) - server - (performance.now() - received)) /
+                    1000,
+                ),
+              ),
+            ]),
+        ),
+      );
+    tick();
+    const interval = window.setInterval(tick, 250);
+    return () => window.clearInterval(interval);
+  }, [snapshot]);
   useEffect(() => {
     setSelected(snapshot?.question?.selectedOptionId ?? null);
   }, [snapshot?.question?.id, snapshot?.question?.selectedOptionId]);
@@ -398,6 +471,12 @@ export function PvpMatchScreen() {
                       ? 'Siap bermain'
                       : 'Belum siap')}
               </p>
+              {p.connectionStatus === 'DISCONNECTED' && p.reconnectDeadlineAt && !closed && (
+                <p role="timer" aria-label={`Waktu reconnect ${p.displayName}`}>
+                  {reconnectRemaining[p.studentId] ?? 'â€”'} detik untuk tersambung kembali.
+                  Keputusan akhir mengikuti server.
+                </p>
+              )}
             </article>
           ))}
         </div>
@@ -442,6 +521,7 @@ export function PvpMatchScreen() {
               disabled={
                 !active ||
                 socket.busy ||
+                socket.uncertain ||
                 snapshot.question.answered ||
                 !socket.connected ||
                 remaining === 0
@@ -584,6 +664,15 @@ export function PvpMatchScreen() {
           <p role="alert" className="text-red-700">
             {socket.error}
           </p>
+        )}
+        {socket.uncertain && (
+          <button
+            className="student-button student-button-outline"
+            disabled={socket.busy || !socket.connected}
+            onClick={socket.retry}
+          >
+            Periksa permintaan sebelumnya
+          </button>
         )}
         {notice && <p role="status">{notice}</p>}
       </div>

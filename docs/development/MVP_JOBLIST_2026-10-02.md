@@ -1,6 +1,6 @@
 # Joblist MVP — rekonsiliasi pekerjaan lama dan urutan pelaksanaan
 
-**Tanggal:** 2 Oktober 2026, WIB. **Status:** PROPOSED rincian backlog engineering berdasarkan pembagian yang sudah digunakan. Keputusan produk/akademik yang OPEN tetap memerlukan owner terkait.
+**Tanggal:** 2 Oktober 2026, WIB. **Status:** PROPOSED rincian backlog engineering; **ENGINEERING DECISION:** klarifikasi pengguna pada tanggal ini menetapkan sembilan pekerjaan dalam gambar sebagai pekerjaan aktif Farel. Penugasan sembilan pekerjaan itu berlaku menggantikan pembagian yang bertumpang tindih pada versi sebelumnya. Keputusan produk/akademik yang OPEN tetap memerlukan owner terkait.
 
 ## 1. Acuan dan cara menggunakan daftar
 
@@ -11,6 +11,8 @@ Baseline kode diperiksa pada `origin/main` commit `3199eebba87f003f80bfc92984716
 **SELESAI TEKNIS** menutup implementasi lama yang sudah ada, bukan otomatis sign-off produksi. **PARSIAL** menyisakan integrasi/acceptance. **BELUM SELESAI** membutuhkan implementasi. **BERUBAH** berarti requirement lama diganti PRD terbaru. Tidak ada area fitur dari daftar lama yang dibuang diam-diam.
 
 Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; dependency wajib didahulukan. QA ikut sejak awal. Pemilik frontend dan backend tetap menulis tes modulnya; Salim memimpin acceptance lintas peran. Satu pekerjaan backend besar aktif per owner, agar Aini tidak mengerjakan TryOut, IRT, XP, Pretest dan PvP bersamaan.
+
+**Batas pengerjaan aktif:** Farel menjadi DRI tunggal untuk profil Teacher, login/logout/session, proteksi role/route frontend, pemeriksaan akses Mandiri/Sekolah, regression join kelas/monitoring, verifikasi visibility PvP/leaderboard existing, diagnosis awal Level 2 dan regression main sebelum/sesudah fixing. Anggota lain menggunakan hasil Farel dan mengerjakan bagian yang diserahkan secara eksplisit. Domain backend serta fitur lanjutan tetap mengikuti owner JOB terkait. Salim melakukan acceptance independen setelah handoff; ia tidak membuka implementasi/fixing paralel atas sembilan task Farel. Rincian handoff dan area file ada pada bagian 7; [OWNERSHIP](OWNERSHIP.md) mencatat klarifikasi yang sama.
 
 ## 2. Rekonsiliasi lengkap 16 pekerjaan lama
 
@@ -136,12 +138,12 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-02 — Siapkan environment trial, profil Teacher dan session tiga peran
 
-- **Owner:** Farel koordinasi/integrasi; aliwafa frontend auth dan profil Teacher; Aini identity/API support dan backend regression; Avicenna Admin UI; Salim acceptance; operator Database/DevOps untuk provisioning. **Asal:** LAMA-01,05; Teacher Profile & Account dan Login/Logout & Session dari daftar gambar.
+- **Owner:** Farel DRI frontend auth, profil Teacher, session dan koordinasi environment; Aini identity/API support hanya melalui handoff defect/field kontrak; Avicenna operasi Admin/content yang terpisah; Salim acceptance independen setelah handoff; operator Database/DevOps untuk provisioning. **Asal:** LAMA-01,05; Teacher Profile & Account dan Login/Logout & Session milik Farel dari daftar gambar.
 - **Kerjakan:** pastikan staging pengguna nyata terpisah dari Development; host/domain, Google provider/callback/CORS/API URL, Redis prefix, server secrets dan schema target sesuai. Verifikasi Admin, Guru A/B, Student Sekolah dan Mandiri pada environment uji; provision hanya yang diperlukan melalui prosedur operator. Siapkan health dan backup/restore minimum serta sekolah/izin trial dengan Product/Design.
 - **Output:** environment/commit/owner/akun uji siap, tanpa mencatat kredensial dalam repo/chat. UI session expiry/logout/account switch dan error429/503 jelas.
 - **Bukti selesai:** Google login/callback berhasil, internal role benar, Admin dapat mengakses operasi sekolah/token, teacher verification dan class join dapat diuji. Health saja atau email QA tidak menutup gate Google.
-- **Profil Teacher:** aliwafa membuat halaman akun berisi identitas, status verifikasi, informasi sekolah, akses menuju kelas dan logout. Data menggunakan profil/kontrak API yang tersedia; Aini memperluas kontrak hanya jika field yang diperlukan belum tersedia. Sertakan loading/error/empty dan status belum terverifikasi; akses kelas tetap mengikuti otorisasi server. Ini deliverable engineering yang diminta pengguna, bukan penetapan aturan profil/edit akun baru dari PRD.
-- **Regresi session:** samakan perilaku login/logout Student dan Teacher; uji pergantian Student A → Teacher → Student B, session expiry, callback, refresh, dan tombol Back setelah logout. Cache/query/provider dan request tertunda tidak boleh menampilkan identitas, kelas atau progres akun sebelumnya. Salim mencatat bukti; frontend ditangani aliwafa/Farel dan defect backend identity oleh Aini.
+- **Profil Teacher:** Farel membuat halaman akun berisi identitas, status verifikasi, informasi sekolah, akses menuju kelas dan logout. Data menggunakan profil/kontrak API yang tersedia; kebutuhan field/API diserahkan ke Aini melalui task terpisah bila diperlukan. Sertakan loading/error/empty dan status belum terverifikasi; akses kelas tetap mengikuti otorisasi server. aliwafa tidak membuat halaman profil Teacher kedua. Ini deliverable engineering yang diminta pengguna, bukan penetapan aturan profil/edit akun baru dari PRD.
+- **Regresi session:** Farel menyamakan perilaku login/logout Student dan Teacher; menguji pergantian Student A → Teacher → Student B, session expiry, callback, refresh, dan tombol Back setelah logout. Cache/query/provider dan request tertunda tidak boleh menampilkan identitas, kelas atau progres akun sebelumnya. Farel mencatat bukti dan memperbaiki frontend dalam task yang sama; defect backend identity diserahkan ke Aini bila terbukti. Salim memakai hasil tersebut untuk acceptance akhir setelah handoff.
 - **Bukti selesai tambahan:** profil Teacher menampilkan data akun aktif dan status verifikasi yang benar, tautan kelas mengikuti aksesnya, logout berfungsi, dan seluruh pergantian akun bebas data pengguna sebelumnya.
 
 ### JOB-03 — Siapkan konten reviewed dan paket Level 2 yang playable
@@ -150,8 +152,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** review 10 soal Level 1 yang akan digunakan; siapkan 10 soal Level 2 dan varian setara sesuai ketersediaan yang disepakati. Periksa kompetensi, difficulty, stem, A–D/LaTeX untuk prototype, kunci/pembahasan, variasi posisi jawaban benar dan label demo. Jangan menyimpulkan fixture semua B sebagai konten TKA yang tervalidasi.
 - **Output:** konten/version/reviewer yang tercatat; paket terbit terikat level dan policy, variant pool/fallback jelas. Perubahan konten tidak menimpa versi yang sudah dipakai attempt.
 - **Bukti selesai:** paket Level 2 benar-benar dapat dimulai setelah ≥80 pada Level 1; pertahankan histories dan uji retry varian. Publish memakai workflow konten/operator yang sesuai, bukan edit ad hoc database atau menonaktifkan readiness check.
-- **Diagnosis error Level 2:** Salim/aliwafa mereproduksi temuan QA pada SHA/environment tercatat dengan akun berhak; simpan langkah, expected/actual, respons/status API dan log relevan yang telah disanitasi. Periksa unlock persisted, readiness paket/versi soal, otorisasi, kontrak dan rendering sebelum menetapkan root cause; jangan menganggap semua error disebabkan paket kosong.
-- **Handoff dan verifikasi:** defect Core Learning frontend ke Ferdi; assessment/unlock/eligibility ke Aini; pipeline/content ke Ferdi dengan Avicenna untuk UI Admin. Owner memperbaiki penyebab yang terbukti, lalu Salim menguji ulang start/save/submit Level 2 serta penolakan pada akun yang masih locked.
+- **Diagnosis error Level 2:** Farel menjadi DRI reproduksi dan diagnosis awal temuan QA pada SHA/environment tercatat dengan akun berhak; simpan langkah, expected/actual, respons/status API dan log relevan yang telah disanitasi. Periksa unlock persisted, readiness paket/versi soal, otorisasi, kontrak dan rendering sebelum menetapkan root cause; jangan menganggap semua error disebabkan paket kosong. Ferdi/Aini tidak membuka diagnosis kedua untuk temuan yang sama.
+- **Handoff dan verifikasi:** setelah Farel mencatat root cause/indikasi dan menyerahkan task, defect Core Learning frontend ke Ferdi; assessment/unlock/eligibility ke Aini; pipeline/content ke Ferdi dengan Avicenna untuk UI Admin. Farel menguji ulang temuan setelah owner memperbaiki penyebab; Salim melakukan acceptance independen start/save/submit Level 2 dan locked-level denial setelah handoff. Penyediaan konten reviewed tetap dapat berjalan paralel karena berbeda dari diagnosis/fixing temuan Farel.
 
 ### JOB-04 — Sambungkan UI Admin ke publisher Drill yang sudah tersedia
 
@@ -166,18 +168,19 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** Retry langsung dari hasil gagal/completed, detail/history level, warning refresh/exit saat risiko data hilang, failed-save/retry/session lost, count-up tanpa pause/deadline. Representasikan XP/star/retensi pending sesuai keputusan; jangan menjanjikan 90 hari/rentang bintang sebagai rule terbaru. Durasi reward dari server, bukan jam UI.
 - **Output:** UI/result contract jujur tentang policy dan state yang tersedia, retry memakai attempt baru, history terpisah, best score monotonic dan unlock permanen.
 - **Bukti selesai:** 7/10 vs 8/10, retry score lebih rendah tidak relock, submit ganda, save failure tidak Saved, unsaved refresh/exit warning. Score/policy yang sudah historis tidak dihitung ulang setelah approval policy baru.
+- **Batas scope:** session pada JOB ini adalah jawaban/timer/result Drill. Login/logout, cache lintas akun dan role/route frontend tetap task aktif Farel; perubahan shared auth hanya melalui handoff bagian 7.
 
 ### JOB-06 — Buktikan trial chain nyata dan otorisasi lintas peran
 
-- **Owner:** Salim acceptance; Farel integrasi; aliwafa onboarding/monitoring; Avicenna Admin; Ferdi Drill; Aini backend. **Asal:** LAMA-01,02,05.
+- **Owner:** Farel DRI integrasi browser, regression dan fixing frontend dalam sembilan task aktifnya; Salim acceptance akhir setelah handoff; Avicenna Admin/content, Ferdi Drill/content, Aini domain backend hanya untuk bagian fitur/defect yang diserahkan. **Asal:** LAMA-01,02,05 dan pekerjaan aktif Farel pada gambar.
 - **Kerjakan:** pada satu release SHA, Admin sekolah/token → Guru Google login/verifikasi/create class → Student Google login/join/save/resume/submit Drill → Guru latest/best/progres siswa sendiri. Uji token 72 jam/single-use/revoke/reissue/race, satu kelas, foreign Teacher/Student denial, refresh/re-auth/double-submit; sertakan Level 2 continuation sebagai gate kelanjutan belajar.
 - **Output:** testcase/evidence per environment/role/commit, daftar defect, konten reviewed dan scope trial yang disetujui. Reuse Playwright; fixture CI bukan bukti seluruh rantai ini.
 - **Bukti selesai:** login/authorization/persistence/scoring ≥80/progres tidak memiliki critical failure. Level 2 playable adalah tambahan kelanjutan belajar di atas minimum Sprint 2 unlock, bukan perubahan diam-diam atas scope trial minimum. Salim menilai gate trial dan gate MVP penuh secara terpisah.
-- **Role & Route Protection:** aliwafa/Farel memeriksa redirect/access-denied pada URL langsung dan refresh halaman Student, Teacher dan Admin untuk setiap role, pengguna belum login, session expired dan Teacher belum terverifikasi. Aini/owner backend memeriksa API terkait dengan role/ownership salah; menyembunyikan menu saja tidak menutup acceptance. Avicenna memverifikasi jalur Admin; Salim mencatat hasil tiap kombinasi.
-- **Student Mandiri vs Sekolah:** uji matriks UI dan API yang sama: Drill serta create/share PvP tersedia untuk keduanya; leaderboard kelas memerlukan keanggotaan kelas, sedangkan leaderboard PvP mengikuti akses global yang disepakati. Mandiri dapat join kelas dan berubah menjadi Sekolah; Student yang sudah berkelas tetap dibatasi satu kelas. TryOut gratis untuk keduanya menurut PRD terbaru. Eligibility Pretest tetap mengikuti keputusan yang belum final, tidak disimpulkan dari akses TryOut.
-- **Join Class Regression:** aliwafa dan Aini menguji kode valid/tidak valid, repeated/concurrent join, satu kelas, serta perubahan affiliation/class/school dari API sesudah join. Salim membuktikan membership bertahan setelah refresh/logout/login ulang dan data kelas akun berbeda tidak tercampur. JOB-19 menambahkan link/QR pada alur yang sama.
-- **Teacher Monitoring Regression:** aliwafa dan Salim menguji Class → Student → Progress → latest/best score pada kelas sendiri. Sertakan score 0, best tidak turun saat retry lebih rendah, data kosong/error, refresh setelah submission, dan denial siswa kelas lain. Defect UI ke aliwafa/Farel; query/authorization ke Aini; JOB-15 tetap menangani fitur feedback/history tambahan.
-- **Verifikasi awal PvP/leaderboard:** Ferdi dan Salim mereproduksi temuan visibility/access QA pada fitur existing sekarang, termasuk menu, URL langsung dan status available/policy-pending untuk Mandiri/Sekolah. Catat ID temuan, role, expected/actual dan owner; denial role yang salah harus konsisten antara UI/API. Pengujian availability tidak menunggu aktivasi match/ranking final JOB-16/17 dan tidak dianggap bukti fitur final telah aktif.
+- **Role & Route Protection:** Farel memeriksa dan memperbaiki redirect/access-denied frontend pada URL langsung dan refresh halaman Student, Teacher dan Admin untuk setiap role, pengguna belum login, session expired dan Teacher belum terverifikasi. Farel mencatat bukti API dengan role/ownership salah; defect backend diserahkan ke Aini/owner API melalui task terpisah. Acceptance tetap memerlukan otorisasi API. Avicenna tidak membuka perbaikan route Admin yang sama secara paralel.
+- **Student Mandiri vs Sekolah:** Farel menguji matriks UI/API dan memperbaiki tampilan akses frontend: Drill serta create/share PvP tersedia untuk keduanya; leaderboard kelas memerlukan keanggotaan kelas, sedangkan leaderboard PvP mengikuti akses global yang disepakati. Mandiri dapat join kelas dan berubah menjadi Sekolah; Student yang sudah berkelas tetap dibatasi satu kelas. TryOut gratis untuk keduanya menurut PRD terbaru; implementasi gap TryOut tetap JOB-07/08. Eligibility Pretest tetap OPEN. Perubahan domain backend harus diserahkan ke owner API, bukan duplikasi task pemeriksaan Farel.
+- **Join Class Regression:** Farel menguji kode valid/tidak valid, repeated/concurrent join, satu kelas, perubahan affiliation/class/school, persistence sesudah refresh/logout/login ulang dan pembersihan cache akun berbeda. Farel memperbaiki frontend existing, lalu menyerahkan defect backend yang terbukti ke Aini. aliwafa tidak mengulang regression/fixing join existing; JOB-19 menambahkan link/QR setelah baseline Farel siap dan area file diserahkan.
+- **Teacher Monitoring Regression:** Farel menguji dan memperbaiki flow existing Class → Student → Progress → latest/best pada kelas sendiri, termasuk score 0, retry lebih rendah, empty/error, refresh setelah submission dan denial kelas lain. Query/authorization defect diserahkan ke Aini. aliwafa menunggu handoff untuk mengintegrasikan fitur feedback baru JOB-15; Salim melakukan acceptance independen setelah hasil Farel siap.
+- **Verifikasi awal PvP/leaderboard:** Farel menjadi DRI temuan QA visibility/access existing: menu, URL langsung, available/policy-pending dan akses Mandiri/Sekolah. Catat ID temuan, expected/actual, SHA dan area perubahan. Farel menangani route/visibility frontend dalam scope ini; defect domain diserahkan ke Ferdi/Aini. JOB-16/17 tetap aktivasi fitur final, bukan verifikasi awal kedua; Salim memakai evidence Farel untuk acceptance setelah handoff.
 
 ### JOB-07 — Perbaiki TryOut backend: free access, 35 item dan kontrak tiga format
 
@@ -237,11 +240,11 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-15 — Feedback satu arah dan monitoring Guru lengkap
 
-- **Owner:** Ferdi backend **sementara, PROPOSED pengganti kapasitas Andi**; aliwafa Guru/inbox UI bersama Ferdi; Farel integrasi; Salim QA; Aini backend reviewer. **Asal:** LAMA-10.
+- **Owner:** Ferdi backend **sementara, ENGINEERING DECISION disetujui pengguna pada 2 Oktober**; aliwafa frontend feedback/inbox baru; Ferdi ringkasan dashboard; Farel handoff baseline monitoring existing dan reviewer integrasi; Salim acceptance independen; Aini backend reviewer. **Asal:** LAMA-10.
 - **Kerjakan:** owned-class feedback create/list/read,1–1.000 karakter, Student inbox/readAt idempotent dan akses history asesmen Guru untuk siswa kelas miliknya. Complete loading/empty/error dan latest/best 0 states. Tidak membangun chat dua arah.
 - **Output:** module/service/DTO/OpenAPI, ownership tests, Teacher send dan Student read UI. Scope backend tambahan ini antre setelah core-critical tasks Ferdi, bukan otomatis dibebankan ke frontend aliwafa.
 - **Bukti selesai:** Guru tidak mengirim/membaca siswa kelas lain; Student tidak membaca feedback Student lain; mark-read tidak menggandakan state; batas karakter server-side. Tidak menyimpulkan Andi hadir dari tabel ownership historis.
-- **Regresi existing:** pertahankan Class → Student → Progress → latest/best yang diuji JOB-06 setelah perubahan feedback/history. aliwafa menangani UI dan Salim menguji ulang score 0, retry lebih rendah, refresh serta foreign-class denial; Aini mereview defect query/authorization. Tugas regresi ini dapat berjalan sebelum API feedback tersedia.
+- **Batas terhadap task Farel:** regression/fixing Class → Student → Progress → latest/best existing tetap Farel pada JOB-06. aliwafa dapat merancang komponen feedback/inbox secara terpisah; integrasi pada layar monitoring menunggu branch Farel di-merge dan handoff file. Ferdi membangun API feedback baru, Aini menangani defect query/authorization hanya bila diserahkan. Salim menguji dampak fitur baru dan acceptance akhir dengan memakai baseline/evidence Farel.
 
 ### JOB-16 — Aktifkan PvP policy final dan pertandingan nyata
 
@@ -249,7 +252,7 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** reuse existing engine, pin production policy approved, menyediakan 10 soal urutan sama, authoritative waktu/skor serta batas waktu 30/45/60 detik dan reconnect 20 detik, room/share/classmate invite access, disconnect/readiness/expiry/cancellation sesuai keputusan. Aktivasi tidak memakai fixture policy produksi.
 - **Output:** availability yang benar, durable match/result/outbox dan frontend recovery states. Mandiri dan Sekolah boleh match; invite teman kelas tetap memerlukan kelas.
 - **Bukti selesai:** dua browser nyata tersinkron, client fake-score/time ditolak, answer lock dan transition benar, reconnect≤20detik kembali, forfeit tidak masuk best record, dua disconnect/restart sesuai policy. Tidak membangun ulang simulator lama.
-- **Visibility/access QA:** tutup temuan awal JOB-06 dengan evidence Mandiri/Sekolah, menu/URL langsung, create/share room dan recovery. Saat policy belum approved, tampilkan pending/unavailable sesuai API tanpa membuka match lewat bypass; setelah aktivasi, Salim mengulang testcase yang sama pada release SHA baru.
+- **Batas terhadap task Farel:** visibility/access existing dan perbaikan route frontend pada JOB-06 dikerjakan Farel. Ferdi/Aini mengerjakan aktivasi engine/match dan fitur PvP baru; defect existing hanya dikerjakan setelah handoff Farel. Integrasi yang mengubah file route/navigation milik task aktif Farel menunggu merge/handoff. Saat policy belum approved, pertahankan pending/unavailable sesuai API; Salim melakukan acceptance fitur baru setelah integrasi dengan baseline Farel.
 
 ### JOB-17 — Sajikan leaderboard kelas/PvP dari sumber valid
 
@@ -257,7 +260,7 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** reuse projection/archive; class endpoint menyajikan ranks ketika XP policy siap, PvP best per difficulty valid, top 20/self dan privacy minimum. Hourly update dan period Rabu 23:59 WIB archive sesuai semantics yang tercatat.
 - **Output:** availability/stale/update timestamp, ranks/current/archive contract dan UI non-fixture. Data XP JOB-11 dan PvP JOB-16 menjadi dependency masing-masing papan.
 - **Bukti selesai:** class hanya anggotanya, Drill+TryOut saja; PvP/Pretest/forfeit excluded dari kelas/best sesuai rule; reproject tidak menggandakan, ties sesuai policy approved, batas minggu Asia/Jakarta benar. Redis restart tidak menghapus truth.
-- **Visibility/access QA:** Ferdi dan Salim menutup temuan awal JOB-06 untuk leaderboard kelas dan global PvP secara terpisah, termasuk empty/policy-pending states, URL langsung, serta pergantian akun/afiliasi. Tidak memakai visibility menu sebagai pengganti otorisasi API; ulangi testcase setelah ledger/projection/policy terkait aktif.
+- **Batas terhadap task Farel:** Farel menangani verifikasi visibility/access existing, account switch dan afiliasi pada JOB-06. Ferdi/Aini mengerjakan ranks/projection/UI data final pada JOB ini, memakai findings Farel. Perubahan route/navigation existing menunggu handoff; Salim menguji sumber data/policy baru dan acceptance akhir setelah merge, dengan otorisasi API tetap wajib.
 
 ### JOB-18 — Admin pengguna/kelas dan correction policy
 
@@ -268,27 +271,28 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-19 — Kelas link/QR dan kelengkapan dashboard persisted
 
-- **Owner:** aliwafa share/join UI; Ferdi dashboard; Farel browser integration; Aini backend support; Avicenna history partner; Salim QA. **Asal:** LAMA-15.
+- **Owner:** aliwafa fitur share link/QR baru sesudah handoff join existing; Ferdi reward/feedback dashboard; Farel DRI join/auth existing dan handoff integrasi; Aini backend support bila kontrak/defect diserahkan; Avicenna history partner; Salim acceptance akhir fitur baru. **Asal:** LAMA-15.
 - **Kerjakan:** teacher share class code/link/QR, preserve destination sesudah Google login/registration, confirm class join, invalid/expired/one-class errors. Tambahkan reward/feedback dashboard ketika kontrak tersedia; reuse class/school/affiliation/latest/best/activity/active Drill API yang sudah ada.
 - **Output:** kelas memakai link/QR yang hanya membawa join reference, bukan token Guru/PII; dashboard real persisted data dan pending-state jujur.
 - **Bukti selesai:** pengguna yang belum login join lewat link/QR sesudah login tanpa bypass satu kelas; code reusable beberapa Student; logout/account switch membuang cache identitas; update kelas/feedback/reward dari API, bukan angka frontend buatan.
-- **Regresi keanggotaan:** ulangi checklist kode dari JOB-06 melalui link dan QR. Perubahan Mandiri → Sekolah, class/school dan eligibility ditampilkan dari response server; membership tetap sama sesudah refresh/login ulang, join kelas kedua ditolak, dan callback tidak memakai tujuan/cache akun sebelumnya. aliwafa/Farel menangani frontend, Aini backend dan Salim evidence.
+- **Batas dan handoff:** validasi kode, perubahan Mandiri → Sekolah, persistence membership, session/cache dan callback existing tetap Farel di JOB-02/06. aliwafa mengembangkan komponen share link/QR terpisah; integrasi join/auth dilakukan sesudah hasil Farel merged dan file diserahkan. Kebutuhan perubahan callback/auth tetap satu task Farel atau diserahkan ke aliwafa secara eksplisit, bukan dua implementasi. Salim menguji skenario link/QR baru memakai baseline join Farel; Aini menangani kebutuhan backend yang ditugaskan.
 
 ### JOB-20 — Lengkapi producer analytics dan operasi outbox
 
-- **Owner:** Ferdi support/view-click producers; Aini domain/worker; Data schema; aliwafa onboarding/monitoring producer UI; Salim delivery QA; Farel coordination. **Asal:** LAMA-06,11,16.
+- **Owner:** Ferdi support/view-click producers; Aini domain/worker; Data schema; aliwafa producers pada feedback/link/QR baru; Farel owner integrasi producers yang menyentuh auth/onboarding/monitoring existing; Salim delivery QA. **Asal:** LAMA-06,11,16.
 - **Kerjakan:** gap inventory registered/join/affiliation, drill_started/question_answered/submitted/completed/unlocked/retry/explanation/view-video/report, Pretest dan TryOut events terhadap latest approved schema. Reuse durable outbox/dedup consumer; define trigger dan retry semantics, correlation dan PII-minimum.
 - **Output:** contracts/producers/worker metrics dan event tests. Star/reward events baru valid sesudah policy/output ada; business mutation/outbox dalam transaksi yang sama.
 - **Bukti selesai:** refresh/repeated request/job retry tidak menggandakan final contribution; event context versi/attempt/time benar; consumer replay aman; queue failures/backlog dapat diketahui. Tidak menghitung consumer existing sebagai belum dibuat.
+- **Batas file:** aliwafa tidak mengubah auth/callback/monitoring existing untuk analytics selama task Farel aktif. Payload/trigger disepakati dengan Data, lalu integrasi di file tersebut dilakukan Farel atau diteruskan melalui handoff setelah merge.
 
 ### JOB-21 — Acceptance dan operasi release untuk scope yang akan diaktifkan
 
-- **Owner:** Salim gate/evidence; Farel koordinasi; seluruh feature owner fixes; operator Database/DevOps release. **Asal:** LAMA-05,16 dan seluruh fitur.
+- **Owner:** Farel DRI regression awal sebelum/sesudah fixing sesuai sembilan task aktif; Salim gate/evidence dan acceptance independen setelah handoff; seluruh feature owner fixes hanya pada task/area yang diserahkan; operator Database/DevOps release. **Asal:** LAMA-05,16 dan seluruh fitur.
 - **Kerjakan:** matriks 49 AC Core Learning dan baseline lintas fitur, negative authorization, mobile target/browser nyata/accessibility, expired session/network/retry, PostgreSQL/Redis integration, backup/restore/upgrade/recovery/health/alert dan beban sesuai target yang disepakati. IRT low-response/SLA dan finalizer backlog khusus ketika TryOut dirilis.
 - **Output:** release candidate SHA/environment, CI results, testcase IDs/evidence, migration/restore runbook, accepted residual defects dan sign-off scoped. Planning targets 100/500/1.000 concurrent serta RPO/RTO tetap PROPOSED sampai owner mengunci; tidak disebut PRD final.
 - **Bukti selesai:** critical failure nol untuk scope aktif, Curriculum/Product/Software/QA/operator sign-off relevan; fitur yang belum compliant tidak diklaim MVP penuh. JOB-06 menangani trial awal; JOB-21 tidak menunda QA sampai semua kode selesai.
-- **Baseline main sebelum fixing:** Farel mencatat SHA `origin/main` terbaru saat sesi regression dimulai; Salim menjalankan flow Student, Teacher dan Admin pada baseline tersebut. Setiap temuan memiliki ID, langkah reproduksi, expected/actual, role/afiliasi, environment, SHA dan severity. Keadaan runtime yang tidak tersedia dicatat blocked, tidak dilaporkan pass.
-- **Sesudah fixing:** catat SHA branch/PR fix, uji ulang temuan beserta flow terkait, lalu ulangi regression pada SHA `main` sesudah fix di-merge sebelum sign-off release. Bukti baseline, fix dan main hasil merge dipisahkan; pengujian branch tidak dilaporkan sebagai pengujian main. Sertakan profil Teacher, session/account switch, role/route, afiliasi/join, monitoring, visibility PvP/leaderboard dan Level 2 dari checklist gambar.
+- **Baseline main sebelum fixing:** Farel mencatat SHA `origin/main` terbaru dan menjalankan flow Student, Teacher dan Admin. Setiap temuan memiliki ID, langkah reproduksi, expected/actual, role/afiliasi, environment, SHA, severity, owner pelaksana dan status handoff. Keadaan runtime yang tidak tersedia dicatat blocked. Salim menyiapkan acceptance matrix/review testability tanpa membuka regression/fixing baseline yang sama sebagai proyek paralel.
+- **Sesudah fixing:** Farel mencatat SHA branch/PR fix, menguji ulang temuan dan flow terkait, lalu mencatat regression pada SHA `main` sesudah merge. Farel menyerahkan evidence baseline/fix/main dan residual defects kepada Salim. Salim menjalankan acceptance independen scoped release, menilai tes kontrak/race/operasi/fitur baru dan sign-off QA. Pengujian independen ini adalah verifikasi akhir atas hasil handoff, bukan implementasi/fixing kedua. Bukti branch dan main tetap dibedakan.
 
 ### JOB-22 — Status docs dan handoff visual yang disetujui
 
@@ -301,70 +305,88 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 **ENGINEERING DECISION yang sudah tercatat:** Ferdi Student Core Learning/PvP/leaderboard frontend + content/report/video/IRT backend; Aini engine/worker/XP/PvP/leaderboard backend; Avicenna Admin/content/History/Pretest frontend; Salim acceptance/E2E/release.
 
-**PROPOSED pelaksanaan untuk enam anggota yang tersedia:** aliwafa kembali menangani onboarding/monitoring frontend; Farel PM/integrasi dan backup implementasi frontend. Ferdi mengambil backend feedback/operasional yang belum memiliki kapasitas Andi secara sementara; Aini menjadi reviewer/fixer identity/class bila ada defect. Andi/Tangguh/Nafi tidak diberi tugas seolah tersedia. Model/Data/Curriculum/DevOps tetap dependency eksternal, bukan engineer tambahan yang diasumsikan hadir.
+**ENGINEERING DECISION — klarifikasi pengguna 2 Oktober:** sembilan pekerjaan dalam gambar sedang dikerjakan Farel. Farel menjadi DRI tunggal task aktif tersebut, termasuk frontend profil/auth/route/join/monitoring existing dan regression awal. Pembagian versi sebelumnya yang menunjuk aliwafa sebagai pelaksana profil/auth/monitoring regression serta Ferdi/Salim sebagai pelaksana diagnosis/verifikasi awal yang sama diganti oleh klarifikasi ini.
+
+**PROPOSED sisa kapasitas:** aliwafa menangani fitur feedback/inbox dan share link/QR baru, dengan integrasi setelah handoff baseline Farel. Ferdi tetap mengambil backend feedback/operasional secara sementara; Aini menangani backend identity/class hanya untuk kebutuhan/defect yang diserahkan. Farel tetap PM, sehingga antrean PM dan sembilan task aktif disusun sesuai kapasitas. Andi/Tangguh/Nafi tidak diasumsikan tersedia; Model/Data/Curriculum/DevOps tetap dependency eksternal.
 
 ### Ferdi
 
-- **Fokus pertama:** JOB-03 konten/support publisher dan diagnosis Level 2, JOB-05 Drill, dukungan JOB-06 termasuk visibility PvP/leaderboard existing
+**ENGINEERING DECISION — 2 Oktober:** pengguna menyetujui rencana Ferdi termasuk JOB-15 backend feedback/riwayat Guru dan JOB-18 backend operasional Admin, kapasitas paruh waktu, satu pekerjaan besar aktif dan checkpoint 12 Oktober berbasis gate. Persetujuan assignment tidak menutup OPEN policy atau handoff Farel. Status implementasi/tes dan dependency dicatat terpisah dalam [FERDI_IMPLEMENTATION_2026-10-02](FERDI_IMPLEMENTATION_2026-10-02.md); snapshot audit lama tetap historis.
+
+- **Fokus pertama:** JOB-03 konten/support publisher dan JOB-05 Drill session/result; perbaikan Level 2 hanya setelah diagnosis dan handoff Farel
 - **Antrean berikut sesuai dependency:** JOB-08/09 UI TryOut; JOB-10 IRT boundary; JOB-11 result; JOB-14 support; JOB-15 backend sementara; JOB-16/17 UI; JOB-18/19/20/22 bagian terkait
-- **Batas tanggung jawab:** Jangan mengerjakan semua backend/UI paralel; statistik IRT dari Data.
+- **Batas tanggung jawab:** Diagnosis awal Level 2 serta visibility/access existing PvP/leaderboard dikerjakan Farel. Ferdi melaksanakan fix Core Learning/content yang diserahkan serta fitur PvP/leaderboard baru; perubahan shared auth/route menunggu handoff. Jangan mengerjakan semua backend/UI paralel; statistik IRT dari Data.
 
 ### Aini
 
-- **Fokus pertama:** JOB-02/06 backend regression role/session/join/monitoring dan handoff assessment Level 2 seperlunya; JOB-07 kontrak/access, lalu JOB-09 finalizer
+- **Fokus pertama:** JOB-07 kontrak/access TryOut, lalu JOB-09 finalizer; defect backend identity/class/monitoring/Level 2 diprioritaskan hanya jika diserahkan Farel melalui temuan konkret
 - **Antrean berikut sesuai dependency:** JOB-10 orchestration/release → JOB-11 XP → JOB-13 Pretest → JOB-16/17 PvP/ranks; review feedback/Admin; JOB-20 worker
-- **Batas tanggung jawab:** Satu pekerjaan besar aktif; tidak mengarang rubrik/model/formula.
+- **Batas tanggung jawab:** Satu pekerjaan backend besar aktif; unit/integration domain tetap tanggung jawab Aini. Tidak membuka regression frontend atau rewrite identity/class paralel atas task Farel; tidak mengarang rubrik/model/formula.
 
 ### Farel
 
-- **Fokus pertama:** JOB-01 keputusan, JOB-02 staging/aktor/izin dan integrasi profil/session, JOB-06 browser integration serta pencatatan SHA main bersama Salim
-- **Antrean berikut sesuai dependency:** Koordinasi dependency/merge/evidence seluruh jobs; JOB-19 auth continuation support; JOB-21/22 release/status
-- **Batas tanggung jawab:** PM mengatur owner keputusan, tidak unilateral menetapkan akademik; coding onboarding pendukung aliwafa.
+- **Fokus pertama:** sembilan task aktif miliknya pada JOB-02/03/06/21: profil Teacher, login/logout/session, role/route, Mandiri/Sekolah, join regression, monitoring regression, verifikasi PvP/leaderboard existing, diagnosis Level 2 dan regression main sebelum/sesudah fixing
+- **Antrean berikut sesuai dependency:** JOB-01 keputusan dan JOB-02 environment sesuai kapasitas PM; handoff defect ke owner domain; JOB-19 handoff join/auth untuk fitur link/QR; JOB-21 evidence kepada Salim; JOB-22 status
+- **Batas tanggung jawab:** DRI tunggal task aktif dari gambar. Farel memperbaiki frontend dalam scope-nya, menyerahkan defect domain/backend ke owner, dan tidak mengesahkan akademik/model sendiri. Koordinasi PM tetap berjalan tanpa menjadwalkan semua pekerjaan besar serentak.
 
 ### aliwafa
 
-- **Fokus pertama:** JOB-02 profil Teacher/onboarding/session/error dan JOB-06 role/route, afiliasi/join serta Teacher monitoring regression
-- **Antrean berikut sesuai dependency:** JOB-19 link/QR, JOB-15 monitoring/feedback UI sesudah kontrak; JOB-20 onboarding events; JOB-21/22 a11y/handoff
-- **Batas tanggung jawab:** Backend authorization/policy tetap Aini/Ferdi; tidak bentrok file Farel.
+- **Fokus pertama:** persiapan flow/komponen feedback/inbox baru JOB-15 dan komponen share link/QR terpisah JOB-19; konfirmasi kontrak, state serta area file sebelum integrasi
+- **Antrean berikut sesuai dependency:** implementasi feedback sesudah kontrak Ferdi siap; integrasi feedback ke monitoring dan link/QR ke join sesudah branch Farel merged serta handoff file; producers fitur baru JOB-20; JOB-21/22 a11y/handoff
+- **Batas tanggung jawab:** Tidak mengerjakan profil Teacher, auth/session, role/route, join regression atau monitoring existing yang aktif di Farel. Komponen baru dapat disiapkan pada file terpisah; perubahan file Farel menunggu handoff. Backend authorization/policy tetap owner domain.
 
 ### Avicenna
 
 - **Fokus pertama:** JOB-04 UI publisher; verification/history JOB-12 dapat mulai pada API existing
 - **Antrean berikut sesuai dependency:** JOB-13 Pretest setelah backend; JOB-14 Admin support; JOB-10 Admin IRT states; JOB-18 operations; JOB-21/22 QA/handoff
 - **Batas tanggung jawab:** API/history/publisher yang ada dipakai ulang; response types generated.
+- **Batas terhadap Farel:** proteksi role/route Admin existing tetap Farel; Avicenna mengerjakan layar content/operasi baru dan menyerahkan kebutuhan shared route/navigation melalui handoff.
 
 ### Salim
 
-- **Fokus pertama:** JOB-01 testability, JOB-03 reproduksi dan verifikasi Level 2, JOB-06 sembilan checklist gambar; JOB-21 baseline main sebelum dan sesudah fixing
+- **Fokus pertama:** JOB-01 testability dan acceptance matrix, konten/kontrak/race criteria; review evidence sembilan task Farel saat tersedia dan rencanakan acceptance independen JOB-06/21
 - **Antrean berikut sesuai dependency:** Testcase/race/regression untuk JOB-07–20; JOB-21 release evidence; JOB-22 status
-- **Batas tanggung jawab:** QA ikut awal; developer tetap menulis unit/integration, operator tetap menjalankan provisioning/release.
+- **Batas tanggung jawab:** Baseline regression, diagnosis awal dan recheck fixing sembilan task dikerjakan Farel. Salim menguji acceptance independen setelah handoff serta domain/fitur baru/release; tidak membuka implementasi/fixing kedua. Developer tetap menulis unit/integration; operator provisioning/release.
 
 ## 5. Pekerjaan yang dapat dimulai serentak sekarang
 
-1. **Farel:** decision sheet dan owner/akses staging/Google; koordinasikan review konten, integrasi profil/session dan SHA main untuk regression.
-2. **aliwafa:** profil Teacher, onboarding/session/account switch, role/route, join/afiliasi dan monitoring regression pada existing API.
+1. **Farel:** lanjutkan sembilan task aktif dari gambar, catat SHA/evidence dan daftar defect; koordinasikan owner/akses staging/Google serta keputusan PM sesuai kapasitas.
+2. **aliwafa:** rancang flow/state feedback/inbox dan komponen share link/QR baru pada area terpisah; integrasi menunggu kontrak dan handoff baseline Farel.
 3. **Avicenna:** UI minimum publisher Drill; regression history existing.
-4. **Ferdi:** Drill warning/result/retry, diagnosis/handoff Level 2, support existing API serta verifikasi visibility PvP/leaderboard bersama Salim.
-5. **Aini:** TryOut access/availability dan rancangan kontrak/finalizer; backend trial defect menjadi interrupt prioritas bila ditemukan.
-6. **Salim:** acceptance test matrix dan sembilan checklist gambar; reproduksi Level 2, baseline main sebelum fixing dan uji ulang sesudah fix tanpa menunggu fitur berikutnya selesai.
+4. **Ferdi:** Drill warning/result/retry dan konten/publisher; tangani fix Level 2 hanya dari handoff Farel. Tidak mengulang diagnosis/verifikasi visibility existing.
+5. **Aini:** TryOut access/availability dan kontrak/finalizer; backend trial defect menjadi interrupt setelah handoff Farel, bukan rewrite atau regression paralel.
+6. **Salim:** acceptance matrix dan review testability domain; gunakan evidence Farel untuk acceptance akhir setelah handoff, serta siapkan race/operasi/fitur baru.
 
 Sesudah dependency kontrak siap, task berpindah antrean secara eksplisit. Target sekitar 12 Oktober tetap checkpoint gate: first trial dan MVP penuh dinilai terpisah; tidak menutup unfinished jobs hanya untuk menyesuaikan tanggal.
 
 ## 6. Rekonsiliasi sembilan tugas dari gambar
 
-Seluruh poin berikut adalah pekerjaan terencana dan kriteria regression; pencantumannya bukan klaim implementasi sudah selesai atau tes sudah lulus. Prioritas profil/session dan regression existing berada pada tahap A; aktivasi PvP/leaderboard final tetap mengikuti dependency tahap B. Bukti baseline kode/database pada bagian 1 tetap historis, sedangkan regression baru mencatat SHA aktual sesuai JOB-21.
+**ENGINEERING DECISION:** pengguna menjelaskan bahwa seluruh sembilan task berikut milik/sedang dikerjakan Farel. Statusnya **IN PROGRESS berdasarkan keterangan pengguna**, bukan hasil verifikasi runtime. Semua task memiliki satu DRI aktif: Farel. Owner domain hanya menerima handoff perbaikan tertentu; Salim menerima handoff untuk acceptance akhir. Prioritas task existing berada pada tahap A, sedangkan aktivasi fitur baru tetap mengikuti dependency tahap B. Snapshot audit pada bagian 1 tidak ditulis ulang.
 
-1. **Teacher Profile & Account → JOB-02.** aliwafa membuat halaman identitas, status verifikasi, sekolah, akses kelas dan logout; Farel integrasi, Aini kontrak/API bila diperlukan, Salim acceptance.
-2. **Login/Logout & Session → JOB-02,06,19,21.** aliwafa/Farel menyamakan flow Student/Teacher dan menangani session/account switch; Aini defect backend, Salim menguji cache/request akun lama.
-3. **Role & Route Protection → JOB-06,21.** aliwafa/Farel frontend, Avicenna Admin, Aini/owner backend API; Salim menguji menu, URL langsung, refresh serta role/ownership salah.
-4. **Student Mandiri vs Sekolah → JOB-06,07,16,17,19,21.** aliwafa/Ferdi UI, Aini eligibility; Salim memverifikasi Drill, PvP, leaderboard kelas/global, join kelas serta TryOut gratis tanpa memperluas eligibility Pretest yang OPEN.
-5. **Join Class Regression → JOB-06,19,21.** aliwafa/Farel frontend, Aini backend; Salim memverifikasi kode, perubahan affiliation, satu kelas dan persistence setelah refresh/login ulang.
-6. **Teacher Monitoring Regression → JOB-06,15,21.** aliwafa/Farel frontend, Aini query/authorization; Salim menguji Class → Student → Progress → latest/best termasuk score 0 dan akses kelas lain.
-7. **PvP & Leaderboard Verification → JOB-06,16,17,21.** Ferdi UI dan Aini backend; Salim mereproduksi temuan QA visibility/access sekarang, kemudian mengulang sesudah policy dan sumber data final aktif.
-8. **Level 2 Error Diagnosis → JOB-03,06,21.** Salim/aliwafa reproduksi; Ferdi frontend/content, Aini assessment/unlock; Salim memverifikasi root cause dan regression setelah fix.
-9. **Regression Testing → JOB-06,21.** Salim memimpin flow Student/Teacher/Admin pada SHA main baseline, branch fix dan main sesudah merge; Farel mencatat SHA/integrasi, owner memperbaiki modulnya.
+1. **Teacher Profile & Account → JOB-02. DRI aktif: Farel.** Implementasi identitas, status verifikasi, sekolah, akses kelas dan logout oleh Farel. Kebutuhan kontrak/API diserahkan ke Aini; aliwafa tidak membangun halaman profil kedua.
+2. **Login/Logout & Session → JOB-02,06,19,21. DRI aktif: Farel.** Implementasi/fixing flow Student/Teacher, session/account switch dan cache/request akun lama oleh Farel. Backend identity defect ke Aini hanya melalui handoff.
+3. **Role & Route Protection → JOB-06,21. DRI aktif: Farel.** Pemeriksaan/fixing role dan route frontend Student/Teacher/Admin oleh Farel. Defect otorisasi backend ke owner API melalui task terpisah; Avicenna tidak memperbaiki route Admin yang sama paralel.
+4. **Student Mandiri vs Sekolah → JOB-06,07,16,17,19,21. DRI aktif: Farel.** Pemeriksaan/fixing tampilan hak akses existing Drill/PvP/leaderboard/join oleh Farel. Gap domain dan free TryOut implementation tetap JOB-07/08 milik Aini/Ferdi; Pretest OPEN tidak ditebak.
+5. **Join Class Regression → JOB-06,19,21. DRI aktif: Farel.** Validasi kode, perubahan affiliation, satu kelas, persistence dan fixing frontend existing oleh Farel. Link/QR baru aliwafa menunggu handoff; backend defect ke Aini.
+6. **Teacher Monitoring Regression → JOB-06,15,21. DRI aktif: Farel.** Class → Student → Progress → latest/best, score 0 dan akses kelas lain beserta fixing frontend existing oleh Farel. Query defect ke Aini; feedback/inbox baru aliwafa/Ferdi setelah kontrak dan handoff layar.
+7. **PvP & Leaderboard Verification → JOB-06,16,17,21. DRI aktif: Farel.** Visibility/access existing dan temuan QA diverifikasi Farel. Ferdi/Aini mengerjakan aktivasi match/ranks baru atau defect domain yang diserahkan; tidak mengulang verifikasi awal sebagai task kedua.
+8. **Level 2 Error Diagnosis → JOB-03,06,21. DRI aktif: Farel.** Reproduksi, identifikasi root cause dan handoff oleh Farel. Fix Core Learning/content ke Ferdi, assessment/unlock ke Aini; Farel recheck, kemudian Salim acceptance independen.
+9. **Regression Testing → JOB-06,21. DRI aktif: Farel.** Baseline main, recheck branch fix dan regression main sesudah merge oleh Farel. Salim menerima evidence/residual defects dan melakukan acceptance independen scoped release; owner implementasi hanya memperbaiki bagian yang diserahkan.
 
-## 7. Referensi implementasi dan evidence
+## 7. Aturan handoff dan area file untuk mencegah pekerjaan ganda
+
+Aturan ini mengatur task aktif pada pembagian sekarang, bukan hak edit permanen atau perubahan CODEOWNERS.
+
+1. **Satu temuan, satu pelaksana fixing:** gunakan satu ID task/bug, DRI, area file, branch/PR, dependency dan status. Bila Farel telah menangani temuan, anggota lain tidak membuka fix alternatif untuk ID yang sama. Status awal sembilan task adalah IN PROGRESS oleh Farel; status selesai tetap membutuhkan evidence.
+2. **Handoff defect domain:** Farel mencatat repro, expected/actual, SHA/environment, respons/log tersanitasi, indikasi root cause dan batas perubahan. Owner penerima menetapkan satu branch/PR untuk bagian yang diserahkan. Farel menghentikan perubahan pada bagian itu sampai fix terintegrasi, lalu recheck; unit/integration domain tetap ditulis owner implementasi.
+3. **Handoff fitur lanjutan:** branch Farel yang menyentuh baseline auth/join/monitoring di-merge terlebih dahulu; penerima menyinkronkan main, mencatat area file yang diserahkan dan baru mengintegrasikan fitur baru. Komponen feedback/inbox atau share link/QR boleh disiapkan pada file terpisah sebelum handoff, memakai kontrak yang disepakati.
+4. **Area auth/onboarding aktif Farel:** `apps/web/src/features/onboarding/`, `apps/web/src/app/auth/callback/page.tsx`, dan `apps/web/src/app/onboarding/page.tsx`. aliwafa tidak mengambil task auth/session/callback/join existing di area ini sementara branch Farel aktif. Kebutuhan analytics/JOB-19 di area ini diterapkan Farel atau diserahkan setelah merge.
+5. **Area Teacher/monitoring aktif Farel:** `apps/web/src/app/teacher/`, `apps/web/src/features/monitoring/teacher-screens.tsx`, dan `apps/web/src/components/shell/teacher-shell.tsx`. aliwafa mempersiapkan feedback baru secara terpisah; integrasi ke layar ini menunggu handoff. Farel tidak mengerjakan backend feedback baru JOB-15 yang ditugaskan ke Ferdi.
+6. **Shared shell/route/API contract:** perubahan role/navigation/session pada `apps/web/src/components/shell/app-shell.tsx`, `apps/web/src/components/shell/student-layout.tsx`, serta entry route PvP/leaderboard existing dikoordinasikan Farel selama task-nya aktif. Owner fitur baru memakai file/domain fiturnya; bila perlu file bersama atau generated contracts, catat satu pelaksana perubahan per area pada task sebelum commit. Avicenna tetap mengerjakan content Admin, bukan fixing proteksi route yang sedang ditangani Farel.
+7. **Pemisahan verifikasi dan QA:** Farel memiliki repro/regression awal dan recheck fixing sembilan task. Salim menyiapkan acceptance criteria sejak awal serta memverifikasi hasil setelah handoff untuk gate release; Salim tidak membuka implementasi/fixing kedua. Task domain baru/race/operasi tetap dapat diuji Salim secara independen sesuai scope.
+8. **Bukti selesai handoff:** catat PR/merge SHA, area yang selesai/diserahkan, testcase/evidence dan residual defects. Task berpindah owner hanya untuk scope yang disebutkan; kepemilikan task lain tetap. Tidak perlu menghapus requirement atau menandai fitur selesai hanya untuk menghilangkan overlap.
+
+## 8. Referensi implementasi dan evidence
 
 - [Review MVP + seluruh 49 AC](MVP_PRD_REVIEW_2026-10-02.md), [QA Guide](../testing/QA_GUIDE.md), [release checklist](../operations/RELEASE_CHECKLIST.md).
 - [Canonical learning controller](../../apps/api/src/modules/learning/learning.controller.ts), [Drill service](../../apps/api/src/modules/learning/drill-assessment.service.ts), [history service](../../apps/api/src/modules/learning/assessment-history.service.ts).
