@@ -8,7 +8,10 @@ const mocks = vi.hoisted(() => {
   let insertedRows: unknown[] = [{ id: 'new-profile' }];
   const db = {
     select: () => ({
-      from: () => ({ where: () => ({ limit: async () => selectRows.shift() ?? [] }) }),
+      from: () => {
+        const query = { innerJoin: () => query, where: () => ({ limit: async () => selectRows.shift() ?? [] }) };
+        return query;
+      },
     }),
     insert: () => ({
       values: () => ({

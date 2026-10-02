@@ -3204,8 +3204,9 @@
         "properties": {
           "joinCode": {
             "type": "string",
-            "minLength": 8,
-            "maxLength": 32
+            "minLength": 6,
+            "maxLength": 32,
+            "pattern": "^(?:[A-Za-z0-9]{6}|[A-Za-z0-9_-]{8,32})$"
           }
         },
         "required": [
@@ -3298,6 +3299,9 @@
           "title": {
             "type": "string"
           },
+          "isDemo": {
+            "type": "boolean"
+          },
           "submittedAt": {
             "type": "string",
             "format": "date-time"
@@ -3318,6 +3322,7 @@
           "attemptId",
           "activity",
           "title",
+          "isDemo",
           "submittedAt",
           "resultState",
           "score"
@@ -4206,8 +4211,9 @@
         "properties": {
           "token": {
             "type": "string",
-            "minLength": 32,
-            "maxLength": 128
+            "minLength": 8,
+            "maxLength": 128,
+            "pattern": "^(?:[A-Za-z0-9]{8}|[A-Za-z0-9_-]{32,128})$"
           }
         },
         "required": [

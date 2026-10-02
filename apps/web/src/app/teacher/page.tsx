@@ -1,5 +1,5 @@
-import { MyClassesScreen } from '@/features/monitoring/screens';
+import { TeacherDashboardScreen } from '@/features/monitoring/teacher-screens';
 
-export default function Teacher() {
-  return <MyClassesScreen />;
+export default function Page() {
+  return <TeacherDashboardScreen />;
 }

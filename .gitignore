@@ -18,6 +18,7 @@ coverage/
 .env.*
 !.env.example
 !.env.cloud.example
+.qa-seed/
 
 # local tooling
 .DS_Store

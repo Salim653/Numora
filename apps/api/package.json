@@ -8,6 +8,8 @@
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "qa:accounts": "node scripts/create-qa-accounts.mjs",
+    "qa:smoke": "node scripts/smoke-qa-workflow.mjs",
     "openapi:generate": "pnpm build && node dist/scripts/export-openapi.js"
   },
   "dependencies": {

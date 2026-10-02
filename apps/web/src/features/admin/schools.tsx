@@ -3,8 +3,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@tka/ui';
+import { Brand, Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
+import { AdminNav } from './nav';
 import {
   createSchool,
   issueTeacherToken,
@@ -93,8 +94,8 @@ export function AdminSchoolsScreen() {
     <main className="monitoring-shell">
       <div className="monitoring-frame">
         <header className="monitoring-header">
-          <strong className="brand">NUMORA · Admin</strong>
-          <Link href="/admin/content">Konten dan operasional</Link>
+          <Link className="brand" href="/admin"><Brand /></Link>
+          <AdminNav />
           <Button className="secondary-button" onClick={() => void logout().then(() => router.replace('/'))}>
             Keluar
           </Button>

@@ -1,551 +1,521 @@
 @import 'tailwindcss';
 
+/* ============================================
+ * NUMORA GLOBAL STYLES
+ * Design tokens + global styles
+ * ============================================ */
+
 :root {
+  /* Color Scheme */
   color-scheme: light;
-  --numora-purple: #722cce;
-  --numora-purple-soft: #b88ac9;
-  --numora-peach: #fa9a71;
-  --numora-gold: #f8d080;
-  --numora-ivory: #f6efcd;
-  --numora-pearl: #f3faf8;
+
+  /* ============================================
+   * BRAND COLORS - Canonical NUMORA Palette
+   * ============================================ */
+
+  /* Primary - Sagat Purple */
+  --numora-purple: #722CCE;
+  --numora-purple-50: #f5edff;
+  --numora-purple-100: #eddfff;
+  --numora-purple-200: #ddbfff;
+  --numora-purple-300: #c99aff;
+  --numora-purple-400: #b06beb;
+  --numora-purple-500: #972cd1;
+  --numora-purple-600: #722cce;
+  --numora-purple-700: #5f20b4;
+  --numora-purple-800: #4b1891;
+  --numora-purple-900: #3d1276;
+
+  /* Secondary - Soft Purple */
+  --numora-soft: #B88AC9;
+  --numora-soft-50: #f9f3fc;
+  --numora-soft-100: #f3e7f9;
+  --numora-soft-200: #e8d0f4;
+  --numora-soft-300: #dbb2ed;
+
+  /* Warm Accent - Peach */
+  --numora-peach: #FA9A71;
+  --numora-peach-50: #fff5f0;
+  --numora-peach-100: #ffebe2;
+  --numora-peach-300: #ffc0a7;
+
+  /* Reward - Golden Yellow */
+  --numora-gold: #F8D080;
+  --numora-gold-50: #fffbf0;
+  --numora-gold-100: #fff6db;
+  --numora-gold-300: #ffe495;
+
+  /* Background - Ivory */
+  --numora-ivory: #F6EFCD;
+  --numora-ivory-50: #fffdf5;
+
+  /* Surface - Pearl */
+  --numora-pearl: #F3FAF8;
+  --numora-pearl-50: #ffffff;
+  --numora-pearl-100: #f3faf8;
+
+  /* ============================================
+   * SEMANTIC TOKENS
+   * ============================================ */
+
+  /* Semantic Aliases */
   --color-primary: var(--numora-purple);
+  --color-primary-hover: var(--numora-purple-700);
+  --color-primary-light: var(--numora-purple-50);
+
+  --color-secondary: var(--numora-soft);
+  --color-secondary-light: var(--numora-soft-50);
+
+  --color-accent: var(--numora-peach);
+  --color-accent-light: var(--numora-peach-50);
+
+  --color-reward: var(--numora-gold);
+  --color-reward-light: var(--numora-gold-50);
+
   --color-bg: var(--numora-ivory);
+  --color-bg-light: var(--numora-ivory-50);
+
   --color-surface: var(--numora-pearl);
-  --color-text: #2f213d;
-  --color-muted: #675b72;
-  --color-border: #e4ddcf;
-  --color-danger: #b83a45;
-  --radius-md: 14px;
-  --radius-xl: 24px;
-  --background: var(--numora-ivory);
-  --foreground: #111827;
-  --numora-primary: #722cce;
-  --numora-surface: #f3faf8;
-  --numora-purple: #722cce;
-  --numora-purple-soft: #b88ac9;
-  --numora-peach: #fa9a71;
-  --numora-gold: #f8d080;
-  --numora-ivory: #f6efcd;
-  --numora-pearl: #f3faf8;
+  --color-surface-raised: #ffffff;
+
+  /* Text Colors */
+  --color-text: #2F213D;
+  --color-text-muted: #675B72;
+  --color-text-light: #8B7A96;
+  --color-text-inverse: #ffffff;
+
+  /* Border */
+  --color-border: #E4DDCF;
+  --color-border-light: #F0EBE3;
+
+  /* Status Colors */
+  --color-success: #2F8F6B;
+  --color-success-light: #e8f5f0;
+  --color-warning: #A86D00;
+  --color-warning-light: #fff8e6;
+  --color-danger: #B83A45;
+  --color-danger-light: #fdeaea;
+  --color-info: #2E6F9E;
+  --color-info-light: #e6f2fa;
+
+  /* ============================================
+   * TYPOGRAPHY
+   * ============================================ */
+
+  --font-sans: var(--font-inter), 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* Font Sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.125rem;
+  --text-2xl: 1.375rem;
+  --text-3xl: 1.75rem;
+  --text-4xl: 2rem;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+
+  /* ============================================
+   * SPACING (4px base)
+   * ============================================ */
+
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ============================================
+   * BORDER RADIUS
+   * ============================================ */
+
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 9999px;
+
+  /* ============================================
+   * SHADOWS
+   * ============================================ */
+
+  --shadow-xs: 0 1px 2px rgba(47, 33, 61, 0.04);
+  --shadow-sm: 0 2px 6px rgba(47, 33, 61, 0.06);
+  --shadow-md: 0 6px 18px rgba(47, 33, 61, 0.10);
+
+  /* ============================================
+   * TRANSITIONS
+   * ============================================ */
+
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 280ms ease;
+
+  /* ============================================
+   * LAYOUT
+   * ============================================ */
+
+  --page-padding-x: var(--space-4);
+  --content-max-width: 680px;
+  --touch-target-min: 44px;
 }
 
-:focus-visible {
-  outline: 3px solid var(--numora-primary);
-  outline-offset: 3px;
-}
+/* ============================================
+ * BASE STYLES
+ * ============================================ */
 
 * {
   box-sizing: border-box;
 }
+
 html,
 body {
   min-height: 100%;
+  min-height: 100dvh;
 }
 
-:focus-visible {
-  outline: 3px solid var(--numora-purple);
-  outline-offset: 3px;
-}
 body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: 'Nunito Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0;
+}
+
+/* ============================================
+ * FOCUS STYLES
+ * ============================================ */
+
 :focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 3px;
 }
 
-.onboarding-shell {
-  min-height: 100dvh;
-  padding: 24px 16px;
+/* ============================================
+ * SELECTION
+ * ============================================ */
+
+::selection {
+  background: var(--numora-purple-200);
+  color: var(--color-text);
 }
-.onboarding-frame {
-  width: min(100%, 1100px);
-  min-height: calc(100dvh - 48px);
-  margin: auto;
-  display: flex;
-  flex-direction: column;
+
+/* ============================================
+ * SCROLLBAR (webkit)
+ * ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
-.brand {
-  display: flex;
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* ============================================
+ * SKELETON ANIMATION
+ * ============================================ */
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================
+ * NUMORA BUTTON STYLES (for CSS-based buttons)
+ * ============================================ */
+
+.numora-button {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-size: 20px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  color: var(--color-primary);
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-weight: var(--font-bold);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
 }
-.page-footer {
-  margin-top: auto;
-  padding-top: 32px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--color-muted);
-}
-.login-layout {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: center;
-  gap: 32px;
-  padding: 48px 0 12px;
-}
-.intro {
-  max-width: 480px;
-  min-width: 0;
-}
-.eyebrow {
-  color: var(--color-primary);
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.intro h1,
-.form-panel h1,
-.home-panel h1 {
-  margin: 12px 0 16px;
-  font-size: clamp(30px, 6vw, 52px);
-  line-height: 1.12;
-  font-weight: 900;
-  letter-spacing: -0.035em;
-}
-.intro h1 em {
-  color: var(--color-primary);
-  font-style: normal;
-}
-.intro p,
-.panel > p,
-.status-panel p {
-  color: var(--color-muted);
-  line-height: 1.65;
-}
-.intro-art {
-  display: flex;
-  gap: 12px;
-  margin-top: 28px;
-}
-.intro-art span {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--color-primary);
-  background: var(--numora-gold);
-  transform: rotate(-7deg);
-}
-.intro-art span:nth-child(2) {
-  background: var(--numora-peach);
-  transform: rotate(8deg);
-}
-.intro-art span:nth-child(3) {
-  background: var(--numora-purple-soft);
-  color: #fff;
-  transform: rotate(-4deg);
-}
-.panel {
-  width: 100%;
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 6px 18px rgba(47, 33, 61, 0.1);
-  padding: 28px 20px;
-}
-.login-panel {
-  max-width: 440px;
-  min-width: 0;
-  margin: 0 auto;
-}
-.panel-icon {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  background: var(--numora-pearl);
-  color: var(--color-primary);
-  border-radius: 18px;
-  font-size: 28px;
-}
-.login-panel h2,
-.status-panel h2 {
-  margin: 18px 0 8px;
-  font-size: 23px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-.login-panel > p {
-  margin: 0 0 22px;
-}
-.primary-button,
-.secondary-button,
-.text-button {
-  min-height: 48px;
-  font-weight: 800;
-  transition:
-    transform 0.15s ease,
-    background 0.15s ease;
-}
-.primary-button {
-  width: 100%;
+
+.numora-button--primary {
   background: var(--color-primary);
-  color: #fff;
-  border: 1px solid var(--color-primary);
+  color: var(--color-text-inverse);
 }
-.primary-button:hover:not(:disabled) {
-  background: #5f20b4;
-  transform: translateY(-1px);
+
+.numora-button--primary:hover:not(:disabled) {
+  background: var(--numora-purple-700);
 }
-.primary-button:active:not(:disabled),
-.secondary-button:active:not(:disabled) {
-  transform: translateY(1px);
+
+.numora-button--secondary {
+  background: var(--color-surface-raised);
+  color: var(--color-primary);
+  border: 2px solid var(--color-border);
 }
-button:disabled {
+
+.numora-button--secondary:hover:not(:disabled) {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+}
+
+.numora-button--ghost {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.numora-button--ghost:hover:not(:disabled) {
+  background: var(--color-primary-light);
+}
+
+.numora-button--danger {
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+
+.numora-button--sm {
+  height: 36px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.numora-button--md {
+  height: var(--touch-target-min);
+  padding: 0 var(--space-5);
+  font-size: var(--text-base);
+}
+
+.numora-button--lg {
+  height: 52px;
+  padding: 0 var(--space-6);
+  font-size: var(--text-lg);
+}
+
+.numora-button:disabled {
   opacity: 0.62;
   cursor: not-allowed;
 }
-.secondary-button {
-  background: var(--numora-pearl);
-  color: var(--color-primary);
-  border: 1px solid var(--color-border);
-}
-.secondary-button:hover:not(:disabled) {
-  background: #e9f3f0;
-}
-.text-button {
-  width: 100%;
-  color: var(--color-primary);
-}
-.helper,
-.field-help {
-  font-size: 13px;
-  color: var(--color-muted);
-}
-.login-panel .helper {
-  margin: 16px 0 0;
-  text-align: center;
+
+.numora-button__spinner {
+  animation: spin 1s linear infinite;
 }
 
-.admin-content-nav, .admin-content-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 16px 0; }
-.admin-content-nav [aria-current="page"] { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-.admin-content-form, .admin-content-row { display: grid; gap: 12px; margin: 20px 0; overflow-wrap: anywhere; }
-.admin-content-field { display: grid; gap: 8px; }
-.admin-content-form input:not([type="checkbox"]), .admin-content-form select, .admin-content-form textarea { width: 100%; min-height: 48px; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: inherit; font: inherit; }
-.admin-content-form textarea { min-height: 110px; resize: vertical; }
-.admin-content-form fieldset { min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
-.admin-content-form fieldset label { display: flex; gap: 12px; align-items: start; padding: 12px 0; }
-.admin-content-form input[type="checkbox"] { width: 24px; height: 24px; flex-shrink: 0; }
-.form-error {
-  margin: 12px 0;
-  color: var(--color-danger);
-  font-size: 14px;
-  font-weight: 700;
-}
-.inline-status {
-  padding: 14px 0;
-  color: var(--color-muted);
-}
-.form-panel,
-.home-panel {
-  max-width: 580px;
-  margin: auto;
-}
-.form-panel h1,
-.home-panel h1 {
-  font-size: clamp(28px, 5vw, 38px);
-}
-.form-panel > p,
-.home-panel > p {
-  margin-bottom: 24px;
-}
-.role-fieldset {
-  border: 0;
-  padding: 0;
-  margin: 24px 0;
-}
-.role-fieldset legend,
-.field-label {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 14px;
-  font-weight: 800;
-}
-.role-options {
-  display: grid;
-  gap: 12px;
-}
-.role-option {
-  min-height: 76px;
-  position: relative;
-  display: grid;
-  grid-template-columns: 22px 1fr;
-  column-gap: 12px;
-  align-items: center;
-  padding: 14px;
-  background: var(--numora-pearl);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-}
-.role-option.selected {
-  border-color: var(--color-primary);
-  background: #f5edff;
-}
-.role-option input {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--color-primary);
-  grid-row: span 2;
-}
-.role-option strong {
-  font-size: 16px;
-}
-.role-option span {
-  color: var(--color-muted);
-  font-size: 13px;
-}
-.role-option:focus-within {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 3px;
-}
-.text-input {
-  width: 100%;
-  min-height: 48px;
-  padding: 10px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text);
-  background: #fff;
-}
-.field-help {
-  margin: 8px 0;
-  overflow-wrap: anywhere;
-}
-.form-panel .primary-button {
-  margin-top: 20px;
-}
-.form-logout {
-  margin-top: 16px;
-  text-align: center;
-}
-.status-panel {
-  padding: 12px 0;
-}
-.status-panel .secondary-button {
-  margin-top: 16px;
-}
-.identity-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px;
-  margin: 24px 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--numora-pearl);
-}
-.avatar {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--numora-purple-soft);
-  color: #fff;
-  font-weight: 900;
-}
-.avatar img {
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  object-fit: cover;
-}
-.identity-card strong,
-.identity-card small {
-  display: block;
-}
-.identity-card small {
-  margin-top: 3px;
-  color: var(--color-muted);
-  overflow-wrap: anywhere;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.monitoring-shell {
-  min-height: 100dvh;
-  padding: 20px 16px 48px;
-}
-.monitoring-frame {
-  width: min(100%, 1000px);
-  margin: auto;
-}
-.monitoring-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.monitoring-header .brand {
-  text-decoration: none;
-}
-.monitoring-heading {
-  padding: 48px 0 24px;
-}
-.monitoring-heading h1 {
-  margin: 12px 0 8px;
-  font-size: clamp(30px, 6vw, 42px);
-  line-height: 1.15;
-}
-.monitoring-heading p {
-  margin: 0;
-  color: var(--color-muted);
-  line-height: 1.5;
-}
-.monitoring-back {
+/* ============================================
+ * NUMORA ICON BUTTON STYLES
+ * ============================================ */
+
+.numora-icon-button {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  margin-bottom: 16px;
-  color: var(--color-primary);
-  font-weight: 800;
-  text-decoration: none;
-}
-.monitoring-back:hover,
-.monitoring-row:hover strong {
-  text-decoration: underline;
-}
-.monitoring-list {
-  list-style: none;
-  display: grid;
-  gap: 12px;
-  padding: 0;
-  margin: 0;
-}
-.monitoring-row,
-.monitoring-notice {
-  border: 1px solid var(--color-border);
+  justify-content: center;
   border-radius: var(--radius-md);
-  background: #fff;
-  padding: 20px;
-}
-.monitoring-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  min-height: 72px;
-  color: var(--color-text);
-  text-decoration: none;
-}
-button.monitoring-row {
-  width: 100%;
-  font: inherit;
-  text-align: left;
+  border: none;
   cursor: pointer;
-}
-.monitoring-create,
-.monitoring-admin-detail,
-.monitoring-admin-detail form {
-  display: grid;
-  gap: 12px;
-}
-.monitoring-create .primary-button,
-.monitoring-admin-detail .primary-button,
-.monitoring-admin-detail .secondary-button {
-  justify-self: start;
-}
-.monitoring-token code {
-  overflow-wrap: anywhere;
-  user-select: all;
-}
-.monitoring-token-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.monitoring-row strong,
-.monitoring-row small {
-  display: block;
-}
-.monitoring-row small {
-  margin-top: 4px;
-  color: var(--color-muted);
-}
-.monitoring-row > span:last-child {
-  color: var(--color-primary);
-  font-size: 24px;
-}
-.monitoring-notice h1,
-.monitoring-notice h2 {
-  margin: 0 0 8px;
-  font-size: 22px;
-}
-.monitoring-notice p {
-  margin: 0 0 16px;
-  color: var(--color-muted);
-  line-height: 1.5;
-}
-.monitoring-notice p:last-child {
-  margin-bottom: 0;
-}
-.monitoring-controls {
-  display: grid;
-  gap: 12px;
-  margin: 8px 0 20px;
-}
-.monitoring-controls label {
-  display: grid;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 800;
+  transition: all var(--transition-fast);
+  outline: none;
 }
 
+.numora-icon-button--sm {
+  width: 32px;
+  height: 32px;
+}
+
+.numora-icon-button--md {
+  width: 40px;
+  height: 40px;
+}
+
+.numora-icon-button--lg {
+  width: 48px;
+  height: 48px;
+}
+
+.numora-icon-button:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+/* ============================================
+ * NUMORA CARD STYLES
+ * ============================================ */
+
+.numora-card {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.numora-card--elevated {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-light);
+}
+
+.numora-card--highlight {
+  background: var(--color-primary-light);
+  border-color: var(--numora-purple-200);
+}
+
+.numora-card--reward {
+  background: var(--color-reward-light);
+  border-color: var(--numora-gold-300);
+}
+
+.numora-card--interactive {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.numora-card--interactive:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.numora-card__header {
+  padding: var(--space-4);
+  font-weight: var(--font-bold);
+}
+
+.numora-card__content {
+  padding: var(--space-4);
+}
+
+.numora-card__footer {
+  padding: var(--space-4);
+}
+
+.numora-card__divider {
+  border: none;
+  border-top: 1px solid var(--color-border-light);
+  margin: 0;
+}
+
+/* ============================================
+ * NUMORA BADGE STYLES
+ * ============================================ */
+
+.numora-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+/* ============================================
+ * NUMORA SKELETON STYLES
+ * ============================================ */
+
+.numora-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-border-light) 25%,
+    var(--color-surface) 50%,
+    var(--color-border-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+ * SCREEN READER ONLY
+ * ============================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================
+ * RESPONSIVE BREAKPOINTS
+ * ============================================ */
+
 @media (min-width: 640px) {
-  .onboarding-shell {
-    padding: 32px 24px;
-  }
-  .panel {
-    padding: 36px;
-  }
-  .role-options {
-    grid-template-columns: 1fr 1fr;
-  }
-  .monitoring-shell {
-    padding: 32px 24px 64px;
-  }
-  .monitoring-controls {
-    grid-template-columns: minmax(0, 1fr) 180px;
-    align-items: end;
+  :root {
+    --page-padding-x: var(--space-6);
   }
 }
+
 @media (min-width: 1024px) {
-  .onboarding-shell {
-    padding: 36px 32px;
-  }
-  .login-layout {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 80px;
-  }
-  .login-panel {
-    max-width: none;
-  }
-  .intro-art {
-    margin-top: 40px;
+  :root {
+    --page-padding-x: var(--space-8);
   }
 }
+
+/* ============================================
+ * REDUCED MOTION
+ * ============================================ */
+
 @media (prefers-reduced-motion: reduce) {
-  .primary-button,
-  .secondary-button,
-  .text-button {
-    transition: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

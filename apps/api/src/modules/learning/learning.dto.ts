@@ -110,6 +110,7 @@ export class AssessmentRecordDto {
   @ApiProperty({ format: 'uuid' }) attemptId!: string;
   @ApiProperty({ enum: ['drill', 'pretest', 'tryout'] }) activity!: string;
   @ApiProperty() title!: string;
+  @ApiProperty() isDemo!: boolean;
   @ApiProperty({ format: 'date-time' }) submittedAt!: string;
   @ApiProperty({ enum: ['ready', 'waitingIrt'] }) resultState!: string;
   @ApiProperty({ type: Number, nullable: true }) score!: number | null;

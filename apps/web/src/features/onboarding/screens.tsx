@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@tka/ui';
+import { Brand, Button } from '@tka/ui';
 import { destination, useAuth } from './auth';
 import { getSupabase } from '@/lib/supabase';
 import { getSchools, verifyTeacher, type SchoolSummary } from '@/lib/api';
@@ -12,7 +12,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="onboarding-shell">
       <div className="onboarding-frame">
-        <header className="brand">NUMORA</header>
+        <header className="brand"><Brand /></header>
         {children}
         <p className="page-footer">Belajar matematika, satu langkah setiap hari.</p>
       </div>
@@ -126,11 +126,6 @@ export function LoginScreen() {
             Matematika jadi lebih <em>terarah.</em>
           </h1>
           <p>Masuk untuk melanjutkan perjalanan belajar atau mendampingi siswa di NUMORA.</p>
-          <div className="intro-art" aria-hidden="true">
-            <span>∑</span>
-            <span>π</span>
-            <span>÷</span>
-          </div>
         </section>
         <section className="panel login-panel" aria-label="Login NUMORA">
           <div className="panel-icon" aria-hidden="true">
@@ -182,9 +177,22 @@ export function LoginScreen() {
               )}
             </>
           )}
-          {process.env.NODE_ENV === 'development' && (
-            <Link className="text-button" href="/admin/preview">Lihat pratinjau Admin (development)</Link>
-          )}
+          <div className="demo-entry">
+            <p>Coba tampilan NUMORA tanpa akun atau backend. Semua data dalam demo bersifat fiktif.</p>
+            <Link className="secondary-button demo-entry-link" href="/demo/student">
+              Jelajahi demo Siswa, PvP, dan peringkat
+            </Link>
+            {process.env.NODE_ENV === 'development' && (
+              <>
+                <Link className="demo-entry-admin" href="/admin/preview">
+                  Lihat pratinjau Admin (development)
+                </Link>
+                {process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://pkamenfnwmoeisccnrnk.supabase.co' && (
+                  <Link className="demo-entry-admin" href="/qa/login">Masuk dengan akun QA Development</Link>
+                )}
+              </>
+            )}
+          </div>
           <p className="helper">Role dipilih sekali setelah login pertama.</p>
         </section>
       </div>

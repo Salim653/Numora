@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { IsString, Length, Matches } from 'class-validator';
 import { SchoolsService } from './schools.service';
 import { TEACHER_TOKEN_PATTERN } from './teacher-token';
+import { CodeAttempt, CodeAttemptGuard } from '../security/code-attempt.guard';
 
 class SchoolDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
@@ -35,6 +36,10 @@ export class SchoolsController {
   }
 
   @Post(':schoolId/teacher-verifications')
+  @CodeAttempt('teacher')
+  @UseGuards(CodeAttemptGuard)
+  @ApiResponse({ status: 429, description: 'Attempt limit exceeded.', headers: { 'Retry-After': { schema: { type: 'integer' } } } })
+  @ApiResponse({ status: 503, description: 'Attempt limiter unavailable.' })
   @ApiCreatedResponse({ type: VerifiedDto })
   verify(
     @Headers('authorization') authorization: string | undefined,

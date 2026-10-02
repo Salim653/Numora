@@ -10,6 +10,8 @@ permissions:
 
 jobs:
   quality:
+    env:
+      TEACHER_TOKEN_PEPPER: fixture-only-teacher-token-pepper-not-for-deployment
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:

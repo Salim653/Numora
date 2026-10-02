@@ -11,6 +11,7 @@ import {
   levels,
   scoringPolicyVersions,
   subchapters,
+  teacherSchoolMemberships,
   teacherVerificationTokens,
   users,
 } from '@tka/database';
@@ -144,7 +145,13 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
       .rejects.toMatchObject({ status: 403 });
     await schools.updateSchool('admin', school.id, { status: 'INACTIVE' });
     expect((await classes.list(owner)).items).toEqual([]);
+    await expect(classes.join('student', firstClass.joinCode)).rejects.toMatchObject({ status: 404 });
     await expect(monitoring.studentProgress(owner, firstClass.id, identities.student))
       .rejects.toMatchObject({ status: 403 });
+    await schools.updateSchool('admin', school.id, { status: 'ACTIVE' });
+    await db.update(teacherSchoolMemberships).set({ endedAt: new Date() })
+      .where(eq(teacherSchoolMemberships.teacherUserId, identities[owner]));
+    await expect(classes.join('student', firstClass.joinCode)).rejects.toMatchObject({ status: 404 });
+    await expect(classes.create(owner, 'IX C')).rejects.toMatchObject({ status: 403 });
   }, 20_000);
 });

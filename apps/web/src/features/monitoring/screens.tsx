@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@tka/ui';
+import { Brand, Button } from '@tka/ui';
 import { destination, useAuth } from '@/features/onboarding/auth';
 import {
   ApiProblem,
@@ -41,7 +41,7 @@ function TeacherGate({
   return (
     <main className="monitoring-shell">
       <div className="monitoring-frame">
-        <header className="brand">NUMORA</header>
+        <header className="brand"><Brand /></header>
         {state.status === 'error' ? (
           <section className="monitoring-notice" role="alert">
             <h1>Akun belum dapat diperiksa</h1>
@@ -98,9 +98,7 @@ function TeacherFrame({
     <main className="monitoring-shell">
       <div className="monitoring-frame">
         <header className="monitoring-header">
-          <Link className="brand" href="/teacher">
-            NUMORA
-          </Link>
+          <Link className="brand" href="/teacher"><Brand /></Link>
           <Button
             className="secondary-button"
             onClick={async () => {
