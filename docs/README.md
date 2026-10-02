@@ -35,6 +35,7 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 - `data/EVENTS.md`
 - `data/ANALYTICS.md`
 - `data/IRT_INTEGRATION.md`
+- [Knowledge varian soal dan IRT, 2 Oktober 2026](data/QUESTION_VARIANT_IRT_KNOWLEDGE_2026-10-02.md) - ringkasan PDF rancangan, konfigurasi OPEN, dan pemetaan sisa JOB-07; status PROPOSED, bukan approval policy.
 
 ## Design
 
