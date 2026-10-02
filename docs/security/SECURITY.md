@@ -30,7 +30,7 @@ Treat as credential:
 
 ## Authorization
 
-Check role + Student affiliation (Mandiri/School) + resource relation + account status. Mandiri may use Drill and create/share a PvP room; Pretest, Tryout, and class leaderboard require Class membership. UI hiding is never authorization.
+Check role + Student affiliation (Mandiri/School) + resource relation + account status. Mandiri may use Drill, free MVP TryOut, and create/share a PvP room. Class leaderboard still requires Class membership; Pretest retains the v0.5 affiliation baseline pending clarification. TryOut v1.1 removes the class/payment prerequisite; validate package/attempt ownership and result release server-side. See [latest Core Learning source](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). UI hiding is never authorization.
 
 ## API protection
 

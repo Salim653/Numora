@@ -20,7 +20,7 @@ Evaluate as needed:
 4. Teacher school verification;
 5. Class membership/ownership;
 6. resource relationship;
-7. product-specific eligibility (level unlocked, active weekly Tryout package, one attempt/package, etc.).
+7. product-specific eligibility (level unlocked, eligible TryOut package and attempt state, one attempt/package, etc.).
 
 ## Matrix baseline
 
@@ -35,11 +35,12 @@ Evaluate as needed:
 | Join class | Yes if no existing class | No | correction policy OPEN-08 |
 | View own assessment results | Yes | own students only | authorized operational access |
 | View another Student detail | No | only own class | authorized |
-| Manage question bank | No | No | Yes |
+| Manage question bank | No | No | Existing operational capability; outside new Drill/TryOut feature scope |
 | Send feedback | No | own Student only | not standard user flow |
 | Read feedback | own only | sent/own-class context as needed | operational only |
 | Start Drill without Class | Yes, Mandiri | n/a | n/a |
-| Start Pretest/Tryout without Class | No | n/a | n/a |
+| Start Pretest without Class | Baseline v0.5 No; affiliation reconciliation remains OPEN | n/a | n/a |
+| Start TryOut without Class | Yes, free MVP for Mandiri and School Students; package eligibility still enforced | n/a | n/a |
 | Create/share PvP room without Class | Yes, Mandiri | n/a | n/a |
 | Invite classmate to PvP | School Student only | n/a | n/a |
 | View IRT | No | No | Yes |
@@ -67,3 +68,7 @@ WebSocket connection must authenticate before joining protected rooms. Every sta
 ## Least data principle
 
 Global PvP leaderboard should return only minimum display fields required by PRD, not email or private learning history.
+
+## Latest Core Learning source — 2 October 2026
+
+**PRD RULE — TryOut v1.1:** no class/payment prerequisite for MVP Students. Validate account role/status, package availability, existing attempt, ownership and result release server-side. Past never-attempted package eligibility is TRY-TBC-05; no second attempt for an already-attempted package. Existing class-required implementation must be aligned, not preserved as a current product rule. Teacher monitoring remains scoped to owned Classes. See [source reconciliation](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md).

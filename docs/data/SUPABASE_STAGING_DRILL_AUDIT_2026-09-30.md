@@ -1,5 +1,7 @@
 # Detail audit baca Staging untuk rekonsiliasi Drill — 30 September 2026
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
 Snapshot read-only dari `Numora-Staging` (`pkamenfnwmoeisccnrnk`) pada 30 September 2026 WIB. Tidak memuat kredensial, isi baris pengguna, atau PII. Dokumen ini melengkapi [laporan status Staging](SUPABASE_STAGING_AUDIT_2026-09-30.md) dan menjawab permintaan data dalam review PR #10. Reyhan kemudian menegaskan bahwa **skema Staging adalah acuan model database**. Saat diperiksa, `main` telah menambahkan `0001_open_the_twelve.sql` dan `0002_amusing_ravenous.sql` dengan bentuk tabel berbeda. Perbedaan tersebut harus direkonsiliasi pada riwayat migrasi dan kode aplikasi; skema `main` bukan target pengganti Staging. PR #10 belum dapat langsung di-merge atau dijalankan ulang karena benturan berkas dan riwayat migrasi.
 
 ## Seluruh riwayat `drizzle.__drizzle_migrations`

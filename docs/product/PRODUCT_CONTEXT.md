@@ -1,6 +1,6 @@
 # Product Context — Numora
 
-**Product source:** team-approved PRD v0.5, 28 September 2026. The supplied PDF still labels itself a consolidated draft for review; the Software Engineering coordinator confirmed team approval on 28 September 2026. Explicit OPEN items remain unresolved.
+**Product source:** [Drill v1.2](sources/PRD_01_Drill_Latihan_Soal.docx.md) dan [TryOut v1.1](sources/PRD_02_Core_Learning_TryOut.docx.md), diberikan pengguna pada 2 Oktober 2026, mengungguli konteks v0.5 yang berbeda untuk fitur tersebut. [Rekonsiliasi](CORE_LEARNING_PRD_UPDATE_2026-10-02.md) mencatat perubahan dan gap implementasi. Baseline lintas fitur: team-approved PRD v0.5, 28 September 2026. The supplied PDF still labels itself a consolidated draft for review; the Software Engineering coordinator confirmed team approval on 28 September 2026. Explicit OPEN items remain unresolved.
 **Document purpose:** shared context for Software, Data/AI, QA, UI/UX, Research & Curriculum, and coding agents.
 
 **ENGINEERING UPDATE, 29 September 2026:** the Database team has prepared one shared Supabase Cloud Development project. This updates the Development environment setup only; the staging domain/project dependency and product rules below remain open as recorded.
@@ -32,46 +32,58 @@ Pengembangan untuk penggunaan lebih luas adalah tahap berikutnya. Sasaran Sprint
 
 Role tetap `Student`, `Teacher`, dan `Admin`. `Student` memiliki dua status afiliasi, bukan dua role baru:
 
-| Status Student | Akses MVP v0.5 | Batas utama |
+| Status Student | Akses MVP setelah PRD fitur terbaru | Batas utama |
 |---|---|---|
-| User Mandiri | Login Google, Drill, membuat room PvP dan membagikan kode, leaderboard PvP global | Belum bergabung kelas; Pretest, Tryout, leaderboard kelas, dan undangan teman sekelas terkunci; tryout berbayar ditunda dari MVP |
+| User Mandiri | Login Google, Drill, TryOut gratis, membuat room PvP dan membagikan kode, leaderboard PvP global | Belum bergabung kelas; leaderboard kelas dan undangan teman sekelas tetap memerlukan kelas. Akses Pretest mempertahankan baseline kelas v0.5 sambil menunggu rekonsiliasi; tidak ada payment TryOut MVP |
 | User Terafiliasi Sekolah | Seluruh fitur belajar yang tersedia gratis; leaderboard kelas dan global; dapat mengundang teman sekelas ke PvP | Maksimal satu kelas; tidak melihat hasil pribadi siswa lain |
 
 User Mandiri dapat bergabung ke kelas dengan kode/QR/link valid dan menjadi User Terafiliasi Sekolah. Siswa tidak dapat keluar/berpindah kelas sendiri; penanganan oleh Admin serta dampaknya pada riwayat/progres masih `OPEN-08`/`OPEN-15`. Afiliasi kelas harus diperiksa di server. Riwayat Student Mandiri tetap disimpan.
 
-Hierarki operasional sekolah: `Admin → School → Verified Teacher → Class → Student`. Guru yang terverifikasi dapat membuat banyak kelas, melihat progres siswa pada kelasnya, dan memberi feedback satu arah. Guru tidak mengelola bank soal. Admin adalah satu role internal pada v0.5, mengelola sekolah/token, pengguna/kelas, konten/paket, laporan, IRT/analitik, dan audit. Pemecahan sub-role Admin masih `OPEN-16`. Admin tidak dapat mengubah parameter inti produk melalui UI.
+Hierarki operasional sekolah: `Admin → School → Verified Teacher → Class → Student`. Guru yang terverifikasi dapat membuat banyak kelas, melihat progres siswa pada kelasnya, dan memberi feedback satu arah. Guru tidak mengelola bank soal. Bank/paket Drill dan TryOut berasal dari Curriculum; CRUD soal/paket Admin dan UI konfigurasi dikecualikan dari kedua PRD fitur. Kapabilitas operasional Admin yang ada dicatat terpisah dari acceptance fitur siswa. Admin adalah satu role internal pada v0.5, mengelola sekolah/token, pengguna/kelas, konten/paket, laporan, IRT/analitik, dan audit. Pemecahan sub-role Admin masih `OPEN-16`. Admin tidak dapat mengubah parameter inti produk melalui UI.
 
 ## 3. Autentikasi, sekolah, dan kelas
 
 - Student dan Teacher login dengan Google. Saat registrasi pertama, user memilih role dan melengkapi profil; role tidak dapat diubah sendiri. Foto mengikuti Google dengan avatar inisial sebagai fallback. Admin memakai akun internal/seeder.
 - Admin membuat sekolah dan menerbitkan token verifikasi guru yang single-use, berlaku 3×24 jam, dapat diterbitkan ulang, dan hangus setelah dipakai. Guru memilih sekolah dan memasukkan token; token gagal tidak membuka fitur Guru.
 - Guru terverifikasi membuat kelas dengan kode/link/QR. Student bergabung lewat salah satunya dan hanya boleh menjadi anggota satu kelas dalam versi ini.
-- Tanpa kelas, Student tetap boleh mengerjakan Drill dan membuat/membagikan room PvP. Pretest, Tryout, dan leaderboard kelas memerlukan keanggotaan kelas.
+- Tanpa kelas, Student tetap boleh mengerjakan Drill dan membuat/membagikan room PvP. TryOut gratis untuk Mandiri dan Sekolah; leaderboard kelas tetap memerlukan kelas. Akses Pretest masih baseline kelas v0.5, perlu klarifikasi terhadap scope siswa pada PRD Drill terbaru.
 
 ## 4. Materi dan Pretest
 
 Hierarki akademik: `Chapter → Subchapter → Level`. PRD v0.5 memberi baseline 5 level per subbab dan 10 soal per level, tetapi juga menyerahkan daftar, urutan, jumlah level, kompetensi, dan definisi tuntas kepada Curriculum (`OPEN-01`). Jangan mengunci skema ke angka lima sebelum keputusan Curriculum; gunakan konten demo yang diberi label jelas.
 
-Pretest opsional, maksimal sekali selesai per bab, dapat dilewati, dan tidak memberi XP. Baseline: 20 soal per bab, diusahakan mewakili seluruh subbab. Tanpa Pretest, Level 1 tiap subbab terbuka. Hasil sempurna dapat membuka maksimal 3 level per subbab. Distribusi soal (`OPEN-02`) serta pemetaan hasil yang tidak sempurna ke level (`OPEN-03`) belum final. Pretest yang sedang berlangsung dilanjutkan saat refresh dan level yang sudah terbuka tidak dikunci kembali.
+**PRD RULE — Drill v1.2 §5:** Pretest opsional, 20 soal per bab, sekali seumur hidup per bab, tanpa XP, dan tidak dapat diulang setelah selesai. Modal informasi menjelaskan tujuan, sifat one-time, dampak level, dan Mulai/Skip. Skip membuka Level 1 seluruh subbab bab tersebut. Distribusi soal dan seluruh mapping score → initial unlocked levels masih OPEN; maksimal tiga level pada hasil sempurna dari v0.5 tidak menjadi mapping final. Akses afiliasi dan kesempatan setelah Skip perlu klarifikasi, bukan disimpulkan dari akses TryOut.
 
 ## 5. Drill, progres, bintang, dan XP
 
-- Student memilih Bab → Subbab → Level; Level terkunci tidak boleh dimulai.
-- Satu sesi berisi 10 soal untuk satu level. Timer count-up tanpa batas produk. Jawaban boleh dilewati/diubah dan soal dapat dinavigasi sebelum submit; konfirmasi submit menampilkan jumlah soal kosong.
-- Ambang Ketuntasan v0.5 adalah **80%**. Skor ≥80 membuka level berikutnya; skor lebih rendah tidak mencabut akses yang sudah dimiliki. Retry tanpa batas memakai varian setara yang berbeda. Refresh mempertahankan attempt dan paket yang sama.
-- Jawaban disimpan selama sesi dengan status penyimpanan yang jelas. Koneksi putus tidak menghentikan timer. Submit berulang tidak membuat hasil/XP ganda.
-- Hasil memuat nilai 0–100, poin mentah, jawaban, pembahasan, status ketuntasan, bintang, dan perubahan akses. Pembahasan Drill dapat diakses selama 90 hari sejak pengerjaan; riwayat hasil dan versi konten tetap dipertahankan.
-- Bintang adalah dorongan psikologis, **bukan** syarat unlock atau pengali XP: 1 bintang untuk 10–50, 2 untuk 60–90, 3 untuk 100. Tampilan skor 0 belum dijelaskan eksplisit di PRD dan perlu klarifikasi sebelum final.
-- Jika skor <80, hasil menampilkan hingga 3 video terkait subbab dari metadata tersimpan; tidak ada pencarian web saat request Student. Kondisi tanpa video tidak menghalangi hasil.
-- PRD memberi baseline XP Drill: `(jumlahBenar × 100) + max(0, (15 − menit) × 10)`. Formula final masih `OPEN-11`; simpan versi kebijakan XP. Bintang tidak mengubah XP.
+**PRD RULE — Drill v1.2 §6–13:**
 
-## 6. Tryout
+- Student memilih Bab → Subbab → Level → Detail; progres antar subbab independen. Level locked tidak dapat dimulai; open/completed dapat dikerjakan ulang.
+- Satu sesi berisi 10 soal satu per tampilan dengan navigator. Timer count-up informasional, tidak pause dan tanpa deadline. Koneksi putus tidak menjadi cara pause timer.
+- Jawaban dapat diubah sebelum submit; konfirmasi final menampilkan soal belum dijawab. Setelah submit, jawaban terkunci. Submit ulang tidak membuat result/history/XP atau kontribusi leaderboard ganda.
+- Score 0–100; ≥80 membuka level berikutnya; <80 menawarkan retry pada level sama. Unlock tidak dicabut oleh hasil lebih rendah. Retry menggunakan varian berbeda jika tersedia dengan kompetensi, bentuk dan kesulitan setara; fallback pool habis DRL-OPEN-09.
+- Semua attempt valid tercatat terpisah. Best score adalah nilai tertinggi, hanya meningkat ketika hasil valid lebih tinggi, dan tidak menggantikan history.
+- Result menampilkan score, XP, 1–3 bintang, ketuntasan/unlock, pembahasan setelah submit, dan retry. Threshold bintang seluruhnya DRL-OPEN-03; hanya final score menentukan bintang, bukan durasi atau syarat unlock.
+- Durasi <15 menit eligible speed bonus; ≥15 menit tidak. Base XP, XP pada attempt gagal, dan formula bonus DRL-OPEN-01/02; formula angka v0.5 tidak menjadi kebijakan final.
+- Hasil gagal menampilkan maksimum tiga video YouTube relevan subbab. Kosong/broken link tidak memblokir result. Student dapat melaporkan video dan soal dengan referensi konteks aktual.
+- Save state harus jujur: gagal tidak berlabel Saved. Warning refresh/exit wajib sesuai risiko aktual. Server autosave/resume adalah mekanisme implementasi yang tercatat pada kontrak, bukan jaminan storage dari PRD; detail persistence/expiry DRL-OPEN-05 dan interaksi Exit DRL-OPEN-06.
+- Retensi pembahasan/history DRL-OPEN-07. Batas 90 hari dari v0.5 tidak boleh disebut aturan PRD terbaru; hasil historis/versioning tetap dijaga sesuai arsitektur dan kebijakan retensi yang disepakati.
 
-- Paket baru rilis setiap **Senin 00:00 WIB**; paket lama dikunci saat paket baru rilis. Semua peserta pada periode yang sama mengerjakan paket yang sama untuk kebutuhan IRT. Satu paket hanya dapat dikerjakan sekali per user.
-- User Sekolah mengakses paket berjalan secara gratis. Tryout berbayar bagi User Mandiri dan pembelian paket lama ditunda dari MVP (`OPEN-17`); jangan membuka akses berbayar tanpa alur yang disetujui.
-- Hasil dan pembahasan tersedia setelah batch IRT terkait selesai, dengan target maksimum 3×24 jam setelah periode berakhir. Detail jaminan waktu batch masih `OPEN-18`. Paket lama yang pernah dikerjakan hanya dapat dibuka untuk pembahasan setelah syarat tersebut terpenuhi.
-- Tryout tidak membuka level Drill. Jumlah soal, durasi, domain, bentuk, dan komposisi resmi masih `OPEN-05`. MVP penskoran fokus pilihan ganda satu jawaban; PGK menunggu `OPEN-04`.
-- Nilai ditampilkan sebagai hasil simulasi, bukan nilai TKA resmi.
+## 6. TryOut
+
+**PRD RULE — TryOut v1.1 §1–11:**
+
+- Semua siswa, termasuk Mandiri, gratis pada MVP; kelas dan checkout bukan prasyarat TryOut.
+- Listing memuat Ongoing dan Past dengan status attempt/hasil. Detail menampilkan tutorial, rules, periode/deadline, jumlah 35 soal, ketiga format PG/PGK MCMA/PGK Kategori, dan durasi yang masih TBC.
+- Semua siswa dalam batch/periode sama menerima paket sama. Satu attempt/user/paket; repeated start/refresh/re-auth tidak membuat kesempatan baru. Start menolak expired/unavailable dan memulai timer hanya setelah attempt valid.
+- Countdown tidak pause; 0 memicu auto-submit tanpa konfirmasi. Submit manual memerlukan konfirmasi. Keduanya final dan idempotent; jawaban/navigator tersedia sebelum final dan jawaban terkunci setelahnya.
+- Setelah submit, tampilkan Submission Success lalu Waiting/Processing tanpa score/kunci/pembahasan. Nilai dan pembahasan hanya setelah release IRT; maksimum 3×24 jam setelah akhir batch/periode. Skor parsial tidak ditampilkan saat delay/error; backend dapat retry processing tanpa mengubah raw submission.
+- Released score immutable dan memakai skala TKA yang disetujui Research/Curriculum; skala, model IRT, rubrik PGK dan komposisi masih OPEN. Label hasil simulasi, bukan nilai TKA resmi.
+- XP berdasarkan skor, tanpa speed/bonus durasi; konversi final TRY-TBC-03. Rekomendasi `XP = final score` di sumber tetap PROPOSED.
+- Paket lampau tetap terlihat. Paket yang pernah dikerjakan tidak dapat diulang; paket lampau belum pernah dikerjakan mengikuti policy TRY-TBC-05. Jangan otomatis mengizinkan atau mengunci semuanya saat paket baru rilis.
+- Rilis mingguan Senin 00:00 WIB tetap baseline lintas fitur v0.5; waktu akhir batch/periode dan hubungan deadline attempt dengan periode TRY-TBC-06. TryOut tidak membuka level Drill.
+
+Kode saat ini masih memiliki gap kelas, PG saja, retensi/rentang lama, dan auto-finalization. Pembaruan dokumen tidak menyatakan gap tersebut telah diimplementasikan; lihat kontrak dan status backend.
 
 ## 7. PvP dan leaderboard
 
@@ -96,6 +108,6 @@ Leaderboard menampilkan data identitas minimum, bukan email atau riwayat belajar
 
 Autorisasi, batas akses Mandiri/Sekolah, waktu asesmen/PvP, penilaian, dan idempotensi harus ditegakkan server-side. Simpan waktu durable dalam UTC; aturan jadwal bisnis menggunakan `Asia/Jakarta`. UI memerlukan state loading, kosong, gagal, validasi, sukses, sesi berakhir, dan akses ditolak. Perlindungan privasi siswa dan pengujian pengguna nyata harus disepakati sebelum uji coba.
 
-PRD v0.5 **sudah disetujui tim sebagai acuan kerja**, walaupun label pada PDF yang diberikan masih menyebut “draf untuk review”. `docs/product/OPEN_DECISIONS.md` mencatat keputusan yang tetap belum final. Dokumen Sprint 2 yang diberikan masih mencantumkan 70% untuk unlock Drill; tim menegaskan bahwa aturan PRD v0.5, yaitu **80%**, berlaku juga untuk Sprint 2.
+PRD fitur Drill v1.2 dan TryOut v1.1 adalah acuan terbaru untuk area terkait. PRD v0.5 **sudah disetujui tim sebagai baseline lintas fitur**, walaupun label pada PDF yang diberikan masih menyebut “draf untuk review”. `docs/product/OPEN_DECISIONS.md` mencatat keputusan yang tetap belum final. Dokumen Sprint 2 yang diberikan masih mencantumkan 70% untuk unlock Drill; tim menegaskan bahwa aturan PRD v0.5, yaitu **80%**, berlaku juga untuk Sprint 2.
 
 Peristiwa analitik tambahan v0.5 antara lain `user_type_changed` dan `star_earned`; kontrak lengkap ada di `docs/data/EVENTS.md`. Kebutuhan keamanan, privasi, observabilitas, dan QA ada di folder `docs/security`, `docs/operations`, serta `docs/testing`.

@@ -1,5 +1,7 @@
 # Audit baca Supabase Numora-Staging — 30 September 2026
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
 Laporan ini adalah snapshot **baca saja** pada 29 September 2026 pukul 17:16 UTC (30 September 00:16 WIB). Sumbernya adalah metadata proyek, katalog PostgreSQL, hasil query `count(*)`, riwayat migrasi, advisor, dan agregat log melalui konektor Supabase. Tidak ada password, token, connection string, isi baris pengguna, atau perubahan konfigurasi database dalam laporan ini. Kondisi operasional dapat berubah sesudah waktu snapshot.
 
 **Lampiran yang diminta reviewer PR #10:** [12 entri Drizzle lengkap dan struktur tujuh tabel Drill](SUPABASE_STAGING_DRILL_AUDIT_2026-09-30.md), termasuk kolom, constraint/FK, indeks, jumlah baris, dan catatan tentang dua akun Supabase Auth.

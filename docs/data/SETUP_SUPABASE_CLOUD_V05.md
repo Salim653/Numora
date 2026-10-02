@@ -1,5 +1,7 @@
 # Setup database Supabase Cloud Numora (PRD v0.5)
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
 **Status (29 September 2026):** Numora-Staging (`pkamenfnwmoeisccnrnk`) sudah memiliki 46 tabel publik dan RLS aktif pada semuanya. Numora-Production belum dimigrasi. Ini adalah baseline struktur data berdasarkan `DATABASE_NUMORA_V05_ACUAN_TIM.md`, bukan implementasi lengkap seluruh aturan bisnis/seed/API.
 
 **Klarifikasi arah integrasi (30 September 2026):** Reyhan menetapkan skema Staging yang diaudit sebagai acuan model database. PR #13 menambahkan migrasi maju `0003` untuk database yang mengikuti riwayat `main` serta menyesuaikan API Drill. Migrasi itu **tidak boleh dijalankan pada Staging yang sudah memiliki 46 tabel acuan**: Drizzle akan mencoba membuat tabel dan enum yang telah ada. Jalur rekonsiliasi Staging memerlukan migrasi aditif tersendiri dan uji pada salinan hasil restore. Lihat [audit detail tujuh tabel Drill](SUPABASE_STAGING_DRILL_AUDIT_2026-09-30.md).

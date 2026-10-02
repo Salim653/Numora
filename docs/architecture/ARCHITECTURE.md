@@ -113,7 +113,7 @@ Resource authorization
 Authorization examples:
 
 - Teacher must be verified and own the Class.
-- Student Mandiri may start Drill and create/share a PvP room; Pretest, Tryout, and class leaderboard require Class membership.
+- Student Mandiri may start Drill, free MVP TryOut, and create/share a PvP room. Class leaderboard requires Class membership; Pretest affiliation retains the v0.5 baseline pending clarification.
 - Admin routes require an internally provisioned Admin identity.
 - Global PvP leaderboard includes Mandiri and School Students and exposes minimum display information only.
 
@@ -198,7 +198,7 @@ Expected jobs:
 - hourly leaderboard projection refresh;
 - Wednesday 23:59 WIB leaderboard period close/archive;
 - daily IRT batch trigger;
-- Monday 00:00 WIB weekly Tryout package release/lock coordination and result publication after IRT;
+- Monday 00:00 WIB weekly TryOut release baseline, countdown auto-finalization, and IRT result release within 3×24h after batch end; exact batch end/past eligibility remain OPEN;
 - continuous/retry outbox processing.
 
 All business-calendar scheduling must explicitly use `Asia/Jakarta` rather than host timezone assumptions.
@@ -256,3 +256,9 @@ Do not add without evidence/ADR:
 - full microservices split;
 - GraphQL;
 - direct browser-to-database business operations.
+
+## Core Learning policy alignment — 2 October 2026
+
+[Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) supersede conflicting v0.5 feature rules without changing the NestJS/PostgreSQL boundary. Drill uses count-up, no pause/deadline, 80 unlock, immutable unlock/history and highest valid best score. Duration <15 minutes is bonus eligibility only; XP formulas, stars and retention remain OPEN.
+
+TryOut is free for all Students, uses 35 PG/PGK MCMA/Category questions with a shared batch package and countdown without pause. Server finalization must survive browser closure and make manual/auto-submit races produce one final submission. Processing cannot expose score/key/explanation; release persists an immutable IRT-weighted result. TKA scale/duration/model/XP conversion and past-package access remain TBC. Admin content CRUD is operational infrastructure outside these student feature PRDs; no feature configuration UI is added.

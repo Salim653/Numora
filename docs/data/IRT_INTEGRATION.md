@@ -1,6 +1,6 @@
 # IRT Integration
 
-## Product requirements
+## Baseline item-analysis requirements and latest TryOut rules
 
 PRD v0.5 states:
 
@@ -11,9 +11,9 @@ PRD v0.5 states:
 - current baseline threshold: minimum 30 responses;
 - below threshold displays “Data belum cukup”;
 - IRT must not modify historical Student score/XP.
-- weekly Tryout uses one shared package for all users in a period, and its result/explanation is released only after the related IRT batch; max 3×24h target after the package ends, with timing/failure policy OPEN-18.
+- weekly Tryout uses one shared package for all users in a period, and its result/explanation is released only after the related IRT batch; TryOut v1.1 makes ≤3×24h after batch/period end a FINAL requirement, with exact batch schedule/low-response/failure policy still OPEN-18.
 
-Detailed thresholds/model parameters remain OPEN-12.
+Detailed model/input/scale parameters remain OPEN-12. Minimum 30 above is the v0.5 Admin item-analysis baseline; the latest TryOut PRD does not define a universal numeric Student release gate.
 
 ## Architectural principle
 
@@ -59,3 +59,9 @@ Persist:
 ## Reproducibility
 
 Store model/version and enough metadata to explain which run produced an Admin-visible result. New IRT runs supersede display results but do not rewrite historical Student assessment facts.
+
+## TryOut weighted result handoff — latest feature PRD
+
+**PRD RULE — [TryOut v1.1 §7–9](../product/sources/PRD_02_Core_Learning_TryOut.docx.md):** 35 PG/PGK MCMA/Category items shared per batch, one attempt/user/package, IRT-weighted simulation score and explanation only after release. Score must use the Research/Curriculum-approved TKA scale (still TBC), become available ≤3×24h after batch end and remain immutable after release. XP is score-based with no time bonus; numeric conversion remains TBC.
+
+**OPEN:** model, calibration, PGK rubrics/input, scale, batch end/schedule and low-response/failure policy. Existing PG-normalized fixture output is not the final result policy. The scheduler must distinguish Admin daily item analysis from TryOut batch closure/result release. Processing/retry retains raw submissions; no partial score/explanation may escape before release. Record result/model/policy versions and release timestamps; measure SLA from batch end, not individual submit. This updates context only, not the runtime integration envelope.

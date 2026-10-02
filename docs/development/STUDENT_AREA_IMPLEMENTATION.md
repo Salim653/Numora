@@ -1,5 +1,8 @@
 # Integrasi area siswa — status dan QA
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
+
 Status: implementasi lokal 1 Oktober 2026; kesiapan rilis tetap membutuhkan review dan QA staging.
 
 ## Perubahan

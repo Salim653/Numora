@@ -1,5 +1,8 @@
 # NUMORA UI/UX REDESIGN PROPOSAL
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
+
 **Version:** 1.0 - Initial Redesign Proposal
 **Date:** 30 September 2026
 **Status:** PROPOSAL - Menunggu Approval

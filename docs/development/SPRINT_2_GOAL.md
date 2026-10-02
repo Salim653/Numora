@@ -1,6 +1,6 @@
 # Sprint 2 — First Core Learning Vertical Slice
 
-**Sources:** “Sprint 2 Goal.pdf” and the team-approved PRD v0.5, both supplied by the Software Engineering coordinator on 28 September 2026. The coordinator confirmed that PRD v0.5's 80% mastery rule applies to Sprint 2 and that the two-week prototype also needs Teacher UI for class creation and progress viewing. This file records scope and decisions, not implementation completion.
+**Sources:** “Sprint 2 Goal.pdf” and the team-approved PRD v0.5, both supplied by the Software Engineering coordinator on 28 September 2026. The coordinator confirmed that PRD v0.5's 80% mastery rule applies to Sprint 2 and that the two-week prototype also needs Teacher UI for class creation and progress viewing. This file records scope and decisions, not implementation completion. **Update 2 October 2026:** [Drill v1.2 and TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) supersede conflicting feature rules; the previously agreed first-trial scope below is retained.
 
 **ENGINEERING UPDATE, 29 September 2026:** a shared Supabase Cloud Development project is prepared for the Google Auth/PostgreSQL integration. This does not remove the separate staging provisioning dependency for the school trial.
 
@@ -31,7 +31,7 @@ Complete one Student flow through real Frontend → API → PostgreSQL → domai
 
 ## Not a blocker for this sprint
 
-Final Pretest placement, Tryout, PvP, leaderboards, final XP formula, **full** Teacher/Admin UI, IRT, video recommendations, reporting, and advanced monitoring. The separate prototype trial target still requires **Teacher class creation and Student progress viewing through UI**.
+Final Pretest placement, full TryOut (35 questions, three formats, free all Students), PvP, leaderboards, final XP/star/retention policies, **full** Teacher/Admin UI, IRT, video recommendations, reporting, and advanced monitoring. The separate prototype trial target still requires **Teacher class creation and Student progress viewing through UI**.
 
 ## Resolved threshold discrepancy
 
@@ -51,3 +51,7 @@ The minimum connected prototype flow is:
 Full Teacher monitoring/feedback and Admin functions beyond School/token management remain outside the supplied Sprint 2 Goal; the specific Admin/Teacher actions above are additional **prototype trial requirements**. Teacher may see progress only for Classes they own. The trial must **not begin** if login, resource authorization, answer/result persistence, or 80% unlock/scoring fails. Demo content is drafted by Software with Curriculum, contains simple text/math formulas, and is reviewed by Curriculum before the trial; results must not be presented as official TKA ability measurement. Product/Design coordinates school permission, participant/guardian consent where needed, and the demo-content notice with the school. The staging domain and Supabase/Google OAuth project access **are not available yet**; provisioning and callback setup are dependencies. Exact participant count and QA evidence still need joint scoping. See CLARIFICATION-006.
 
 UI/UX designs or wireframes are still being prepared. A **simple mock UI is acceptable for the first school trial** if the connected flow and basic accessibility work. For this temporary UI, follow the team-supplied [NUMORA UI design-system baseline](../design/README.md): centralize tokens and shared components so the eventual approved UI handoff can refine presentation without changing product behavior. The team will **jointly decide** the staging host and accountable setup owner; neither has been selected yet. DevOps handling the domain and the Database team handling Supabase/Google OAuth remain tentative responsibilities pending team confirmation.
+
+## Feature PRD alignment dependencies
+
+Drill retains the prototype 10-question/80 unlock flow. Latest acceptance also requires no-pause count-up, <15min bonus eligibility (formula TBC), completed-level retry with equivalent variants/fallback pending, separate history/highest best score, honest save states and refresh/exit warnings, failed-only max-three YouTube/report. XP/star formulas and retention are now DRL-OPEN; legacy values do not become trial policy by being implemented. Confirm the subset and pending-policy display with PO/QA before trial. New TryOut access rules do not automatically add TryOut to the first school session.

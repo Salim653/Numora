@@ -14,7 +14,7 @@ The backend is a modular monolith. Modules own business behavior, not merely tab
 | `scoring` | scoring policy interfaces/versions | content |
 | `progress` | level access/completion, latest/best score | assessments |
 | `xp` | XP policy interface and immutable ledger | assessments/PvP |
-| `tryout` | weekly shared package release, one-attempt-per-package eligibility, IRT-gated result policy | assessments, IRT |
+| `tryout` | free all-Student package eligibility, 35-item/three-format contract, countdown finalization, one attempt/package, immutable IRT release | assessments, IRT |
 | `leaderboards` | periods/projections/archive | XP, PvP results |
 | `pvp` | cross-affiliation room/invite/match state, scoring orchestration | content, identity, XP |
 | `monitoring` | teacher-facing aggregates | classes, progress, assessments |
@@ -32,7 +32,7 @@ The backend is a modular monolith. Modules own business behavior, not merely tab
 2. `admin` is not allowed to duplicate content/school business rules; it orchestrates authorized admin use cases.
 3. `leaderboards` consumes XP/PvP sources; it must not independently invent XP.
 4. `monitoring` aggregates existing learning data; it must not modify learning results.
-5. `irt` never changes historical Student scores.
+5. `irt` produces the initial TryOut weighted result; it never rewrites released or historical Student scores.
 6. `pvp` reuses the shared question/content model and must not introduce an incompatible PvP-only question representation.
 7. `web` must not own authoritative scoring/progress rules.
 
@@ -64,3 +64,7 @@ Avoid circular dependencies. When a cycle appears, extract a stable shared contr
 ```
 
 Shared feature folders should reflect domain capabilities, e.g. `features/assessments`, `features/classes`, not generic `components/pageA` structures.
+
+## Feature policy ownership
+
+[Latest Core Learning PRDs](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) leave XP formulas, star mapping, retention, placement, duration/scale and model policy OPEN. `progress` owns highest valid best score and irreversible unlock; `assessments` owns save/finalize/manual-auto race; `tryout` owns Ongoing/Past and release gating; `irt` owns versioned computation. Curriculum supplies bank/packages. Existing `admin` CRUD remains a separate operational capability outside the student feature scope.

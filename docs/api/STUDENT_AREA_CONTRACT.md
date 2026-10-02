@@ -49,3 +49,7 @@ Snapshot `room:state` dipersonalisasi: hanya pilihan jawaban pemain sendiri; kun
 - **PROPOSED:** peringkat seri kompetisi `1,1,3`; perlu review sebelum rilis leaderboard.
 
 OpenAPI berada di `packages/contracts/openapi/openapi.json`. Setelah perubahan DTO: `pnpm openapi:generate`, `pnpm contracts:pvp`, `pnpm contracts:types`, lalu validasi/check generated types.
+
+## Pengaruh PRD Core Learning terbaru
+
+[Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) mengubah policy asesmen yang dikonsumsi dashboard/history: TryOut gratis semua siswa, 35 soal/tiga format, status processing sampai released IRT ≤3×24 jam setelah batch end, dan released score immutable. XP tetap menunggu formula; threshold bintang/retensi Drill juga TBC. Class leaderboard masih memerlukan kelas dan tidak otomatis tersedia bagi Mandiri karena akses TryOut gratis. Tidak ada kontrak PvP/leaderboard atau generated types yang berubah melalui pembaruan docs ini.

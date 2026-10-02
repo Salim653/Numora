@@ -201,9 +201,9 @@ Model-specific optional fields should not be added as product facts before Data/
 - `audit_logs`
 - optional processed-event/integration tables as needed
 
-## 4. Weekly Tryout package eligibility
+## 4. TryOut package eligibility and release
 
-PRD v0.5 replaces the daily-start rule. A new shared package releases Monday 00:00 WIB; the previous package becomes locked. A Student may start a given package at most once. Only School Students access the active package in the MVP while Mandiri payment is deferred.
+**PRD RULE — TryOut v1.1:** all Students access MVP TryOut free; one attempt per Student/package, 35 questions, three formats, same package per batch. Past packages remain visible; already-attempted packages cannot be repeated. Start eligibility for past never-attempted packages remains TRY-TBC-05. Monday 00:00 WIB release remains v0.5 cadence baseline; exact batch end/deadline relationship TRY-TBC-06. Do not infer blanket historical-package lock from the older rule.
 
 Recommended persistence technique:
 
@@ -262,3 +262,9 @@ Do not use manual dashboard edits as the canonical shared schema workflow.
 - PvP finalization + result + XP/best-record source + outbox;
 - leaderboard period close/archive metadata;
 - content publish/version transition where audit is required.
+
+## Data impact of latest feature PRDs
+
+See [reconciliation](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). Drill score 0–100, irreversible 80 unlock, separate attempt history and monotonically improving best score remain durable domain facts. Star thresholds, XP formulas and explanation/history retention are OPEN; a 90-day access limit is a legacy implementation value, not the latest PRD rule.
+
+TryOut released score uses a TKA scale still TBC. Existing `score_0_100` storage cannot be assumed sufficient without scale review. PGK response/scoring snapshots and server deadline finalization need contract/schema review before implementation; this documentation update applies no migration. Store batch end, release state and final scoring/model versions to validate the ≤3×24h product requirement and preserve released values. Class snapshots may be null for Mandiri; leaderboard contribution remains class-scoped according to its separate rule.

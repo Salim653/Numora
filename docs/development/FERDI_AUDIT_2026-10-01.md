@@ -1,5 +1,7 @@
 # Audit ulang perubahan Ferdi — 1 Oktober 2026
 
+> **Konteks historis/provisional:** bukti dan rancangan di bawah dipertahankan pada tanggal pencatatannya. Aturan Core Learning yang berbeda telah digantikan oleh [PRD Drill v1.2 / TryOut v1.1, 2 Oktober 2026](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); hasil tes lama tidak membuktikan acceptance terbaru.
+
 **ENGINEERING AUDIT:** cakupan adalah diff tiga PR Ferdi terhadap `origin/main` yang diperbarui pada audit, yaitu `4f912cf`. Audit awal tidak mengubah aturan PRD, menutup OPEN, menerapkan migrasi cloud, atau melakukan merge ke main. Pemulihan startup sandbox yang kemudian diminta pengguna tercatat di [progress implementasi](FERDI_IMPLEMENTATION_2026-10-01.md#pemulihan-pnpm-dev).
 
 ## Hasil dan cakupan ownership
