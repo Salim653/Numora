@@ -78,6 +78,8 @@ jobs:
         run: pnpm --filter @tka/web exec playwright install --with-deps chromium
 
       - name: Browser E2E
+        env:
+          DEBUG: pw:browser,pw:api
         run: pnpm --filter @tka/web test:e2e
 
       - name: Build
