@@ -20,6 +20,7 @@ async function fixtures(
   page: Page,
   role: 'STUDENT' | 'TEACHER' | 'ADMIN' = 'STUDENT',
   teacherVerified = true,
+  verificationIdentityDelayMs = 0,
 ) {
   const jwt = [
     Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'),
@@ -64,7 +65,9 @@ async function fixtures(
   await page.route('http://localhost:3301/api/v1/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
     let data: unknown;
-    if (path === '/identity/me')
+    if (path === '/identity/me') {
+      if (teacherVerified && verificationIdentityDelayMs)
+        await new Promise((resolve) => setTimeout(resolve, verificationIdentityDelayMs));
       data = {
         id: studentId,
         displayName: 'Siswa fixture',
@@ -74,7 +77,7 @@ async function fixtures(
         studentAffiliation: school ? 'SCHOOL' : 'MANDIRI',
         teacherVerified: role === 'TEACHER' ? teacherVerified : null,
       };
-    else if (path === '/schools')
+    } else if (path === '/schools')
       data = { items: [{ id: chapterId, code: 'QA', name: 'Sekolah fixture' }] };
     else if (path === `/schools/${chapterId}/teacher-verifications`) {
       teacherVerified = true;
@@ -414,6 +417,8 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await fixtures(page, 'ADMIN');
     await page.goto('/admin/schools');
+    await expect(page.getByRole('button', { name: 'Keluar', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Buka profil' })).toHaveCount(0);
     await page.getByRole('button', { name: /Sekolah fixture/ }).click();
     await page.getByRole('button', { name: 'Terbitkan token' }).click();
     await expect(page.getByText('QAAB2345', { exact: true })).toBeVisible();
@@ -423,6 +428,36 @@ for (const width of [390, 1440]) {
     await page.screenshot({ path: testInfo.outputPath(`admin-${width}.png`), fullPage: true });
   });
 }
+
+test('Teacher profile owns logout and signed-out Teacher routes stay protected', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await fixtures(page, 'TEACHER');
+  await page.goto('/teacher');
+  await expect(page.getByRole('button', { name: 'Keluar', exact: true })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Buka profil' }).click();
+  await expect(page).toHaveURL(/\/teacher\/profile$/);
+  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toBeVisible();
+  await expect(page.getByText('Terverifikasi')).toBeVisible();
+  await expect(page.getByRole('link', { name: /Kelas saya/ }).last()).toHaveAttribute(
+    'href',
+    '/teacher',
+  );
+  await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
+  await page.getByRole('button', { name: 'Keluar dari akun' }).click();
+  await expect(page).toHaveURL('http://localhost:3300/');
+  await page.goto('/teacher/profile');
+  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
+});
+
+test('Student cannot open Teacher profile', async ({ page }) => {
+  await fixtures(page);
+  await page.goto('/teacher/profile');
+  await expect(page).toHaveURL('http://localhost:3300/student');
+  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
+});
 
 test('signed-out login offers Google authentication without removed demo destinations', async ({
   page,
@@ -447,5 +482,44 @@ for (const verificationToken of ['QAAB2345', 'Ab_cd-'.repeat(6)]) {
     expect((await request).postDataJSON()).toEqual({ token: verificationToken });
     await expect(page).toHaveURL(/\/teacher$/);
     await expect(page.getByRole('heading', { name: 'Kelas saya', exact: true })).toBeVisible();
+  });
+}
+
+test('Teacher stays on verification while refreshed identity is pending', async ({ page }) => {
+  await fixtures(page, 'TEACHER', false, 2_000);
+  const teacherNavigations: string[] = [];
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame() && new URL(frame.url()).pathname === '/teacher')
+      teacherNavigations.push(frame.url());
+  });
+  await page.goto('/teacher/verification-required');
+  await page.getByLabel('Sekolah', { exact: true }).selectOption(chapterId);
+  await page.getByLabel('Token verifikasi').fill('QAAB2345');
+  const refreshedIdentity = page.waitForRequest((request) =>
+    request.url().endsWith('/identity/me'),
+  );
+  await page.getByRole('button', { name: 'Verifikasi dan lanjutkan' }).click();
+
+  await refreshedIdentity;
+  await page.waitForTimeout(250);
+  expect(teacherNavigations).toHaveLength(0);
+  await expect(page).toHaveURL(/\/teacher$/);
+});
+
+for (const { role, verified, path, destination } of [
+  { role: 'STUDENT', verified: true, path: '/teacher', destination: '/student' },
+  { role: 'TEACHER', verified: true, path: '/student', destination: '/teacher' },
+  {
+    role: 'TEACHER',
+    verified: false,
+    path: '/admin/schools',
+    destination: '/teacher/verification-required',
+  },
+  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin/schools' },
+] as const) {
+  test(`${role}${verified ? '' : ' unverified'} cannot enter ${path}`, async ({ page }) => {
+    await fixtures(page, role, verified);
+    await page.goto(path);
+    await expect(page).toHaveURL(new RegExp(`${destination}$`));
   });
 }

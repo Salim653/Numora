@@ -8,6 +8,7 @@ import { ProfileScreen } from './profile';
 import { TryoutScreen } from './tryout';
 import { SubchapterScreen } from './catalog';
 import { TeacherDashboardScreen } from '@/features/monitoring/teacher-screens';
+import { TeacherProfileScreen } from '@/features/onboarding/teacher-profile';
 import { learningApi } from './api';
 import { getTeacherClasses, joinClass } from '@/lib/api';
 import { destination } from '@/features/onboarding/destination';
@@ -161,6 +162,55 @@ describe('responsive learning composition', () => {
     render(<TeacherDashboardScreen />);
     await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/student'));
     expect(getTeacherClasses).not.toHaveBeenCalled();
+  });
+  it('shows a verified Teacher account and signs out from Profile', async () => {
+    context.pathname = '/teacher/profile';
+    context.state = {
+      status: 'ready',
+      profile: { ...profile, role: 'TEACHER', teacherVerified: true },
+      session: { access_token: 'teacher-test' },
+    };
+    render(<TeacherProfileScreen />);
+    expect(screen.getByRole('heading', { name: 'Profil & akun' })).toBeTruthy();
+    expect(screen.getAllByText('test@example.invalid')).toHaveLength(2);
+    expect(screen.getByText('Terverifikasi')).toBeTruthy();
+    expect(
+      screen
+        .getAllByRole('link', { name: /Kelas saya/ })
+        .at(-1)
+        ?.getAttribute('href'),
+    ).toBe('/teacher');
+    expect(screen.queryByRole('button', { name: /^Keluar$/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Keluar dari akun' }));
+    await waitFor(() => expect(context.logout).toHaveBeenCalledOnce());
+    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/'));
+  });
+  it('keeps Teacher Profile guarded and Admin logout in the shell', async () => {
+    context.pathname = '/teacher/profile';
+    render(<TeacherProfileScreen />);
+    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/student'));
+    expect(screen.queryByText('test@example.invalid')).toBeNull();
+    cleanup();
+    context.state = {
+      status: 'ready',
+      profile: { ...profile, role: 'TEACHER', teacherVerified: false },
+      session: { access_token: 'teacher-test' },
+    };
+    render(<TeacherProfileScreen />);
+    await waitFor(() =>
+      expect(context.replace).toHaveBeenCalledWith('/teacher/verification-required'),
+    );
+    expect(screen.queryByText('test@example.invalid')).toBeNull();
+    cleanup();
+    context.pathname = '/admin/schools';
+    context.state = {
+      status: 'ready',
+      profile: { ...profile, role: 'ADMIN' },
+      session: { access_token: 'admin-test' },
+    };
+    render(<AppShell area="admin">Admin</AppShell>);
+    expect(screen.getByRole('button', { name: 'Keluar' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Buka profil' })).toBeNull();
   });
   it('keeps an empty progress range finite and accessible', () => {
     render(<ProgressBar value={0} max={0} label="Level selesai" />);
