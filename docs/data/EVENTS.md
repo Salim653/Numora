@@ -106,3 +106,25 @@ Sources: [Drill v1.2 §11/14](../product/sources/PRD_01_Drill_Latihan_Soal.docx.
 TryOut `explanation_viewed` is P1; Drill source recommends user/session, bab/subbab/level, attempt, timestamp and relevant object identifiers. The exact required schema/deduplication policy is OPEN, not a reason to omit required events or invent event aliases.
 
 **PROPOSED:** namespace shared `question_answered`/`explanation_viewed` through an assessment-type field in the versioned envelope. Data must approve the mapping. `tryout_completed` from v0.5 must not silently mean submission success, IRT completion and result release simultaneously. Processing must not include unreleased scores in events accessible to the Student. Domain finalization/outbox delivery remains idempotent.
+
+## Ferdi producer implementation — PROPOSED mapping, 2 October
+
+SUPPORT_ANALYTICS_ENABLED=false is the server default; enable only after Data approves payload/trigger/version mapping. Never NEXT_PUBLIC. With the gate off, feedback/report persistence works; POST `/api/v1/students/me/learning-interactions` returns `{state:"policyPending"}` after Student authentication and records nothing. No shared environment was enabled here.
+
+When enabled, the endpoint takes required clientRequestId UUID, one of four interaction names, and only relevant context. Actor comes from identity, never body. Ownership, available explanation, published/released package and actual recommendation are verified server-side. Concurrent identical UUIDs record one outbox row; changed actor/event/entity/context returns 409. Tracking errors do not block navigation/video/learning. Browser view dedup is per mounted context, not invented global-session policy.
+
+| Event | Trigger | Proposed server-derived context |
+| --- | --- | --- |
+| tryout_opened | TryOut page mounted | Student entity, no score/raw answer/PII |
+| tryout_detail_viewed | Detail/rules opened | Published/released package ID/version |
+| explanation_viewed | Available Drill explanation rendered | Owned graded attempt, packageId/assessmentType/levelId/subchapterId; TryOut waits for release contract |
+| video_clicked | Recommendation link opened | Owned failed Drill recommendation, attempt/package/level/subchapter/mapping; video metadata resolved through mapping |
+| level_retry | Canonical retry creation commits | Server derives previous GRADED attempt, package/level/subchapter/chapter. Event and new attempt/items commit together; start resuming an active attempt emits nothing. Not accepted from browser interaction endpoint |
+| question_reported | Report insert commits | Report entity, attemptItemId/attemptId/questionVersionId/levelId/chapterId/subchapterId/category |
+| video_reported | Report insert commits | Report entity, immutable attempt/level/subchapter/video/mapping/category |
+| feedback_sent | New feedback commits | Feedback entity, classId/studentId; no body/name/email |
+| feedback_read | First readAt commits | Feedback entity/classId; repeat reads emit nothing |
+
+Report/feedback/retry outbox is inserted in the same DB transaction as mutation; accepted retries emit nothing twice. Canonical retry producer is a narrow addition requiring Aini review; no scoring/eligibility/variant policy changes. Existing Aini worker owns delivery, without a new queue/dual-write. Stored envelope follows analytics_outbox (eventVersion text "1", actorUserId/entityType/entityId/correlationId/payload). Conversion to Data's external envelope and exact required fields needs review. No silent aliasing of Aini domain events.
+
+Tests cover off-gate authentication/no rows, enabled TEST ONLY actor ownership, concurrent replay/conflict, feedback first-read dedup, and report rollback when outbox fails followed by same-ID retry. Domain answer/submit/completion/XP producers and TryOut processing/result analytics depend on Aini finalization/release contracts. Data approval, activation, transport/delivery and release acceptance remain separate gates.

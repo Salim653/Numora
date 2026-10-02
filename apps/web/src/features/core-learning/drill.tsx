@@ -17,7 +17,7 @@ import {
   Status,
   StudentGate,
 } from './ui';
-import { RecommendedVideos, ReportForm } from './support';
+import { QUESTION_REPORT_CATEGORIES, RecommendedVideos, ReportForm } from './support';
 
 export function DrillScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -182,6 +182,7 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
               <MathText value={q.explanation} />
             </p>
             <ReportForm
+              categories={QUESTION_REPORT_CATEGORIES}
               label={`Laporkan soal ${index + 1}`}
               submit={(category, details, clientRequestId) =>
                 learningApi.reportQuestion(token, {

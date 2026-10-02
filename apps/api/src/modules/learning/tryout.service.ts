@@ -150,6 +150,7 @@ export class TryoutService {
       packageTitle: attempt.title,
       status: attempt.status === 'IN_PROGRESS' ? ('inProgress' as const) : ('submitted' as const),
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
+      serverTime: new Date().toISOString(),
       questions: rows.map((row) => {
         const content = decodeSingleChoice(row);
         return {

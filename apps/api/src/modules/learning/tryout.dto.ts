@@ -15,12 +15,14 @@ export class CurrentTryoutDto {
   @ApiProperty({ enum: ['unavailable', 'open', 'inProgress', 'waitingIrt', 'resultReady'] })
   state!: string;
   @ApiProperty({ required: false }) eligible?: boolean;
-  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) attemptId?: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) attemptId?:
+    string | null;
   @ApiProperty({ type: Number, nullable: true, required: false }) questionCount?: number | null;
   @ApiProperty({ type: Number, nullable: true, required: false }) durationSeconds?: number | null;
 }
 
 export class TryoutAttemptDto {
+  @ApiProperty({ type: String, format: 'date-time', required: false }) serverTime?: string;
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) packageId!: string;
   @ApiProperty() packageTitle!: string;

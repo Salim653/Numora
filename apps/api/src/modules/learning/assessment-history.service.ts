@@ -25,7 +25,7 @@ export class AssessmentHistoryService {
     return this.listForStudent(user.id, cursor);
   }
 
-  async listForStudent(studentId: string, cursor?: string) {
+  async listForStudent(studentId: string, cursor?: string, classId?: string) {
     const { db } = getDatabase();
     const [position] = cursor
       ? await db
@@ -34,6 +34,7 @@ export class AssessmentHistoryService {
           .where(and(
             eq(assessmentAttempts.id, cursor),
             eq(assessmentAttempts.studentId, studentId),
+            classId ? eq(assessmentAttempts.classIdAtStart, classId) : undefined,
             isNotNull(assessmentAttempts.finishedAt),
           ))
           .limit(1)
@@ -56,6 +57,7 @@ export class AssessmentHistoryService {
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
       .where(and(
         eq(assessmentAttempts.studentId, studentId),
+        classId ? eq(assessmentAttempts.classIdAtStart, classId) : undefined,
         inArray(assessmentAttempts.assessmentType, ['PRETEST', 'DRILL', 'TRYOUT']),
         isNotNull(assessmentAttempts.finishedAt),
         or(
