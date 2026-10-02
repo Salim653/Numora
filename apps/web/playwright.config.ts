@@ -13,7 +13,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'pnpm exec next dev -p 3300',
+    command: 'node node_modules/next/dist/bin/next dev -p 3300',
+    gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
     url: 'http://localhost:3300',
     reuseExistingServer: false,
     timeout: 180_000,

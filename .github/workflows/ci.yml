@@ -79,7 +79,7 @@ jobs:
 
       - name: Browser E2E
         env:
-          DEBUG: pw:browser,pw:api
+          DEBUG: pw:webserver
         run: pnpm --filter @tka/web test:e2e
 
       - name: Build
