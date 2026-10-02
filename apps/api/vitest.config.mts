@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 import ts from 'typescript';
 
 export default defineConfig({
+  test: { maxWorkers: 2 },
   plugins: [
     {
       name: 'nestjs-test-metadata',
