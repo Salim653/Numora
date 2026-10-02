@@ -20,9 +20,10 @@ class CreateClassDto {
   name!: string;
 }
 class JoinClassDto {
-  @ApiProperty({ minLength: 8, maxLength: 32 })
+  @ApiProperty({ minLength: 6, maxLength: 32, pattern: '^(?:[A-Za-z0-9]{6}|[A-Za-z0-9_-]{8,32})$' })
   @IsString()
-  @Length(8, 32)
+  @Length(6, 32)
+  @Matches(/^(?:[A-Za-z0-9]{6}|[A-Za-z0-9_-]{8,32})$/)
   joinCode!: string;
 }
 class JoinedClassDto {

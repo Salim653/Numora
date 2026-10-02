@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IsString, Length } from 'class-validator';
+import { IsString, Length, Matches } from 'class-validator';
 import { SchoolsService } from './schools.service';
+import { TEACHER_TOKEN_PATTERN } from './teacher-token';
 
 class SchoolDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
@@ -11,9 +12,10 @@ class SchoolListDto {
   @ApiProperty({ type: [SchoolDto] }) items!: SchoolDto[];
 }
 class VerifyTeacherDto {
-  @ApiProperty({ minLength: 32, maxLength: 128 })
+  @ApiProperty({ minLength: 8, maxLength: 128, pattern: TEACHER_TOKEN_PATTERN })
   @IsString()
-  @Length(32, 128)
+  @Length(8, 128)
+  @Matches(new RegExp(TEACHER_TOKEN_PATTERN))
   token!: string;
 }
 class VerifiedDto {

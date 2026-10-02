@@ -4,8 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { createHash, randomBytes } from 'node:crypto';
-import { and, eq, gt, isNull } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull } from 'drizzle-orm';
 import {
   auditLogs,
   getDatabase,
@@ -14,8 +13,8 @@ import {
   teacherVerificationTokens,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
+import { generateTeacherToken, hashTeacherToken, teacherTokenHashes } from './teacher-token';
 
-const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 const isUniqueViolation = (error: unknown): boolean => {
   if (typeof error !== 'object' || error === null) return false;
   if ('code' in error && error.code === '23505') return true;
@@ -78,7 +77,7 @@ export class SchoolsService {
         .where(
           and(
             eq(teacherVerificationTokens.schoolId, schoolId),
-            eq(teacherVerificationTokens.tokenHash, hashToken(token.trim())),
+            inArray(teacherVerificationTokens.tokenHash, teacherTokenHashes(token)),
             isNull(teacherVerificationTokens.usedAt),
             isNull(teacherVerificationTokens.revokedAt),
             gt(teacherVerificationTokens.expiresAt, now),
@@ -120,13 +119,13 @@ export class SchoolsService {
       .limit(1);
     if (!school)
       throw new NotFoundException({ code: 'SCHOOL_NOT_FOUND', detail: 'Sekolah tidak tersedia.' });
-    const token = randomBytes(32).toString('base64url');
+    const token = generateTeacherToken();
     const createdAt = new Date();
     const expiresAt = new Date(createdAt.getTime() + 72 * 60 * 60 * 1000);
     const result = await db.transaction(async (tx) => {
       const [created] = await tx
         .insert(teacherVerificationTokens)
-        .values({ schoolId, tokenHash: hashToken(token), createdByUserId: adminId, createdAt, expiresAt })
+        .values({ schoolId, tokenHash: hashTeacherToken(token), createdByUserId: adminId, createdAt, expiresAt })
         .returning({ id: teacherVerificationTokens.id });
       await tx.insert(auditLogs).values({
         actorUserId: adminId,
@@ -233,7 +232,7 @@ export class SchoolsService {
 
   async reissueToken(authorization: string | undefined, schoolId: string, tokenId: string) {
     const adminId = await this.role(authorization, 'ADMIN');
-    const token = randomBytes(32).toString('base64url');
+    const token = generateTeacherToken();
     const createdAt = new Date();
     const expiresAt = new Date(createdAt.getTime() + 72 * 60 * 60 * 1000);
     const { db } = getDatabase();
@@ -251,7 +250,7 @@ export class SchoolsService {
           code: 'TOKEN_NOT_REVOCABLE', detail: 'Token sudah dipakai, dicabut, atau tidak ditemukan.',
         });
       const [created] = await tx.insert(teacherVerificationTokens)
-        .values({ schoolId, tokenHash: hashToken(token), createdByUserId: adminId, createdAt, expiresAt })
+        .values({ schoolId, tokenHash: hashTeacherToken(token), createdByUserId: adminId, createdAt, expiresAt })
         .returning({ id: teacherVerificationTokens.id });
       await tx.insert(auditLogs).values({
         actorUserId: adminId, action: 'teacher_token_reissued',
