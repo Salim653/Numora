@@ -29,13 +29,13 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: 'node node_modules/next/dist/bin/next dev -p 3400',
+      command: 'node node_modules/next/dist/bin/next start -p 3400',
       url: 'http://localhost:3400',
       reuseExistingServer: false,
       gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
       timeout: 180_000,
       env: {
-        NODE_ENV: 'development',
+        NODE_ENV: 'production',
         NUMORA_WEB_DIST_DIR: '.next-connected',
         NEXT_PUBLIC_API_URL: 'http://localhost:3401/api/v1',
         API_INTERNAL_URL: 'http://localhost:3401/api/v1',

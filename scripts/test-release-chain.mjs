@@ -16,12 +16,24 @@ for (const args of [
   ['--filter', '@tka/database', 'db:migrate'],
   ['--filter', '@tka/database', 'build'],
   ['--filter', '@tka/api', 'build'],
+  ['--filter', '@tka/web', 'build'],
   ['--filter', '@tka/web', 'exec', 'playwright', 'test', '--config=playwright.connected.config.ts'],
 ]) {
   // All command arguments are constants; credentials travel only through child environment.
+  const buildWeb = args[1] === '@tka/web' && args[2] === 'build';
   const result = spawnSync('pnpm', args, {
     cwd: root,
-    env,
+    env: buildWeb
+      ? {
+          ...env,
+          NODE_ENV: 'production',
+          NUMORA_WEB_DIST_DIR: '.next-connected',
+          NEXT_PUBLIC_API_URL: 'http://localhost:3401/api/v1',
+          API_INTERNAL_URL: 'http://localhost:3401/api/v1',
+          NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:3402',
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'job06-fixture-public-key',
+        }
+      : env,
     stdio: 'inherit',
     shell: process.platform === 'win32',
   });
