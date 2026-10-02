@@ -363,6 +363,56 @@ for (const width of [390, 1440]) {
   });
 }
 
+test('Teacher sees distinct latest and best Drill scores but no foreign Class progress', async ({
+  page,
+}) => {
+  await fixtures(page, 'TEACHER');
+  await page.route(
+    `http://localhost:3301/api/v1/classes/${chapterId}/students/${studentId}/progress`,
+    (route) =>
+      route.fulfill({
+        json: {
+          class: { id: chapterId, name: 'IX fixture' },
+          student: { id: studentId, displayName: 'Siswa fixture' },
+          latestDrillScore: 60,
+          levels: [
+            {
+              levelId,
+              chapterLabel: 'Aljabar',
+              subchapterLabel: 'Persamaan',
+              levelLabel: 'Level 1',
+              accessStatus: 'UNLOCKED',
+              inProgress: false,
+              latestDrillScore: 60,
+              bestDrillScore: 90,
+            },
+          ],
+        },
+      }),
+  );
+  await page.goto('/teacher');
+  await page.getByRole('link', { name: /IX fixture/ }).click();
+  await page.getByRole('link', { name: /Siswa fixture/ }).click();
+  await expect(page.getByRole('heading', { name: '60', exact: true })).toBeVisible();
+  const level = page.locator('.level-card');
+  await expect(level.getByText('60', { exact: true })).toBeVisible();
+  await expect(level.getByText('90', { exact: true })).toBeVisible();
+
+  const foreignClassId = '77777777-7777-4777-8777-777777777777';
+  await page.route(
+    `http://localhost:3301/api/v1/classes/${foreignClassId}/students/${studentId}/progress`,
+    (route) =>
+      route.fulfill({
+        status: 403,
+        contentType: 'application/problem+json',
+        json: { code: 'CLASS_FORBIDDEN', detail: 'Akses Class ditolak.' },
+      }),
+  );
+  await page.goto(`/teacher/classes/${foreignClassId}/students/${studentId}`);
+  await expect(page.getByRole('heading', { name: 'Akses ditolak' })).toBeVisible();
+  await expect(page.locator('.level-card')).toHaveCount(0);
+});
+
 test('signed-out login offers Google authentication without removed demo destinations', async ({
   page,
 }) => {
