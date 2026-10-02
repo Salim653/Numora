@@ -95,7 +95,7 @@ async function fixtures(
         activeDrill: !completed ? { attemptId, title: 'Drill fixture', levelId } : null,
         features: {
           drill: true,
-          tryout: school,
+          tryout: true,
           pvp: false,
           pretest: false,
           classLeaderboard: false,
@@ -182,18 +182,7 @@ async function fixtures(
         ],
         nextCursor: null,
       };
-    else if (path === '/tryout/packages/current')
-      data = {
-        state: 'unavailable',
-        id: null,
-        eligible: school,
-        title: null,
-        releaseAt: null,
-        durationSeconds: null,
-        questionCount: null,
-        isDemo: false,
-        attemptId: null,
-      };
+    else if (path === '/tryout/packages/current') data = { state: 'unavailable' };
     else if (path === '/pvp/availability')
       data = { available: false, reasonCode: 'PVP_POLICY_OPEN', message: 'PvP belum tersedia.' };
     else if (path === '/leaderboards/class' && !school)
@@ -294,7 +283,7 @@ for (const width of [320, 390, 768, 1440])
     await page.getByRole('button', { name: 'Kirim Drill' }).click();
     await expect(page.getByText('Tuntas', { exact: true })).toBeVisible();
     for (const [label, text] of [
-      ['Tryout', 'Tryout untuk siswa sekolah'],
+      ['Tryout', 'Paket belum tersedia'],
       ['Progres', 'Menunggu hasil'],
       ['PvP', 'PvP belum tersedia'],
       ['Peringkat', 'Peringkat belum tersedia'],
@@ -311,6 +300,92 @@ for (const width of [320, 390, 768, 1440])
     await page.keyboard.press('Tab');
     await expect(nav.getByRole('link', { name: 'Tryout', exact: true })).toBeFocused();
   });
+test('Mandiri Tryout starts and resumes without a class, then waits for released results', async ({
+  page,
+}) => {
+  await fixtures(page);
+  let state: 'open' | 'inProgress' | 'waitingIrt' | 'resultReady' = 'open';
+  const attempt = {
+    id: attemptId,
+    packageId: chapterId,
+    packageTitle: 'Tryout fixture',
+    status: 'inProgress',
+    deadlineAt: null,
+    questions: [
+      {
+        questionInstanceId: questionId,
+        order: 1,
+        stem: 'Fixture: 1 + 1?',
+        options: [
+          { id: 'A', text: '2' },
+          { id: 'B', text: '3' },
+        ],
+        selectedOptionId: null,
+      },
+    ],
+  };
+  await page.route('http://localhost:3301/api/v1/tryout/**', async (route) => {
+    const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
+    if (path === '/tryout/packages/current') {
+      return route.fulfill({
+        json: {
+          id: chapterId,
+          title: attempt.packageTitle,
+          releaseAt: '2026-09-27T17:00:00Z',
+          state,
+          eligible: state === 'open',
+          attemptId: state === 'open' ? null : attemptId,
+          questionCount: 1,
+          durationSeconds: null,
+        },
+      });
+    }
+    if (path === '/tryout/attempts') {
+      expect(route.request().postDataJSON()).toEqual({ packageId: chapterId });
+      state = 'inProgress';
+      return route.fulfill({ status: 201, json: attempt });
+    }
+    if (path === `/tryout/attempts/${attemptId}`) return route.fulfill({ json: attempt });
+    if (path === `/tryout/attempts/${attemptId}/result`)
+      return route.fulfill({
+        json: {
+          attemptId,
+          packageTitle: attempt.packageTitle,
+          score: 100,
+          correctCount: 1,
+          questionCount: 1,
+          explanation: [
+            {
+              questionInstanceId: questionId,
+              stem: 'Fixture: 1 + 1?',
+              selectedOptionId: 'A',
+              correctOptionId: 'A',
+              explanation: 'Fixture explanation',
+            },
+          ],
+        },
+      });
+    return route.fallback();
+  });
+  await page.goto('/student/tryout');
+  await expect(page.getByText(/TryOut gratis untuk seluruh siswa/)).toBeVisible();
+  await page.getByRole('button', { name: 'Mulai TryOut' }).click();
+  await expect(page).toHaveURL(`/student/tryout/${attemptId}`);
+  await expect(page.getByText('Fixture: 1 + 1?', { exact: true })).toBeVisible();
+  await page.goto('/student/tryout');
+  await expect(page.getByRole('link', { name: 'Lanjutkan TryOut' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mulai TryOut' })).toHaveCount(0);
+  state = 'waitingIrt';
+  await page.reload();
+  await expect(page.getByRole('status')).toContainText('pembahasan belum tersedia');
+  await expect(page.getByRole('link', { name: 'Lihat hasil simulasi' })).toHaveCount(0);
+  state = 'resultReady';
+  await page.reload();
+  await page.getByRole('link', { name: 'Lihat hasil simulasi' }).click();
+  await expect(page).toHaveURL(`/student/tryout/${attemptId}/result`);
+  await expect(page.getByText('Fixture explanation', { exact: true })).toBeVisible();
+});
+
 for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
   test(`join class ${joinCode} refreshes eligibility, and removed demo routes return 404`, async ({
     page,
