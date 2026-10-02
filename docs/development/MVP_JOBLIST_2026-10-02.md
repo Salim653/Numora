@@ -134,12 +134,15 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Output:** keputusan owner yang dicatat di PRD/module spec/OPEN register, lalu kontrak/policy version yang dapat dipakai developer. Angka yang belum diputuskan tetap pending atau fixture DEMO.
 - **Bukti selesai:** item yang menghalangi jalur aktif sudah memiliki keputusan atau tanggal/owner dan batas implementasi yang jelas. Farel tidak mengesahkan rumus statistik/akademik sendiri. Infrastructure/kontrak generik tetap dapat dikerjakan saat menunggu.
 
-### JOB-02 — Siapkan environment trial dan identitas tiga peran
+### JOB-02 — Siapkan environment trial, profil Teacher dan session tiga peran
 
-- **Owner:** Farel; aliwafa frontend auth; Aini backend regression; Avicenna Admin UI; operator Database/DevOps untuk provisioning. **Asal:** LAMA-01,05.
+- **Owner:** Farel koordinasi/integrasi; aliwafa frontend auth dan profil Teacher; Aini identity/API support dan backend regression; Avicenna Admin UI; Salim acceptance; operator Database/DevOps untuk provisioning. **Asal:** LAMA-01,05; Teacher Profile & Account dan Login/Logout & Session dari daftar gambar.
 - **Kerjakan:** pastikan staging pengguna nyata terpisah dari Development; host/domain, Google provider/callback/CORS/API URL, Redis prefix, server secrets dan schema target sesuai. Verifikasi Admin, Guru A/B, Student Sekolah dan Mandiri pada environment uji; provision hanya yang diperlukan melalui prosedur operator. Siapkan health dan backup/restore minimum serta sekolah/izin trial dengan Product/Design.
 - **Output:** environment/commit/owner/akun uji siap, tanpa mencatat kredensial dalam repo/chat. UI session expiry/logout/account switch dan error429/503 jelas.
 - **Bukti selesai:** Google login/callback berhasil, internal role benar, Admin dapat mengakses operasi sekolah/token, teacher verification dan class join dapat diuji. Health saja atau email QA tidak menutup gate Google.
+- **Profil Teacher:** aliwafa membuat halaman akun berisi identitas, status verifikasi, informasi sekolah, akses menuju kelas dan logout. Data menggunakan profil/kontrak API yang tersedia; Aini memperluas kontrak hanya jika field yang diperlukan belum tersedia. Sertakan loading/error/empty dan status belum terverifikasi; akses kelas tetap mengikuti otorisasi server. Ini deliverable engineering yang diminta pengguna, bukan penetapan aturan profil/edit akun baru dari PRD.
+- **Regresi session:** samakan perilaku login/logout Student dan Teacher; uji pergantian Student A → Teacher → Student B, session expiry, callback, refresh, dan tombol Back setelah logout. Cache/query/provider dan request tertunda tidak boleh menampilkan identitas, kelas atau progres akun sebelumnya. Salim mencatat bukti; frontend ditangani aliwafa/Farel dan defect backend identity oleh Aini.
+- **Bukti selesai tambahan:** profil Teacher menampilkan data akun aktif dan status verifikasi yang benar, tautan kelas mengikuti aksesnya, logout berfungsi, dan seluruh pergantian akun bebas data pengguna sebelumnya.
 
 ### JOB-03 — Siapkan konten reviewed dan paket Level 2 yang playable
 
@@ -147,6 +150,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** review 10 soal Level 1 yang akan digunakan; siapkan 10 soal Level 2 dan varian setara sesuai ketersediaan yang disepakati. Periksa kompetensi, difficulty, stem, A–D/LaTeX untuk prototype, kunci/pembahasan, variasi posisi jawaban benar dan label demo. Jangan menyimpulkan fixture semua B sebagai konten TKA yang tervalidasi.
 - **Output:** konten/version/reviewer yang tercatat; paket terbit terikat level dan policy, variant pool/fallback jelas. Perubahan konten tidak menimpa versi yang sudah dipakai attempt.
 - **Bukti selesai:** paket Level 2 benar-benar dapat dimulai setelah ≥80 pada Level 1; pertahankan histories dan uji retry varian. Publish memakai workflow konten/operator yang sesuai, bukan edit ad hoc database atau menonaktifkan readiness check.
+- **Diagnosis error Level 2:** Salim/aliwafa mereproduksi temuan QA pada SHA/environment tercatat dengan akun berhak; simpan langkah, expected/actual, respons/status API dan log relevan yang telah disanitasi. Periksa unlock persisted, readiness paket/versi soal, otorisasi, kontrak dan rendering sebelum menetapkan root cause; jangan menganggap semua error disebabkan paket kosong.
+- **Handoff dan verifikasi:** defect Core Learning frontend ke Ferdi; assessment/unlock/eligibility ke Aini; pipeline/content ke Ferdi dengan Avicenna untuk UI Admin. Owner memperbaiki penyebab yang terbukti, lalu Salim menguji ulang start/save/submit Level 2 serta penolakan pada akun yang masih locked.
 
 ### JOB-04 — Sambungkan UI Admin ke publisher Drill yang sudah tersedia
 
@@ -168,6 +173,11 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** pada satu release SHA, Admin sekolah/token → Guru Google login/verifikasi/create class → Student Google login/join/save/resume/submit Drill → Guru latest/best/progres siswa sendiri. Uji token 72 jam/single-use/revoke/reissue/race, satu kelas, foreign Teacher/Student denial, refresh/re-auth/double-submit; sertakan Level 2 continuation sebagai gate kelanjutan belajar.
 - **Output:** testcase/evidence per environment/role/commit, daftar defect, konten reviewed dan scope trial yang disetujui. Reuse Playwright; fixture CI bukan bukti seluruh rantai ini.
 - **Bukti selesai:** login/authorization/persistence/scoring ≥80/progres tidak memiliki critical failure. Level 2 playable adalah tambahan kelanjutan belajar di atas minimum Sprint 2 unlock, bukan perubahan diam-diam atas scope trial minimum. Salim menilai gate trial dan gate MVP penuh secara terpisah.
+- **Role & Route Protection:** aliwafa/Farel memeriksa redirect/access-denied pada URL langsung dan refresh halaman Student, Teacher dan Admin untuk setiap role, pengguna belum login, session expired dan Teacher belum terverifikasi. Aini/owner backend memeriksa API terkait dengan role/ownership salah; menyembunyikan menu saja tidak menutup acceptance. Avicenna memverifikasi jalur Admin; Salim mencatat hasil tiap kombinasi.
+- **Student Mandiri vs Sekolah:** uji matriks UI dan API yang sama: Drill serta create/share PvP tersedia untuk keduanya; leaderboard kelas memerlukan keanggotaan kelas, sedangkan leaderboard PvP mengikuti akses global yang disepakati. Mandiri dapat join kelas dan berubah menjadi Sekolah; Student yang sudah berkelas tetap dibatasi satu kelas. TryOut gratis untuk keduanya menurut PRD terbaru. Eligibility Pretest tetap mengikuti keputusan yang belum final, tidak disimpulkan dari akses TryOut.
+- **Join Class Regression:** aliwafa dan Aini menguji kode valid/tidak valid, repeated/concurrent join, satu kelas, serta perubahan affiliation/class/school dari API sesudah join. Salim membuktikan membership bertahan setelah refresh/logout/login ulang dan data kelas akun berbeda tidak tercampur. JOB-19 menambahkan link/QR pada alur yang sama.
+- **Teacher Monitoring Regression:** aliwafa dan Salim menguji Class → Student → Progress → latest/best score pada kelas sendiri. Sertakan score 0, best tidak turun saat retry lebih rendah, data kosong/error, refresh setelah submission, dan denial siswa kelas lain. Defect UI ke aliwafa/Farel; query/authorization ke Aini; JOB-15 tetap menangani fitur feedback/history tambahan.
+- **Verifikasi awal PvP/leaderboard:** Ferdi dan Salim mereproduksi temuan visibility/access QA pada fitur existing sekarang, termasuk menu, URL langsung dan status available/policy-pending untuk Mandiri/Sekolah. Catat ID temuan, role, expected/actual dan owner; denial role yang salah harus konsisten antara UI/API. Pengujian availability tidak menunggu aktivasi match/ranking final JOB-16/17 dan tidak dianggap bukti fitur final telah aktif.
 
 ### JOB-07 — Perbaiki TryOut backend: free access, 35 item dan kontrak tiga format
 
@@ -231,6 +241,7 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** owned-class feedback create/list/read,1–1.000 karakter, Student inbox/readAt idempotent dan akses history asesmen Guru untuk siswa kelas miliknya. Complete loading/empty/error dan latest/best 0 states. Tidak membangun chat dua arah.
 - **Output:** module/service/DTO/OpenAPI, ownership tests, Teacher send dan Student read UI. Scope backend tambahan ini antre setelah core-critical tasks Ferdi, bukan otomatis dibebankan ke frontend aliwafa.
 - **Bukti selesai:** Guru tidak mengirim/membaca siswa kelas lain; Student tidak membaca feedback Student lain; mark-read tidak menggandakan state; batas karakter server-side. Tidak menyimpulkan Andi hadir dari tabel ownership historis.
+- **Regresi existing:** pertahankan Class → Student → Progress → latest/best yang diuji JOB-06 setelah perubahan feedback/history. aliwafa menangani UI dan Salim menguji ulang score 0, retry lebih rendah, refresh serta foreign-class denial; Aini mereview defect query/authorization. Tugas regresi ini dapat berjalan sebelum API feedback tersedia.
 
 ### JOB-16 — Aktifkan PvP policy final dan pertandingan nyata
 
@@ -238,6 +249,7 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** reuse existing engine, pin production policy approved, menyediakan 10 soal urutan sama, authoritative waktu/skor serta batas waktu 30/45/60 detik dan reconnect 20 detik, room/share/classmate invite access, disconnect/readiness/expiry/cancellation sesuai keputusan. Aktivasi tidak memakai fixture policy produksi.
 - **Output:** availability yang benar, durable match/result/outbox dan frontend recovery states. Mandiri dan Sekolah boleh match; invite teman kelas tetap memerlukan kelas.
 - **Bukti selesai:** dua browser nyata tersinkron, client fake-score/time ditolak, answer lock dan transition benar, reconnect≤20detik kembali, forfeit tidak masuk best record, dua disconnect/restart sesuai policy. Tidak membangun ulang simulator lama.
+- **Visibility/access QA:** tutup temuan awal JOB-06 dengan evidence Mandiri/Sekolah, menu/URL langsung, create/share room dan recovery. Saat policy belum approved, tampilkan pending/unavailable sesuai API tanpa membuka match lewat bypass; setelah aktivasi, Salim mengulang testcase yang sama pada release SHA baru.
 
 ### JOB-17 — Sajikan leaderboard kelas/PvP dari sumber valid
 
@@ -245,6 +257,7 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** reuse projection/archive; class endpoint menyajikan ranks ketika XP policy siap, PvP best per difficulty valid, top 20/self dan privacy minimum. Hourly update dan period Rabu 23:59 WIB archive sesuai semantics yang tercatat.
 - **Output:** availability/stale/update timestamp, ranks/current/archive contract dan UI non-fixture. Data XP JOB-11 dan PvP JOB-16 menjadi dependency masing-masing papan.
 - **Bukti selesai:** class hanya anggotanya, Drill+TryOut saja; PvP/Pretest/forfeit excluded dari kelas/best sesuai rule; reproject tidak menggandakan, ties sesuai policy approved, batas minggu Asia/Jakarta benar. Redis restart tidak menghapus truth.
+- **Visibility/access QA:** Ferdi dan Salim menutup temuan awal JOB-06 untuk leaderboard kelas dan global PvP secara terpisah, termasuk empty/policy-pending states, URL langsung, serta pergantian akun/afiliasi. Tidak memakai visibility menu sebagai pengganti otorisasi API; ulangi testcase setelah ledger/projection/policy terkait aktif.
 
 ### JOB-18 — Admin pengguna/kelas dan correction policy
 
@@ -259,6 +272,7 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** teacher share class code/link/QR, preserve destination sesudah Google login/registration, confirm class join, invalid/expired/one-class errors. Tambahkan reward/feedback dashboard ketika kontrak tersedia; reuse class/school/affiliation/latest/best/activity/active Drill API yang sudah ada.
 - **Output:** kelas memakai link/QR yang hanya membawa join reference, bukan token Guru/PII; dashboard real persisted data dan pending-state jujur.
 - **Bukti selesai:** pengguna yang belum login join lewat link/QR sesudah login tanpa bypass satu kelas; code reusable beberapa Student; logout/account switch membuang cache identitas; update kelas/feedback/reward dari API, bukan angka frontend buatan.
+- **Regresi keanggotaan:** ulangi checklist kode dari JOB-06 melalui link dan QR. Perubahan Mandiri → Sekolah, class/school dan eligibility ditampilkan dari response server; membership tetap sama sesudah refresh/login ulang, join kelas kedua ditolak, dan callback tidak memakai tujuan/cache akun sebelumnya. aliwafa/Farel menangani frontend, Aini backend dan Salim evidence.
 
 ### JOB-20 — Lengkapi producer analytics dan operasi outbox
 
@@ -273,6 +287,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Kerjakan:** matriks 49 AC Core Learning dan baseline lintas fitur, negative authorization, mobile target/browser nyata/accessibility, expired session/network/retry, PostgreSQL/Redis integration, backup/restore/upgrade/recovery/health/alert dan beban sesuai target yang disepakati. IRT low-response/SLA dan finalizer backlog khusus ketika TryOut dirilis.
 - **Output:** release candidate SHA/environment, CI results, testcase IDs/evidence, migration/restore runbook, accepted residual defects dan sign-off scoped. Planning targets 100/500/1.000 concurrent serta RPO/RTO tetap PROPOSED sampai owner mengunci; tidak disebut PRD final.
 - **Bukti selesai:** critical failure nol untuk scope aktif, Curriculum/Product/Software/QA/operator sign-off relevan; fitur yang belum compliant tidak diklaim MVP penuh. JOB-06 menangani trial awal; JOB-21 tidak menunda QA sampai semua kode selesai.
+- **Baseline main sebelum fixing:** Farel mencatat SHA `origin/main` terbaru saat sesi regression dimulai; Salim menjalankan flow Student, Teacher dan Admin pada baseline tersebut. Setiap temuan memiliki ID, langkah reproduksi, expected/actual, role/afiliasi, environment, SHA dan severity. Keadaan runtime yang tidak tersedia dicatat blocked, tidak dilaporkan pass.
+- **Sesudah fixing:** catat SHA branch/PR fix, uji ulang temuan beserta flow terkait, lalu ulangi regression pada SHA `main` sesudah fix di-merge sebelum sign-off release. Bukti baseline, fix dan main hasil merge dipisahkan; pengujian branch tidak dilaporkan sebagai pengujian main. Sertakan profil Teacher, session/account switch, role/route, afiliasi/join, monitoring, visibility PvP/leaderboard dan Level 2 dari checklist gambar.
 
 ### JOB-22 — Status docs dan handoff visual yang disetujui
 
@@ -289,25 +305,25 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### Ferdi
 
-- **Fokus pertama:** JOB-03 konten/support publisher, JOB-05 Drill, dukungan JOB-06
+- **Fokus pertama:** JOB-03 konten/support publisher dan diagnosis Level 2, JOB-05 Drill, dukungan JOB-06 termasuk visibility PvP/leaderboard existing
 - **Antrean berikut sesuai dependency:** JOB-08/09 UI TryOut; JOB-10 IRT boundary; JOB-11 result; JOB-14 support; JOB-15 backend sementara; JOB-16/17 UI; JOB-18/19/20/22 bagian terkait
 - **Batas tanggung jawab:** Jangan mengerjakan semua backend/UI paralel; statistik IRT dari Data.
 
 ### Aini
 
-- **Fokus pertama:** JOB-02/06 backend regression seperlunya; JOB-07 kontrak/access, lalu JOB-09 finalizer
+- **Fokus pertama:** JOB-02/06 backend regression role/session/join/monitoring dan handoff assessment Level 2 seperlunya; JOB-07 kontrak/access, lalu JOB-09 finalizer
 - **Antrean berikut sesuai dependency:** JOB-10 orchestration/release → JOB-11 XP → JOB-13 Pretest → JOB-16/17 PvP/ranks; review feedback/Admin; JOB-20 worker
 - **Batas tanggung jawab:** Satu pekerjaan besar aktif; tidak mengarang rubrik/model/formula.
 
 ### Farel
 
-- **Fokus pertama:** JOB-01 keputusan, JOB-02 staging/aktor/izin, JOB-06 browser integration
+- **Fokus pertama:** JOB-01 keputusan, JOB-02 staging/aktor/izin dan integrasi profil/session, JOB-06 browser integration serta pencatatan SHA main bersama Salim
 - **Antrean berikut sesuai dependency:** Koordinasi dependency/merge/evidence seluruh jobs; JOB-19 auth continuation support; JOB-21/22 release/status
 - **Batas tanggung jawab:** PM mengatur owner keputusan, tidak unilateral menetapkan akademik; coding onboarding pendukung aliwafa.
 
 ### aliwafa
 
-- **Fokus pertama:** JOB-02 onboarding/session/error dan JOB-06 teacher/student flow
+- **Fokus pertama:** JOB-02 profil Teacher/onboarding/session/error dan JOB-06 role/route, afiliasi/join serta Teacher monitoring regression
 - **Antrean berikut sesuai dependency:** JOB-19 link/QR, JOB-15 monitoring/feedback UI sesudah kontrak; JOB-20 onboarding events; JOB-21/22 a11y/handoff
 - **Batas tanggung jawab:** Backend authorization/policy tetap Aini/Ferdi; tidak bentrok file Farel.
 
@@ -319,22 +335,36 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### Salim
 
-- **Fokus pertama:** JOB-01 testability, JOB-03 konten/evidence, JOB-06 real-flow acceptance
+- **Fokus pertama:** JOB-01 testability, JOB-03 reproduksi dan verifikasi Level 2, JOB-06 sembilan checklist gambar; JOB-21 baseline main sebelum dan sesudah fixing
 - **Antrean berikut sesuai dependency:** Testcase/race/regression untuk JOB-07–20; JOB-21 release evidence; JOB-22 status
 - **Batas tanggung jawab:** QA ikut awal; developer tetap menulis unit/integration, operator tetap menjalankan provisioning/release.
 
 ## 5. Pekerjaan yang dapat dimulai serentak sekarang
 
-1. **Farel:** decision sheet dan owner/akses staging/Google; koordinasikan review konten.
-2. **aliwafa:** onboarding/session/monitoring dasar pada existing API dan repro flow browser.
+1. **Farel:** decision sheet dan owner/akses staging/Google; koordinasikan review konten, integrasi profil/session dan SHA main untuk regression.
+2. **aliwafa:** profil Teacher, onboarding/session/account switch, role/route, join/afiliasi dan monitoring regression pada existing API.
 3. **Avicenna:** UI minimum publisher Drill; regression history existing.
-4. **Ferdi:** Drill warning/result/retry serta handoff konten Level 2 dan support existing API.
+4. **Ferdi:** Drill warning/result/retry, diagnosis/handoff Level 2, support existing API serta verifikasi visibility PvP/leaderboard bersama Salim.
 5. **Aini:** TryOut access/availability dan rancangan kontrak/finalizer; backend trial defect menjadi interrupt prioritas bila ditemukan.
-6. **Salim:** acceptance test matrix dan real-flow checklist; uji existing modules tanpa menunggu fitur berikutnya selesai.
+6. **Salim:** acceptance test matrix dan sembilan checklist gambar; reproduksi Level 2, baseline main sebelum fixing dan uji ulang sesudah fix tanpa menunggu fitur berikutnya selesai.
 
 Sesudah dependency kontrak siap, task berpindah antrean secara eksplisit. Target sekitar 12 Oktober tetap checkpoint gate: first trial dan MVP penuh dinilai terpisah; tidak menutup unfinished jobs hanya untuk menyesuaikan tanggal.
 
-## 6. Referensi implementasi dan evidence
+## 6. Rekonsiliasi sembilan tugas dari gambar
+
+Seluruh poin berikut adalah pekerjaan terencana dan kriteria regression; pencantumannya bukan klaim implementasi sudah selesai atau tes sudah lulus. Prioritas profil/session dan regression existing berada pada tahap A; aktivasi PvP/leaderboard final tetap mengikuti dependency tahap B. Bukti baseline kode/database pada bagian 1 tetap historis, sedangkan regression baru mencatat SHA aktual sesuai JOB-21.
+
+1. **Teacher Profile & Account → JOB-02.** aliwafa membuat halaman identitas, status verifikasi, sekolah, akses kelas dan logout; Farel integrasi, Aini kontrak/API bila diperlukan, Salim acceptance.
+2. **Login/Logout & Session → JOB-02,06,19,21.** aliwafa/Farel menyamakan flow Student/Teacher dan menangani session/account switch; Aini defect backend, Salim menguji cache/request akun lama.
+3. **Role & Route Protection → JOB-06,21.** aliwafa/Farel frontend, Avicenna Admin, Aini/owner backend API; Salim menguji menu, URL langsung, refresh serta role/ownership salah.
+4. **Student Mandiri vs Sekolah → JOB-06,07,16,17,19,21.** aliwafa/Ferdi UI, Aini eligibility; Salim memverifikasi Drill, PvP, leaderboard kelas/global, join kelas serta TryOut gratis tanpa memperluas eligibility Pretest yang OPEN.
+5. **Join Class Regression → JOB-06,19,21.** aliwafa/Farel frontend, Aini backend; Salim memverifikasi kode, perubahan affiliation, satu kelas dan persistence setelah refresh/login ulang.
+6. **Teacher Monitoring Regression → JOB-06,15,21.** aliwafa/Farel frontend, Aini query/authorization; Salim menguji Class → Student → Progress → latest/best termasuk score 0 dan akses kelas lain.
+7. **PvP & Leaderboard Verification → JOB-06,16,17,21.** Ferdi UI dan Aini backend; Salim mereproduksi temuan QA visibility/access sekarang, kemudian mengulang sesudah policy dan sumber data final aktif.
+8. **Level 2 Error Diagnosis → JOB-03,06,21.** Salim/aliwafa reproduksi; Ferdi frontend/content, Aini assessment/unlock; Salim memverifikasi root cause dan regression setelah fix.
+9. **Regression Testing → JOB-06,21.** Salim memimpin flow Student/Teacher/Admin pada SHA main baseline, branch fix dan main sesudah merge; Farel mencatat SHA/integrasi, owner memperbaiki modulnya.
+
+## 7. Referensi implementasi dan evidence
 
 - [Review MVP + seluruh 49 AC](MVP_PRD_REVIEW_2026-10-02.md), [QA Guide](../testing/QA_GUIDE.md), [release checklist](../operations/RELEASE_CHECKLIST.md).
 - [Canonical learning controller](../../apps/api/src/modules/learning/learning.controller.ts), [Drill service](../../apps/api/src/modules/learning/drill-assessment.service.ts), [history service](../../apps/api/src/modules/learning/assessment-history.service.ts).
