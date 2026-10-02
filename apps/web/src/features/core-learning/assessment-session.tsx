@@ -78,7 +78,7 @@ export function AssessmentSession({
   async function choose(questionId: string, optionId: string | null) {
     if (
       deadline.expired ||
-      submit.isPending ||
+      finalizing.current ||
       saving.current ||
       (unsaved && unsaved.questionId !== questionId)
     )
@@ -104,7 +104,7 @@ export function AssessmentSession({
   }
 
   function confirmSubmit() {
-    if (deadline.expired || unsaved || saving.current || submit.isPending) return;
+    if (deadline.expired || unsaved || saving.current || finalizing.current) return;
     if (window.confirm(confirmMessage(emptyCount))) finalize();
   }
 
@@ -145,6 +145,7 @@ export function AssessmentSession({
             save.isPending ||
             deadline.expired ||
             submit.isPending ||
+            submit.isSuccess ||
             (!!unsaved && unsaved.questionId !== question.questionInstanceId)
           }
           className="mt-6 space-y-3"
@@ -172,6 +173,7 @@ export function AssessmentSession({
             disabled={
               deadline.expired ||
               submit.isPending ||
+              submit.isSuccess ||
               save.isPending ||
               (!!unsaved && unsaved.questionId !== question.questionInstanceId)
             }
@@ -217,7 +219,13 @@ export function AssessmentSession({
           <PrimaryButton onClick={() => setIndex(index + 1)}>Berikutnya</PrimaryButton>
         ) : (
           <PrimaryButton
-            disabled={deadline.expired || !!unsaved || save.isPending || submit.isPending}
+            disabled={
+              deadline.expired ||
+              !!unsaved ||
+              save.isPending ||
+              submit.isPending ||
+              submit.isSuccess
+            }
             onClick={confirmSubmit}
           >
             {submitLabel}

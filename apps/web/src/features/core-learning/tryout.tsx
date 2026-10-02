@@ -205,7 +205,7 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
     queryFn: () => learningApi.tryoutAttempt(token, attemptId),
     refetchInterval: (query) => (query.state.data?.status === 'submitted' ? false : 15_000),
   });
-  if (query.isPending || query.isError)
+  if (!query.data)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
@@ -220,12 +220,22 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
       </Status>
     );
   return (
-    <TryoutForm
-      key={attemptId}
-      attempt={query.data}
-      token={token}
-      check={() => void query.refetch()}
-    />
+    <>
+      {query.isError && (
+        <Status title="Status server belum dapat diperbarui">
+          Jawaban lokal tetap ditampilkan. Periksa koneksi dan status pengiriman sebelum keluar.
+          <button className="min-h-11 font-semibold underline" onClick={() => void query.refetch()}>
+            Periksa status sesi
+          </button>
+        </Status>
+      )}
+      <TryoutForm
+        key={attemptId}
+        attempt={query.data}
+        token={token}
+        check={() => void query.refetch()}
+      />
+    </>
   );
 }
 

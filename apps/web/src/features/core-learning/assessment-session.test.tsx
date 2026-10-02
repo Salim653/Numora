@@ -50,6 +50,20 @@ function mount(
 }
 
 describe('sesi asesmen', () => {
+  it('locks answers after successful finalization while navigation is still pending', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const save = vi.fn();
+    const { onSubmitted, onSubmit } = mount(save);
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim Drill' }));
+    await waitFor(() => expect(onSubmitted).toHaveBeenCalledOnce());
+    expect(
+      screen.getByRole('radio', { name: /^A\./ }).closest('fieldset')?.hasAttribute('disabled'),
+    ).toBe(true);
+    expect(screen.getByRole('button', { name: 'Kirim Drill' }).hasAttribute('disabled')).toBe(true);
+    fireEvent.click(screen.getByRole('radio', { name: /^A\./ }));
+    expect(save).not.toHaveBeenCalled();
+    expect(onSubmit).toHaveBeenCalledOnce();
+  });
   it('uses one finalizer when manual submit is still pending at the server deadline', async () => {
     let elapsed = 0;
     vi.spyOn(performance, 'now').mockImplementation(() => elapsed);

@@ -36,7 +36,17 @@ function usePvpSocket(enabled: boolean, matchId?: string) {
     requestId: string;
   } | null>(null);
   const [uncertain, setUncertain] = useState(false);
+  const pendingMatch = useRef(matchId);
   useEffect(() => {
+    // Token renewal keeps the request ID; changing matches or disabling PvP clears it.
+    if (!enabled || pendingMatch.current !== matchId) pending.current = null;
+    pendingMatch.current = matchId;
+    setState(null);
+    setConnected(false);
+    setError(pending.current ? 'Periksa permintaan sebelumnya setelah koneksi pulih.' : '');
+    setBusy(false);
+    setUncertain(pending.current !== null);
+    sending.current = false;
     if (!enabled) return;
     const url = new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1');
     const s = io(`${url.origin}/pvp`, {
@@ -58,10 +68,11 @@ function usePvpSocket(enabled: boolean, matchId?: string) {
             payload: { matchId },
           },
           (err: Error | null, ack: Ack) => {
+            if (socket.current !== s) return;
             if (err) setError('Snapshot pertandingan belum diterima. Coba sambungkan lagi.');
             else if (!ack.payload.ok)
               setError(ack.payload.error?.detail ?? 'Pertandingan belum dapat dilanjutkan.');
-            else if (ack.payload.state) setState(ack.payload.state);
+            else if (ack.payload.state?.matchId === matchId) setState(ack.payload.state);
           },
         );
     });
@@ -73,7 +84,10 @@ function usePvpSocket(enabled: boolean, matchId?: string) {
           : 'Koneksi PvP terputus. Coba sambungkan lagi.',
       ),
     );
-    s.on('room:state', (event: { payload: PvpSnapshotDto }) => setState(event.payload));
+    s.on('room:state', (event: { payload: PvpSnapshotDto }) => {
+      if (socket.current === s && (!matchId || event.payload.matchId === matchId))
+        setState(event.payload);
+    });
     s.on(
       'invitation:received',
       () => void client.invalidateQueries({ queryKey: ['pvp-invitations'] }),
@@ -101,16 +115,18 @@ function usePvpSocket(enabled: boolean, matchId?: string) {
     }
     pending.current ??= { event, payload, requestId: crypto.randomUUID() };
     sending.current = true;
+    const currentSocket = socket.current;
     setBusy(true);
     setError('');
     try {
-      const ack = (await socket.current.timeout(7000).emitWithAck(event, {
+      const ack = (await currentSocket.timeout(7000).emitWithAck(event, {
         event,
         eventVersion: '1',
         requestId: pending.current.requestId,
         sentAt: new Date().toISOString(),
         payload,
       })) as Ack;
+      if (socket.current !== currentSocket) return;
       if (!ack.payload.ok) {
         pending.current = null;
         setUncertain(false);
@@ -120,20 +136,24 @@ function usePvpSocket(enabled: boolean, matchId?: string) {
       pending.current = null;
       setUncertain(false);
       if (ack.payload.state) {
+        if (matchId && ack.payload.state.matchId !== matchId) return;
         setState(ack.payload.state);
         if (!matchId) router.push(`/student/pvp/${ack.payload.state.matchId}`);
       }
       await client.invalidateQueries({ queryKey: ['pvp-invitations'] });
     } catch {
+      if (socket.current !== currentSocket) return;
       setUncertain(true);
       setError('Jawaban server belum diterima. Sambungkan lagi untuk memeriksa state tersimpan.');
     } finally {
-      sending.current = false;
-      setBusy(false);
+      if (socket.current === currentSocket) {
+        sending.current = false;
+        setBusy(false);
+      }
     }
   }
   return {
-    state,
+    state: matchId && state?.matchId !== matchId ? null : state,
     error,
     busy,
     connected,
@@ -473,8 +493,8 @@ export function PvpMatchScreen() {
               </p>
               {p.connectionStatus === 'DISCONNECTED' && p.reconnectDeadlineAt && !closed && (
                 <p role="timer" aria-label={`Waktu reconnect ${p.displayName}`}>
-                  {reconnectRemaining[p.studentId] ?? 'â€”'} detik untuk tersambung kembali.
-                  Keputusan akhir mengikuti server.
+                  {reconnectRemaining[p.studentId] ?? '-'} detik untuk tersambung kembali. Keputusan
+                  akhir mengikuti server.
                 </p>
               )}
             </article>

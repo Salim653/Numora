@@ -52,6 +52,8 @@ Log lokal: `D:/numora-ferdi-runtime-20261002/ci-final.log`, `browser.log` dan `b
 
 ## Handoff dan checkpoint
 
+[Audit ulang 2 Oktober](FERDI_REAUDIT_2026-10-02.md) mencatat perbaikan recovery TryOut, lock pasca-submit dan lifecycle ACK/snapshot PvP. Tes web setelah audit menjadi 55; bukti implementasi/CI sebelumnya di atas tetap historis. Gunakan required checks pada head terakhir PR #44 untuk keputusan merge.
+
 Paket review bertumpuk: [kandidat konten PR #42](https://github.com/ayiinee/Numora/pull/42) → [backend/kontrak PR #43](https://github.com/ayiinee/Numora/pull/43) → [Student PR #44](https://github.com/ayiinee/Numora/pull/44), branch `feat/ferdi-mvp-completion-2026-10-02`. Backend diuji terpisah dengan frontend baseline dan lulus CI (37 tes web); hasil gabungan di atas memakai 51 tes web. Setelah PR dasar merge, retarget PR berikutnya ke main terbaru dan jalankan pemeriksaan yang relevan. Tidak ada merge/deployment pada sesi ini.
 
 Screenshot fixture tersimpan pada [evidence Student](evidence/ferdi-2026-10-02/README.md). Connector GitHub menolak create PR dengan `403: Resource not accessible by integration`; draft PR dibuat melalui CLI menggunakan credential Git yang sudah tersedia secara in-memory, tanpa menyimpan token atau mengubah login CLI/global config.
