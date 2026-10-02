@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { DrillAssessmentService } from './drill-assessment.service';
 import { AssessmentHistoryService } from './assessment-history.service';
 import { LearningCatalogService } from './learning-catalog.service';
@@ -67,6 +67,7 @@ export class LearningController {
 
   @Get('students/me/assessment-results')
   @ApiOkResponse({ type: AssessmentHistoryDto })
+  @ApiQuery({ name: 'cursor', required: false, format: 'uuid' })
   history(
     @Headers('authorization') authorization: string | undefined,
     @Query('cursor', new ParseUUIDPipe({ optional: true })) cursor?: string,
