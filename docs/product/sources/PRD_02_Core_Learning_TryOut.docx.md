@@ -595,4 +595,3 @@ TryOut adalah fitur simulasi asesmen TKA Matematika SMP. Berbeda dari Drill yang
 | Error handling | Internet/refresh/timeout/duplicate. | Ditambah package expiry, session expiry, result delay, IRT failure, content load. |
 | Analytics | 6 event. | Diperluas dengan detail view, processing view, abandonment. |
 | Acceptance | 7 criteria. | 25 criteria yang mencakup lifecycle dan edge cases. |
-
