@@ -82,6 +82,10 @@ Record menampilkan ID bab/level snapshot serta label taxonomy saat ini, subbab/l
 
 ## Bukti dan gerbang rilis
 
+**ENGINEERING UPDATE — permintaan Aini, 2 Oktober 2026:** default `pnpm dev` menjalankan web/API tanpa worker. `pnpm dev:worker` atau `pnpm dev:full` mengaktifkan background processing secara eksplisit. Worker melakukan preflight Redis sebelum consumer BullMQ, berhenti pada quota exhaustion, dan membatasi log gangguan runtime. `.env.test.example`/guard `test:local` memisahkan target pengujian localhost dari development cloud. Rate limiter verifikasi/join tetap membutuhkan Redis sehat; tanpa worker, outbox/proyeksi belum diproses. Provision instance Development terpisah serta bukti Redis cloud/staging tetap dependency operator. Perubahan ini tidak mengaktifkan TryOut/IRT/PvP atau menutup keputusan OPEN. Lihat [panduan setup](GETTING_STARTED.md#development-process-modes--2-october-2026).
+
+Bukti lokal perubahan mode/worker: lint repository serta typecheck/build worker lulus; enam tes worker dan lima root checks lulus. Tiga tes integrasi PostgreSQL dilewati karena `TEST_DATABASE_URL` tidak disediakan. Tes quota/startup/shutdown memakai fixture Redis tanpa request cloud; ini bukan bukti provisioning instance atau konektivitas Redis nyata.
+
 Pengujian dijalankan pada PostgreSQL lokal terisolasi, bukan Supabase shared development/staging. Gunakan `NODE_ENV=test` dan `TEST_DATABASE_URL` untuk mengaktifkan integration suite. Migrasi diterapkan melalui CLI, bukan dashboard.
 
 Perintah verifikasi utama:

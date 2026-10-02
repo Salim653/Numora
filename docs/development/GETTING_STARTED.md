@@ -27,7 +27,7 @@ The lockfile and initial Drizzle migration are committed with the bootstrap. Use
 
 - `apps/web` — Next.js on `http://localhost:3000`
 - `apps/api` — NestJS on `http://localhost:3001`
-- `apps/worker` — BullMQ worker/scheduler process
+- `apps/worker` — optional BullMQ worker/scheduler process, started explicitly
 - PostgreSQL/Auth — isolated Supabase cloud development branch/project
 - Redis — cloud TCP/TLS endpoint, with a developer-specific BullMQ prefix
 
@@ -38,6 +38,37 @@ Useful checks:
 - Swagger: `http://localhost:3001/api/docs`
 
 The Supabase dashboard URL is supplied by the cloud team. Local web and API ports remain 3000 and 3001.
+
+### Development process modes — 2 October 2026
+
+**ENGINEERING DECISION — requested by Aini:** Redis consumers run only when background processing is being tested. All modes retain the existing environment/schema checks and load the ignored root `.env`.
+
+| Command           | Processes          | Use                                                                        |
+| ----------------- | ------------------ | -------------------------------------------------------------------------- |
+| `pnpm dev`        | Web + API          | Default for UI, access rules, DTOs and synchronous assessment work.        |
+| `pnpm dev:worker` | Worker only        | Run in a second terminal while testing outbox/projection/queue processing. |
+| `pnpm dev:full`   | Web + API + worker | Connected background-flow verification. Do not also start `dev:worker`.    |
+
+Stop an old `pnpm dev` session before switching modes. With the worker stopped, outbox delivery and hourly leaderboard projection do not run; PostgreSQL retains the durable records. Teacher-code verification and class join still require a healthy Redis rate limiter in the API. Health endpoints alone do not verify those operations. Once PvP is enabled, its API scheduler also consumes Redis independently of `apps/worker`.
+
+BullMQ issues commands even on idle queues. Keep the worker off when it is not needed, including on other developers' machines sharing the instance. A unique `BULLMQ_PREFIX` isolates keys but does not allocate a separate provider request quota. Use a dedicated Development Redis instance, separate from test and school-facing Staging; a cloud operator must provision its TCP/TLS endpoint and supply credentials outside Git. Adding a prefix does not provision an instance.
+
+The worker checks Redis before creating its consumer. A `max requests limit exceeded` error at startup or runtime logs `REDIS_QUOTA_EXCEEDED`, stops schedules, disconnects and exits with code 1. Restore quota or configure a healthy dedicated instance before restarting manually. Transient runtime errors retry with backoff and emit at most one diagnostic per minute; startup and shutdown waits are bounded. `dev:full` may stop the other processes when its worker exits, so use separate `dev` and `dev:worker` terminals when diagnosing an outage. No provider error text or connection URL is logged.
+
+### Dedicated local test dependencies
+
+Copy `.env.test.example` to `.env.test.local` and configure dedicated **localhost** PostgreSQL/Redis services. This file is ignored by Git and is separate from development `.env`. Example credentials are fixtures, not cloud credentials. Local services must be started separately; this change does not install Redis/PostgreSQL or create a cloud database.
+
+```powershell
+Copy-Item .env.test.example .env.test.local
+# Apply committed migrations to the dedicated local test database before integration tests.
+pnpm db:migrate:test
+pnpm test:local
+```
+
+Run the copy once; preserve an already configured local file. `test:local` and `db:migrate:test` reject non-test mode, remote endpoints, database names outside `numora_test`/`numora_test_*`, non-test prefixes and inherited runtime URLs. The migration URL must exactly match `TEST_DATABASE_URL` (or be empty when not migrating); update both together when changing the local database. Test PostgreSQL credentials need permission to create/drop disposable worker-test databases. The guard confirms target configuration, not connectivity or whether other applications share a localhost service. CI continues to supply its own isolated PostgreSQL/Redis services.
+
+Plain `redis://localhost` is permitted only for test mode by the existing API guards. Development still requires `rediss://`; do not change `NODE_ENV` to test to bypass development TLS/rate limiting. Avoid running Redis integration tests against the shared cloud instance.
 
 ## Environment files
 

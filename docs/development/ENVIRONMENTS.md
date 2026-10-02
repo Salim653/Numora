@@ -23,6 +23,10 @@ Preferred local stack:
 
 The local processes use cloud dependencies; Docker is not required for development. Developer credentials must not grant staging schema migration or seed access. A development branch must not copy real-user staging data.
 
+**ENGINEERING DECISION — requested by Aini, 2 October 2026:** `pnpm dev` runs web/API; `pnpm dev:worker` explicitly runs background processing and `pnpm dev:full` runs all three processes. Keep idle BullMQ consumers off during synchronous development. Worker Redis quota exhaustion is terminal until manually restarted; transient runtime logs are throttled. API verification/join rate limiting remains enforced.
+
+Development Redis must be separate from test and Staging. Prefixes isolate keys, not instance-wide command quotas. Provision a dedicated cloud TCP/TLS endpoint through the operator; do not copy credentials into documentation. Local integration tests use ignored `.env.test.local`, based on `.env.test.example`, with dedicated localhost services and a `numora:test:` prefix. `pnpm test:local` validates isolation before running suites. These templates do not create services or allocate cloud quotas. See [process modes and test setup](GETTING_STARTED.md#development-process-modes--2-october-2026).
+
 The student UI uses authenticated NestJS endpoints. Former standalone preview routes have been removed. Demo question content remains explicitly labeled from backend metadata; browser fixtures run only inside tests.
 
 **ENGINEERING DECISION (2 October 2026):** API startup requires server-only `TEACHER_TOKEN_PEPPER`; do not expose it through `NEXT_PUBLIC_*`. Use an environment-specific random secret of at least 32 bytes, stable across API replicas and the 72-hour token lifetime. Preserve the same pepper for outstanding short tokens issued by #26. Redis TLS and the environment/developer prefix also serve atomic teacher-verification and class-join quotas; outage returns 503 before mutation. See [onboarding/UI integration](ONBOARDING_UI_INTEGRATION_2026-10-02.md).
