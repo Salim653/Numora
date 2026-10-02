@@ -87,3 +87,7 @@ The supplied Sprint 2 Goal defines one Student vertical slice and excludes *full
 ## Decision workflow
 
 When a joint decision is reached, record its owner/date and update the PRD or module specification first; then update this register, `PRD_MAPPING.md`, affected contracts/schema/tests, and an ADR only if architecture changes. The original PDF metadata should be synchronized with the team's approval record when its owner republishes it.
+
+## Catatan implementasi area siswa ? 1 Oktober 2026
+
+**ENGINEERING DECISION:** desain pratinjau dipindahkan ke area siswa terautentikasi dengan dashboard NestJS, engine PvP teruji fixture, serta endpoint/proyeksi leaderboard. Ini tidak menutup **OPEN-07** atau **OPEN-11**: akun nyata tidak dapat memulai PvP, kebijakan fixture tidak tersedia melalui konfigurasi runtime, dan tidak ada XP Drill/Tryout otomatis. **PROPOSED:** peringkat seri 1,1,3 tetap menunggu review produk sebelum rilis. Lihat [kontrak area siswa](../api/STUDENT_AREA_CONTRACT.md).

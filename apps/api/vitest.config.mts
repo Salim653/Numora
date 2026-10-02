@@ -2,6 +2,10 @@ import { defineConfig } from 'vitest/config';
 import ts from 'typescript';
 
 export default defineConfig({
+  test: {
+    maxWorkers: 2,
+    env: { TEACHER_TOKEN_PEPPER: 'fixture-only-teacher-token-pepper-not-for-deployment' },
+  },
   plugins: [
     {
       name: 'nestjs-test-metadata',

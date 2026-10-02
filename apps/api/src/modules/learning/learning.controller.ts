@@ -1,8 +1,13 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { LearningService } from './learning.service';
+import { DrillAssessmentService } from './drill-assessment.service';
+import { AssessmentHistoryService } from './assessment-history.service';
+import { LearningCatalogService } from './learning-catalog.service';
+import { StudentDashboardService } from './student-dashboard.service';
+import { StudentDashboardDto } from './student-dashboard.dto';
 import {
   CatalogDto,
+  AssessmentHistoryDto,
   ChapterDetailDto,
   DrillAttemptDto,
   DrillResultDto,
@@ -17,12 +22,23 @@ import {
 @ApiBearerAuth()
 @Controller()
 export class LearningController {
-  constructor(private readonly learning: LearningService) {}
+  constructor(
+    private readonly catalogService: LearningCatalogService,
+    private readonly drillService: DrillAssessmentService,
+    private readonly historyService: AssessmentHistoryService,
+    private readonly dashboardService: StudentDashboardService,
+  ) {}
+
+  @Get('students/me/dashboard')
+  @ApiOkResponse({ type: StudentDashboardDto })
+  dashboard(@Headers('authorization') authorization?: string) {
+    return this.dashboardService.dashboard(authorization);
+  }
 
   @Get('chapters')
   @ApiOkResponse({ type: CatalogDto })
   catalog(@Headers('authorization') authorization?: string) {
-    return this.learning.catalog(authorization);
+    return this.catalogService.catalog(authorization);
   }
 
   @Get('chapters/:chapterId')
@@ -31,7 +47,7 @@ export class LearningController {
     @Headers('authorization') authorization: string | undefined,
     @Param('chapterId', ParseUUIDPipe) chapterId: string,
   ) {
-    return this.learning.chapter(authorization, chapterId);
+    return this.catalogService.chapter(authorization, chapterId);
   }
 
   @Get('subchapters/:subchapterId')
@@ -40,19 +56,28 @@ export class LearningController {
     @Headers('authorization') authorization: string | undefined,
     @Param('subchapterId', ParseUUIDPipe) subchapterId: string,
   ) {
-    return this.learning.subchapter(authorization, subchapterId);
+    return this.catalogService.subchapter(authorization, subchapterId);
   }
 
   @Get('students/me/progress')
   @ApiOkResponse({ type: StudentProgressDto })
   progress(@Headers('authorization') authorization?: string) {
-    return this.learning.progress(authorization);
+    return this.catalogService.progress(authorization);
+  }
+
+  @Get('students/me/assessment-results')
+  @ApiOkResponse({ type: AssessmentHistoryDto })
+  history(
+    @Headers('authorization') authorization: string | undefined,
+    @Query('cursor', new ParseUUIDPipe({ optional: true })) cursor?: string,
+  ) {
+    return this.historyService.list(authorization, cursor);
   }
 
   @Post('assessments/drill/attempts')
   @ApiCreatedResponse({ type: DrillAttemptDto })
   start(@Headers('authorization') authorization: string | undefined, @Body() input: StartDrillDto) {
-    return this.learning.start(authorization, input.levelId);
+    return this.drillService.start(authorization, input.levelId);
   }
 
   @Get('assessment-attempts/:attemptId')
@@ -61,7 +86,7 @@ export class LearningController {
     @Headers('authorization') authorization: string | undefined,
     @Param('attemptId', ParseUUIDPipe) attemptId: string,
   ) {
-    return this.learning.attempt(authorization, attemptId);
+    return this.drillService.attempt(authorization, attemptId);
   }
 
   @Patch('assessment-attempts/:attemptId/answers/:questionInstanceId')
@@ -72,7 +97,7 @@ export class LearningController {
     @Param('questionInstanceId', ParseUUIDPipe) questionInstanceId: string,
     @Body() input: SaveDrillAnswerDto,
   ) {
-    return this.learning.saveAnswer(authorization, attemptId, questionInstanceId, input.optionId);
+    return this.drillService.saveAnswer(authorization, attemptId, questionInstanceId, input.optionId);
   }
 
   @Post('assessment-attempts/:attemptId/submit')
@@ -81,7 +106,7 @@ export class LearningController {
     @Headers('authorization') authorization: string | undefined,
     @Param('attemptId', ParseUUIDPipe) attemptId: string,
   ) {
-    return this.learning.submit(authorization, attemptId);
+    return this.drillService.submit(authorization, attemptId);
   }
 
   @Get('assessment-attempts/:attemptId/result')
@@ -90,6 +115,6 @@ export class LearningController {
     @Headers('authorization') authorization: string | undefined,
     @Param('attemptId', ParseUUIDPipe) attemptId: string,
   ) {
-    return this.learning.result(authorization, attemptId);
+    return this.drillService.result(authorization, attemptId);
   }
 }

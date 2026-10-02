@@ -27,6 +27,8 @@ For the first school trial, a simple mock UI is accepted while UI/UX designs are
 
 ## High-risk scenarios
 
+The six-actor Cloud Development fixture and live Google flow are described in [QA_SEED.md](QA_SEED.md). Use new QA identities; retain the existing sandbox data.
+
 ### School verification
 
 - prototype Admin UI lists/creates/edits Schools, changes School status, and issues/reissues/revokes tokens before Teacher onboarding;

@@ -24,6 +24,8 @@ PRD v0.5 (28 September 2026) is the team-approved product source of truth, as co
 - `api/API_GUIDELINES.md`
 - `api/AUTHORIZATION.md`
 - `api/IDEMPOTENCY.md`
+- `api/CORE_LEARNING_FRONTEND_CONTRACT.md` — kontrak Drill, riwayat, dan infrastruktur Tryout; mencatat batas keputusan OPEN.
+- `api/STUDENT_AREA_CONTRACT.md` — dashboard, PvP Socket.IO, leaderboard dan batas rilis OPEN.
 
 ## Data
 
@@ -43,6 +45,8 @@ PRD v0.5 (28 September 2026) is the team-approved product source of truth, as co
 - `development/PROJECT_STRUCTURE.md` — panduan utama lokasi kode, struktur folder saat ini dan yang direncanakan, serta contoh kerja lintas tim.
 - `development/GETTING_STARTED.md`
 - `development/SPRINT_2_GOAL.md` — first Student vertical slice and additional Teacher UI needed for the prototype trial.
+- `development/CORE_LEARNING_BACKEND_STATUS.md` — implementasi backend, bukti lokal, dan pekerjaan Core Learning yang tersisa.
+- `development/STUDENT_AREA_IMPLEMENTATION.md` — integrasi desain siswa, migrasi PvP, verifikasi dan QA staging.
 - `development/GIT_WORKFLOW.md`
 - `development/CODING_STANDARDS.md`
 - `development/ENVIRONMENTS.md`

@@ -24,6 +24,7 @@
     "db:staging:bridge-check": "tsx src/staging-bridge-check.ts",
     "db:seed": "tsx src/seed.ts",
     "db:seed:learning": "tsx src/seed.ts --learning-only",
+    "db:seed:qa": "tsx src/qa-seed.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

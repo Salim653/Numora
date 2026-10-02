@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   chapters,
-  drillAttempts,
+  assessmentAttempts,
   getDatabase,
   levelProgress,
   levels,
@@ -49,21 +49,29 @@ export class MonitoringService {
       .from(levelProgress)
       .where(eq(levelProgress.studentId, studentId));
     const active = await db
-      .select({ levelId: drillAttempts.levelId })
-      .from(drillAttempts)
-      .where(and(eq(drillAttempts.studentId, studentId), eq(drillAttempts.status, 'IN_PROGRESS')));
+      .select({ levelId: assessmentAttempts.levelIdAtStart })
+      .from(assessmentAttempts)
+      .where(and(
+        eq(assessmentAttempts.studentId, studentId),
+        eq(assessmentAttempts.assessmentType, 'DRILL'),
+        eq(assessmentAttempts.status, 'IN_PROGRESS'),
+      ));
     const progressByLevel = new Map(states.map((row) => [row.levelId, row]));
-    const activeLevelIds = new Set(active.map((row) => row.levelId));
+    const activeLevelIds = new Set(active.flatMap((row) => row.levelId ? [row.levelId] : []));
     const [latest] = await db
-      .select({ score: drillAttempts.score })
-      .from(drillAttempts)
-      .where(and(eq(drillAttempts.studentId, studentId), eq(drillAttempts.status, 'COMPLETED')))
-      .orderBy(desc(drillAttempts.completedAt), desc(drillAttempts.id))
+      .select({ score: assessmentAttempts.score0To100 })
+      .from(assessmentAttempts)
+      .where(and(
+        eq(assessmentAttempts.studentId, studentId),
+        eq(assessmentAttempts.assessmentType, 'DRILL'),
+        eq(assessmentAttempts.status, 'GRADED'),
+      ))
+      .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
       .limit(1);
     return {
       class: owned.class,
       student,
-      latestDrillScore: latest?.score ?? null,
+      latestDrillScore: latest?.score === null || latest?.score === undefined ? null : Number(latest.score),
       levels: published.map((level) => {
         const state = progressByLevel.get(level.levelId);
         return {

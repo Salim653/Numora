@@ -1,7 +1,25 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiParam, ApiProperty, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiParam,
+  ApiProperty,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { IsString, Length, Matches } from 'class-validator';
 import { ClassesService } from './classes.service';
+import { CodeAttempt, CodeAttemptGuard } from '../security/code-attempt.guard';
 
 class ClassSummaryDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
@@ -10,7 +28,7 @@ class ClassSummaryDto {
 }
 
 class CreatedClassDto extends ClassSummaryDto {
-  @ApiProperty() declare joinCode: string;
+  @ApiProperty({ required: true }) declare joinCode: string;
 }
 class CreateClassDto {
   @ApiProperty({ minLength: 1, maxLength: 80 })
@@ -20,9 +38,10 @@ class CreateClassDto {
   name!: string;
 }
 class JoinClassDto {
-  @ApiProperty({ minLength: 8, maxLength: 32 })
+  @ApiProperty({ minLength: 6, maxLength: 32, pattern: '^(?:[A-Za-z0-9]{6}|[A-Za-z0-9_-]{8,32})$' })
   @IsString()
-  @Length(8, 32)
+  @Length(6, 32)
+  @Matches(/^(?:[A-Za-z0-9]{6}|[A-Za-z0-9_-]{8,32})$/)
   joinCode!: string;
 }
 class JoinedClassDto {
@@ -66,11 +85,16 @@ export class ClassesController {
   }
 
   @Post('join')
+  @CodeAttempt('class')
+  @UseGuards(CodeAttemptGuard)
+  @ApiResponse({
+    status: 429,
+    description: 'Attempt limit exceeded.',
+    headers: { 'Retry-After': { schema: { type: 'integer' } } },
+  })
+  @ApiResponse({ status: 503, description: 'Attempt limiter unavailable.' })
   @ApiCreatedResponse({ type: JoinedClassDto })
-  join(
-    @Headers('authorization') authorization: string | undefined,
-    @Body() body: JoinClassDto,
-  ) {
+  join(@Headers('authorization') authorization: string | undefined, @Body() body: JoinClassDto) {
     return this.classes.join(authorization, body.joinCode);
   }
 

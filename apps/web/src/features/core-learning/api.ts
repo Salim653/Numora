@@ -10,6 +10,12 @@ import type {
   TryoutResult,
   AssessmentHistory,
 } from './types';
+import type {
+  StudentDashboardDto,
+  StudentQuestionReportDto,
+  StudentVideoReportDto,
+  StudentVideosDto,
+} from './generated-types';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -23,7 +29,7 @@ export class LearningApiError extends Error {
   }
 }
 
-async function request<T>(token: string, path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(token: string, path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`${baseUrl}${path}`, {
@@ -59,6 +65,7 @@ async function request<T>(token: string, path: string, init?: RequestInit): Prom
 const id = encodeURIComponent;
 
 export const learningApi = {
+  dashboard: (token: string) => request<StudentDashboardDto>(token, '/students/me/dashboard'),
   catalog: (token: string) => request<Catalog>(token, '/chapters'),
   chapter: (token: string, chapterId: string) =>
     request<ChapterDetail>(token, `/chapters/${id(chapterId)}`),
@@ -119,4 +126,16 @@ export const learningApi = {
       token,
       `/students/me/assessment-results${cursor ? `?cursor=${id(cursor)}` : ''}`,
     ),
+  videos: (token: string, attemptId: string) =>
+    request<StudentVideosDto>(token, `/students/me/drill-attempts/${id(attemptId)}/videos`),
+  reportQuestion: (token: string, body: StudentQuestionReportDto) =>
+    request<{ id: string }>(token, '/students/me/question-reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  reportVideo: (token: string, body: StudentVideoReportDto) =>
+    request<{ id: string }>(token, '/students/me/video-reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
 };

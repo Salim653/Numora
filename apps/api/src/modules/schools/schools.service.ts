@@ -3,9 +3,9 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
-import { createHash, randomBytes } from 'node:crypto';
-import { and, eq, gt, isNull } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull } from 'drizzle-orm';
 import {
   auditLogs,
   getDatabase,
@@ -14,12 +14,25 @@ import {
   teacherVerificationTokens,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
+import { generateTeacherToken, hashTeacherToken, teacherTokenHashes } from './teacher-token';
 
-const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 const isUniqueViolation = (error: unknown): boolean => {
   if (typeof error !== 'object' || error === null) return false;
   if ('code' in error && error.code === '23505') return true;
   return 'cause' in error && isUniqueViolation(error.cause);
+};
+
+const isTokenHashCollision = (error: unknown): boolean => {
+  if (typeof error !== 'object' || error === null) return false;
+  if (
+    'code' in error &&
+    error.code === '23505' &&
+    (('constraint' in error && error.constraint === 'teacher_verification_tokens_hash_uq') ||
+      ('constraint_name' in error &&
+        error.constraint_name === 'teacher_verification_tokens_hash_uq'))
+  )
+    return true;
+  return 'cause' in error && isTokenHashCollision(error.cause);
 };
 
 @Injectable()
@@ -49,63 +62,69 @@ export class SchoolsService {
     const { db } = getDatabase();
     try {
       return await db.transaction(async (tx) => {
-      const [school] = await tx
-        .select({ id: schools.id })
-        .from(schools)
-        .where(and(eq(schools.id, schoolId), eq(schools.status, 'ACTIVE')))
-        .limit(1);
-      if (!school)
-        throw new NotFoundException({ code: 'SCHOOL_NOT_FOUND', detail: 'Sekolah tidak tersedia.' });
-      const [existing] = await tx
-        .select({ id: teacherSchoolMemberships.id })
-        .from(teacherSchoolMemberships)
-        .where(
-          and(
-            eq(teacherSchoolMemberships.teacherUserId, teacherId),
-            isNull(teacherSchoolMemberships.endedAt),
-          ),
-        )
-        .limit(1);
-      if (existing)
+        const [school] = await tx
+          .select({ id: schools.id })
+          .from(schools)
+          .where(and(eq(schools.id, schoolId), eq(schools.status, 'ACTIVE')))
+          .limit(1);
+        if (!school)
+          throw new NotFoundException({
+            code: 'SCHOOL_NOT_FOUND',
+            detail: 'Sekolah tidak tersedia.',
+          });
+        const [existing] = await tx
+          .select({ id: teacherSchoolMemberships.id })
+          .from(teacherSchoolMemberships)
+          .where(
+            and(
+              eq(teacherSchoolMemberships.teacherUserId, teacherId),
+              isNull(teacherSchoolMemberships.endedAt),
+            ),
+          )
+          .limit(1);
+        if (existing)
+          throw new ConflictException({
+            code: 'ALREADY_VERIFIED',
+            detail: 'Guru sudah terverifikasi pada sekolah.',
+          });
+        const now = new Date();
+        const [consumed] = await tx
+          .update(teacherVerificationTokens)
+          .set({ usedAt: now, usedByUserId: teacherId })
+          .where(
+            and(
+              eq(teacherVerificationTokens.schoolId, schoolId),
+              inArray(teacherVerificationTokens.tokenHash, teacherTokenHashes(token)),
+              isNull(teacherVerificationTokens.usedAt),
+              isNull(teacherVerificationTokens.revokedAt),
+              gt(teacherVerificationTokens.expiresAt, now),
+            ),
+          )
+          .returning({ id: teacherVerificationTokens.id });
+        if (!consumed)
+          throw new ForbiddenException({
+            code: 'INVALID_TEACHER_TOKEN',
+            detail: 'Token tidak valid, kedaluwarsa, telah dipakai, atau dicabut.',
+          });
+        await tx.insert(teacherSchoolMemberships).values({
+          teacherUserId: teacherId,
+          schoolId,
+          verificationTokenId: consumed.id,
+        });
+        await tx.insert(auditLogs).values({
+          actorUserId: teacherId,
+          action: 'teacher_verified',
+          entityType: 'school',
+          entityId: schoolId,
+        });
+        return { verified: true };
+      });
+    } catch (error) {
+      if (isUniqueViolation(error))
         throw new ConflictException({
           code: 'ALREADY_VERIFIED',
           detail: 'Guru sudah terverifikasi pada sekolah.',
         });
-      const now = new Date();
-      const [consumed] = await tx
-        .update(teacherVerificationTokens)
-        .set({ usedAt: now, usedByUserId: teacherId })
-        .where(
-          and(
-            eq(teacherVerificationTokens.schoolId, schoolId),
-            eq(teacherVerificationTokens.tokenHash, hashToken(token.trim())),
-            isNull(teacherVerificationTokens.usedAt),
-            isNull(teacherVerificationTokens.revokedAt),
-            gt(teacherVerificationTokens.expiresAt, now),
-          ),
-        )
-        .returning({ id: teacherVerificationTokens.id });
-      if (!consumed)
-        throw new ForbiddenException({
-          code: 'INVALID_TEACHER_TOKEN',
-          detail: 'Token tidak valid, kedaluwarsa, telah dipakai, atau dicabut.',
-        });
-      await tx.insert(teacherSchoolMemberships).values({
-        teacherUserId: teacherId,
-        schoolId,
-        verificationTokenId: consumed.id,
-      });
-      await tx.insert(auditLogs).values({
-        actorUserId: teacherId,
-        action: 'teacher_verified',
-        entityType: 'school',
-        entityId: schoolId,
-      });
-      return { verified: true };
-      });
-    } catch (error) {
-      if (isUniqueViolation(error))
-        throw new ConflictException({ code: 'ALREADY_VERIFIED', detail: 'Guru sudah terverifikasi pada sekolah.' });
       throw error;
     }
   }
@@ -120,30 +139,89 @@ export class SchoolsService {
       .limit(1);
     if (!school)
       throw new NotFoundException({ code: 'SCHOOL_NOT_FOUND', detail: 'Sekolah tidak tersedia.' });
-    const token = randomBytes(32).toString('base64url');
-    const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
-    const result = await db.transaction(async (tx) => {
-      const [created] = await tx
-        .insert(teacherVerificationTokens)
-        .values({ schoolId, tokenHash: hashToken(token), createdByUserId: adminId, expiresAt })
-        .returning({ id: teacherVerificationTokens.id });
-      await tx.insert(auditLogs).values({
-        actorUserId: adminId,
-        action: 'teacher_token_issued',
-        entityType: 'teacher_verification_token',
-        entityId: created!.id,
-      });
-      return created!;
+    return this.createToken(adminId, schoolId);
+  }
+
+  private async createToken(adminId: string, schoolId: string, replacedTokenId?: string) {
+    const { db } = getDatabase();
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const token = generateTeacherToken();
+      const createdAt = new Date();
+      const expiresAt = new Date(createdAt.getTime() + 72 * 60 * 60 * 1000);
+      try {
+        const issued = await db.transaction(async (tx) => {
+          // A pre-marker HMAC digest identifies the same token as hmac-v1.
+          // Check both encodings so an old token can never be reissued by collision.
+          const [collision] = await tx
+            .select({ id: teacherVerificationTokens.id })
+            .from(teacherVerificationTokens)
+            .where(inArray(teacherVerificationTokens.tokenHash, teacherTokenHashes(token)))
+            .limit(1);
+          if (collision) throw new TokenGenerationCollision();
+          if (replacedTokenId) {
+            const [revoked] = await tx
+              .update(teacherVerificationTokens)
+              .set({ revokedAt: createdAt })
+              .where(
+                and(
+                  eq(teacherVerificationTokens.id, replacedTokenId),
+                  eq(teacherVerificationTokens.schoolId, schoolId),
+                  isNull(teacherVerificationTokens.usedAt),
+                  isNull(teacherVerificationTokens.revokedAt),
+                ),
+              )
+              .returning({ id: teacherVerificationTokens.id });
+            if (!revoked)
+              throw new ConflictException({
+                code: 'TOKEN_NOT_REVOCABLE',
+                detail: 'Token sudah dipakai, dicabut, atau tidak ditemukan.',
+              });
+          }
+          const [created] = await tx
+            .insert(teacherVerificationTokens)
+            .values({
+              schoolId,
+              tokenHash: hashTeacherToken(token),
+              createdByUserId: adminId,
+              createdAt,
+              expiresAt,
+            })
+            .returning({ id: teacherVerificationTokens.id });
+          await tx.insert(auditLogs).values({
+            actorUserId: adminId,
+            action: replacedTokenId ? 'teacher_token_reissued' : 'teacher_token_issued',
+            entityType: 'teacher_verification_token',
+            entityId: created!.id,
+            ...(replacedTokenId ? { metadata: { replacedTokenId } } : {}),
+          });
+          return created!;
+        });
+        return { id: issued.id, token, expiresAt: expiresAt.toISOString() };
+      } catch (error) {
+        if (!(error instanceof TokenGenerationCollision) && !isTokenHashCollision(error))
+          throw error;
+      }
+    }
+    throw new ServiceUnavailableException({
+      code: 'TOKEN_GENERATION_UNAVAILABLE',
+      detail: 'Token belum dapat dibuat. Coba lagi.',
     });
-    return { id: result.id, token, expiresAt: expiresAt.toISOString() };
   }
 
   async listForAdmin(authorization?: string) {
     await this.role(authorization, 'ADMIN');
     const { db } = getDatabase();
-    return { items: await db.select({
-      id: schools.id, code: schools.code, name: schools.name, status: schools.status,
-    }).from(schools).orderBy(schools.name) };
+    return {
+      items: await db
+        .select({
+          id: schools.id,
+          code: schools.code,
+          name: schools.name,
+          status: schools.status,
+        })
+        .from(schools)
+        .orderBy(schools.name),
+    };
   }
 
   async createSchool(authorization: string | undefined, code: string, name: string) {
@@ -151,19 +229,32 @@ export class SchoolsService {
     const { db } = getDatabase();
     try {
       return await db.transaction(async (tx) => {
-      const [school] = await tx.insert(schools).values({
-        code: code.trim().toUpperCase(), name: name.trim(),
-      }).returning({
-        id: schools.id, code: schools.code, name: schools.name, status: schools.status,
-      });
-      await tx.insert(auditLogs).values({
-        actorUserId: adminId, action: 'school_created', entityType: 'school', entityId: school!.id,
-      });
-      return school!;
+        const [school] = await tx
+          .insert(schools)
+          .values({
+            code: code.trim().toUpperCase(),
+            name: name.trim(),
+          })
+          .returning({
+            id: schools.id,
+            code: schools.code,
+            name: schools.name,
+            status: schools.status,
+          });
+        await tx.insert(auditLogs).values({
+          actorUserId: adminId,
+          action: 'school_created',
+          entityType: 'school',
+          entityId: school!.id,
+        });
+        return school!;
       });
     } catch (error) {
       if (isUniqueViolation(error))
-        throw new ConflictException({ code: 'SCHOOL_CODE_EXISTS', detail: 'Kode sekolah sudah digunakan.' });
+        throw new ConflictException({
+          code: 'SCHOOL_CODE_EXISTS',
+          detail: 'Kode sekolah sudah digunakan.',
+        });
       throw error;
     }
   }
@@ -176,17 +267,30 @@ export class SchoolsService {
     const adminId = await this.role(authorization, 'ADMIN');
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
-      const [school] = await tx.update(schools).set({
-        ...(input.name !== undefined ? { name: input.name.trim() } : {}),
-        ...(input.status !== undefined ? { status: input.status } : {}),
-        updatedAt: new Date(),
-      }).where(eq(schools.id, schoolId)).returning({
-        id: schools.id, code: schools.code, name: schools.name, status: schools.status,
-      });
+      const [school] = await tx
+        .update(schools)
+        .set({
+          ...(input.name !== undefined ? { name: input.name.trim() } : {}),
+          ...(input.status !== undefined ? { status: input.status } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(schools.id, schoolId))
+        .returning({
+          id: schools.id,
+          code: schools.code,
+          name: schools.name,
+          status: schools.status,
+        });
       if (!school)
-        throw new NotFoundException({ code: 'SCHOOL_NOT_FOUND', detail: 'Sekolah tidak ditemukan.' });
+        throw new NotFoundException({
+          code: 'SCHOOL_NOT_FOUND',
+          detail: 'Sekolah tidak ditemukan.',
+        });
       await tx.insert(auditLogs).values({
-        actorUserId: adminId, action: 'school_updated', entityType: 'school', entityId: schoolId,
+        actorUserId: adminId,
+        action: 'school_updated',
+        entityType: 'school',
+        entityId: schoolId,
         metadata: { nameChanged: input.name !== undefined, status: input.status },
       });
       return school;
@@ -196,12 +300,15 @@ export class SchoolsService {
   async listTokens(authorization: string | undefined, schoolId: string) {
     await this.role(authorization, 'ADMIN');
     const { db } = getDatabase();
-    const items = await db.select({
-      id: teacherVerificationTokens.id,
-      expiresAt: teacherVerificationTokens.expiresAt,
-      usedAt: teacherVerificationTokens.usedAt,
-      revokedAt: teacherVerificationTokens.revokedAt,
-    }).from(teacherVerificationTokens).where(eq(teacherVerificationTokens.schoolId, schoolId));
+    const items = await db
+      .select({
+        id: teacherVerificationTokens.id,
+        expiresAt: teacherVerificationTokens.expiresAt,
+        usedAt: teacherVerificationTokens.usedAt,
+        revokedAt: teacherVerificationTokens.revokedAt,
+      })
+      .from(teacherVerificationTokens)
+      .where(eq(teacherVerificationTokens.schoolId, schoolId));
     return { items };
   }
 
@@ -209,22 +316,28 @@ export class SchoolsService {
     const adminId = await this.role(authorization, 'ADMIN');
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
-      const [revoked] = await tx.update(teacherVerificationTokens)
+      const [revoked] = await tx
+        .update(teacherVerificationTokens)
         .set({ revokedAt: new Date() })
-        .where(and(
-          eq(teacherVerificationTokens.id, tokenId),
-          eq(teacherVerificationTokens.schoolId, schoolId),
-          isNull(teacherVerificationTokens.usedAt),
-          isNull(teacherVerificationTokens.revokedAt),
-        ))
+        .where(
+          and(
+            eq(teacherVerificationTokens.id, tokenId),
+            eq(teacherVerificationTokens.schoolId, schoolId),
+            isNull(teacherVerificationTokens.usedAt),
+            isNull(teacherVerificationTokens.revokedAt),
+          ),
+        )
         .returning({ id: teacherVerificationTokens.id });
       if (!revoked)
         throw new ConflictException({
-          code: 'TOKEN_NOT_REVOCABLE', detail: 'Token sudah dipakai, dicabut, atau tidak ditemukan.',
+          code: 'TOKEN_NOT_REVOCABLE',
+          detail: 'Token sudah dipakai, dicabut, atau tidak ditemukan.',
         });
       await tx.insert(auditLogs).values({
-        actorUserId: adminId, action: 'teacher_token_revoked',
-        entityType: 'teacher_verification_token', entityId: tokenId,
+        actorUserId: adminId,
+        action: 'teacher_token_revoked',
+        entityType: 'teacher_verification_token',
+        entityId: tokenId,
       });
       return { revoked: true };
     });
@@ -232,32 +345,8 @@ export class SchoolsService {
 
   async reissueToken(authorization: string | undefined, schoolId: string, tokenId: string) {
     const adminId = await this.role(authorization, 'ADMIN');
-    const token = randomBytes(32).toString('base64url');
-    const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
-    const { db } = getDatabase();
-    const issued = await db.transaction(async (tx) => {
-      const [revoked] = await tx.update(teacherVerificationTokens)
-        .set({ revokedAt: new Date() })
-        .where(and(
-          eq(teacherVerificationTokens.id, tokenId),
-          eq(teacherVerificationTokens.schoolId, schoolId),
-          isNull(teacherVerificationTokens.usedAt),
-          isNull(teacherVerificationTokens.revokedAt),
-        )).returning({ id: teacherVerificationTokens.id });
-      if (!revoked)
-        throw new ConflictException({
-          code: 'TOKEN_NOT_REVOCABLE', detail: 'Token sudah dipakai, dicabut, atau tidak ditemukan.',
-        });
-      const [created] = await tx.insert(teacherVerificationTokens)
-        .values({ schoolId, tokenHash: hashToken(token), createdByUserId: adminId, expiresAt })
-        .returning({ id: teacherVerificationTokens.id });
-      await tx.insert(auditLogs).values({
-        actorUserId: adminId, action: 'teacher_token_reissued',
-        entityType: 'teacher_verification_token', entityId: created!.id,
-        metadata: { replacedTokenId: tokenId },
-      });
-      return created!;
-    });
-    return { id: issued.id, token, expiresAt: expiresAt.toISOString() };
+    return this.createToken(adminId, schoolId, tokenId);
   }
 }
+
+class TokenGenerationCollision extends Error {}

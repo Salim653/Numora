@@ -1,7 +1,7 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { LearningApiError } from './api';
 
 export function LearningProvider({ children }: { children: ReactNode }) {
@@ -17,6 +17,12 @@ export function LearningProvider({ children }: { children: ReactNode }) {
           },
         },
       }),
+  );
+  useEffect(
+    () => () => {
+      client.clear();
+    },
+    [client],
   );
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }

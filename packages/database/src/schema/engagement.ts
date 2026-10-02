@@ -3,6 +3,8 @@ import { boolean, check, foreignKey, index, integer, jsonb, numeric, pgEnum, pgT
 import { assessmentAttempts, assessmentPackages, packageItems } from './assessments.js';
 import { classes } from './classes.js';
 import { users } from './identity.js';
+import { questionVersions } from './content.js';
+import { scoringPolicyVersions } from './assessments.js';
 
 export const pvpMatchStatus = pgEnum('pvp_match_status', ['WAITING', 'READY', 'RUNNING', 'FINISHED', 'CANCELLED']);
 export const pvpConnectionStatus = pgEnum('pvp_connection_status', ['CONNECTED', 'DISCONNECTED', 'FORFEIT']);
@@ -62,6 +64,10 @@ export const pvpMatches = pgTable('pvp_matches', {
   roomCode: text('room_code').notNull(),
   packageId: uuid('package_id').notNull().references(() => assessmentPackages.id, { onDelete: 'restrict' }),
   creatorStudentId: uuid('creator_student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  createRequestId: uuid('create_request_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }),
+  scoringPolicyVersionId: uuid('scoring_policy_version_id').references(() => scoringPolicyVersions.id, { onDelete: 'restrict' }),
   difficulty: text('difficulty').notNull(),
   status: pvpMatchStatus('status').notNull().default('WAITING'),
   startedAt: timestamp('started_at', { withTimezone: true }),
@@ -71,8 +77,10 @@ export const pvpMatches = pgTable('pvp_matches', {
   scoringSnapshot: jsonb('scoring_snapshot').notNull().default({}),
 }, (table) => [
   uniqueIndex('pvp_matches_room_code_uq').on(table.roomCode),
+  uniqueIndex('pvp_matches_creator_request_uq').on(table.creatorStudentId, table.createRequestId),
   uniqueIndex('pvp_matches_id_package_uq').on(table.id, table.packageId),
-  check('pvp_matches_time_ck', sql`${table.endedAt} is null or (${table.startedAt} is not null and ${table.endedAt} >= ${table.startedAt})`),
+  check('pvp_matches_time_ck', sql`${table.endedAt} is null or ${table.endedAt} >= coalesce(${table.startedAt}, ${table.createdAt})`),
+  check('pvp_matches_difficulty_ck', sql`${table.difficulty} in ('easy', 'medium', 'hard')`),
 ]).enableRLS();
 
 export const pvpPlayers = pgTable('pvp_players', {
@@ -99,6 +107,7 @@ export const pvpMatchQuestions = pgTable('pvp_match_questions', {
   matchId: uuid('match_id').notNull().references(() => pvpMatches.id, { onDelete: 'restrict' }),
   packageId: uuid('package_id').notNull(),
   packageItemId: uuid('package_item_id').notNull().references(() => packageItems.id, { onDelete: 'restrict' }),
+  questionVersionId: uuid('question_version_id').notNull().references(() => questionVersions.id, { onDelete: 'restrict' }),
   displayOrder: integer('display_order').notNull(),
   startedAt: timestamp('started_at', { withTimezone: true }),
   deadlineAt: timestamp('deadline_at', { withTimezone: true }),
@@ -107,6 +116,11 @@ export const pvpMatchQuestions = pgTable('pvp_match_questions', {
   uniqueIndex('pvp_match_questions_match_order_uq').on(table.matchId, table.displayOrder),
   uniqueIndex('pvp_match_questions_match_item_uq').on(table.matchId, table.packageItemId),
   uniqueIndex('pvp_match_questions_id_match_uq').on(table.id, table.matchId),
+  foreignKey({
+    name: 'pvp_match_questions_item_version_fk',
+    columns: [table.packageItemId, table.questionVersionId],
+    foreignColumns: [packageItems.id, packageItems.questionVersionId],
+  }).onDelete('restrict'),
   foreignKey({
     name: 'pvp_match_questions_match_package_fk',
     columns: [table.matchId, table.packageId],
@@ -125,12 +139,14 @@ export const pvpAnswers = pgTable('pvp_answers', {
   playerId: uuid('player_id').notNull().references(() => pvpPlayers.id, { onDelete: 'restrict' }),
   matchId: uuid('match_id').notNull(),
   matchQuestionId: uuid('match_question_id').notNull().references(() => pvpMatchQuestions.id, { onDelete: 'restrict' }),
+  requestId: uuid('request_id'),
   answer: jsonb('answer').notNull(),
   receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
   basePoints: numeric('base_points', { precision: 10, scale: 2 }).notNull().default('0'),
   speedBonus: numeric('speed_bonus', { precision: 10, scale: 2 }).notNull().default('0'),
 }, (table) => [
   uniqueIndex('pvp_answers_player_question_uq').on(table.playerId, table.matchQuestionId),
+  uniqueIndex('pvp_answers_player_request_uq').on(table.playerId, table.requestId),
   foreignKey({
     name: 'pvp_answers_player_match_fk',
     columns: [table.playerId, table.matchId],
@@ -176,6 +192,7 @@ export const pvpInvites = pgTable('pvp_invites', {
   matchId: uuid('match_id').notNull().references(() => pvpMatches.id, { onDelete: 'restrict' }),
   classIdAtInvite: uuid('class_id_at_invite').notNull().references(() => classes.id, { onDelete: 'restrict' }),
   senderStudentId: uuid('sender_student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  requestId: uuid('request_id'),
   recipientStudentId: uuid('recipient_student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
   status: pvpInviteStatus('status').notNull().default('PENDING'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -183,6 +200,7 @@ export const pvpInvites = pgTable('pvp_invites', {
   respondedAt: timestamp('responded_at', { withTimezone: true }),
 }, (table) => [
   uniqueIndex('pvp_invites_pending_recipient_uq').on(table.matchId, table.recipientStudentId).where(sql`${table.status} = 'PENDING'`),
+  uniqueIndex('pvp_invites_sender_request_uq').on(table.senderStudentId, table.requestId),
   index('pvp_invites_recipient_status_idx').on(table.recipientStudentId, table.status),
   check('pvp_invites_distinct_students_ck', sql`${table.senderStudentId} <> ${table.recipientStudentId}`),
   check('pvp_invites_expiry_ck', sql`${table.expiresAt} is null or ${table.expiresAt} > ${table.createdAt}`),

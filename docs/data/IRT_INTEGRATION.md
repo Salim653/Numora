@@ -17,6 +17,8 @@ Detailed thresholds/model parameters remain OPEN-12.
 
 ## Architectural principle
 
+**ENGINEERING IMPLEMENTATION, 1 October 2026:** `IrtIntegrationService` provides canonical response snapshots, pseudonymous respondents, transactional output persistence, and idempotent completion/failure handling. The envelope still requires Data review; the model, scheduler, and release policy remain owned by Data/Qurotul and OPEN-12/18. See [FERDI_CONTENT_SUPPORT](../api/FERDI_CONTENT_SUPPORT.md). Migration `0004_flimsy_korg` adds nullable batch metadata; no automatic Tryout release or historical score/XP rewrite is performed.
+
 IRT is asynchronous and must not run in the Student answer/submit critical request path.
 
 ```text

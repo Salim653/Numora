@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { Badge, Icon } from '@tka/ui';
 import { useParams, useRouter } from 'next/navigation';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { learningApi, LearningApiError } from './api';
 import type { TryoutAttempt } from './types';
 import { AssessmentSession } from './assessment-session';
@@ -19,7 +20,10 @@ import {
 export function TryoutScreen() {
   return (
     <LearningFrame title="TryOut">
-      <Panel className="mb-5 bg-[var(--numora-pearl)]">
+      <Panel className="tryout-hero mb-5">
+        <span className="icon-tile accent-1">
+          <Icon name="clipboard" />
+        </span>
         <p className="text-sm font-bold uppercase tracking-wide text-[var(--numora-purple)]">
           Simulasi mingguan
         </p>
@@ -49,12 +53,36 @@ function CurrentTryout({ token }: { token: string }) {
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   const current = query.data;
-  if (current.state === 'unavailable')
+  if (current.state === 'unavailable' || !current.id || !current.releaseAt)
     return (
-      <Status title="Paket belum tersedia">TryOut yang dapat dikerjakan belum diterbitkan.</Status>
+      <Status title={current.eligible ? 'Paket belum tersedia' : 'Tryout untuk siswa sekolah'}>
+        <p>
+          {current.eligible
+            ? 'Paket Tryout yang dapat dikerjakan belum diterbitkan. Paket tersedia akan muncul di sini.'
+            : 'Bergabung dengan kelas menggunakan kode dari guru untuk mendapatkan akses Tryout.'}
+        </p>
+        <Link
+          className="button-link"
+          href={current.eligible ? '/student/learn' : '/student/profile'}
+        >
+          {current.eligible ? 'Latihan dulu' : 'Gabung kelas'}
+          <Icon name="arrow" />
+        </Link>
+      </Status>
     );
+  const packageId = current.id;
   return (
-    <Panel>
+    <Panel className="tryout-package">
+      <Badge variant="primary">
+        {
+          {
+            open: 'Tersedia',
+            inProgress: 'Sedang berlangsung',
+            waitingIrt: 'Menunggu IRT',
+            resultReady: 'Selesai',
+          }[current.state]
+        }
+      </Badge>
       <p className="text-sm font-semibold text-[var(--numora-purple)]">Paket berjalan</p>
       <h2 className="mt-2 text-xl font-bold">{current.title}</h2>
       <p className="mt-2 text-sm text-slate-700">
@@ -66,21 +94,21 @@ function CurrentTryout({ token }: { token: string }) {
         }).format(new Date(current.releaseAt))}{' '}
         WIB
       </p>
-      {current.questionCount !== null && (
+      {current.questionCount != null && (
         <p className="mt-1 text-sm text-slate-700">{current.questionCount} soal</p>
       )}
-      {current.durationSeconds !== null && (
+      {current.durationSeconds != null && (
         <p className="mt-1 text-sm text-slate-700">
           Durasi paket: {Math.ceil(current.durationSeconds / 60)} menit
         </p>
       )}
       {!current.eligible && (
         <p className="mt-4 rounded-xl bg-amber-100 p-3 text-sm font-semibold text-amber-950">
-          TryOut MVP tersedia untuk siswa yang sudah bergabung ke kelas.
+          Tryout tersedia untuk siswa yang sudah bergabung ke kelas.
         </p>
       )}
       {current.eligible && current.state === 'open' && (
-        <PrimaryButton disabled={start.isPending} onClick={() => start.mutate(current.id)}>
+        <PrimaryButton disabled={start.isPending} onClick={() => start.mutate(packageId)}>
           {start.isPending ? 'Memulai…' : 'Mulai TryOut'}
         </PrimaryButton>
       )}
@@ -120,7 +148,7 @@ function CurrentTryout({ token }: { token: string }) {
 export function TryoutAttemptScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
   return (
-    <LearningFrame title="Mengerjakan TryOut">
+    <LearningFrame title="Mengerjakan TryOut" focus>
       <StudentGate>{(token) => <AttemptData token={token} attemptId={attemptId} />}</StudentGate>
     </LearningFrame>
   );
@@ -150,6 +178,7 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
 
 function TryoutForm({ attempt, token }: { attempt: TryoutAttempt; token: string }) {
   const router = useRouter();
+  const client = useQueryClient();
   const deadline = attempt.deadlineAt
     ? new Intl.DateTimeFormat('id-ID', {
         dateStyle: 'medium',
@@ -170,7 +199,11 @@ function TryoutForm({ attempt, token }: { attempt: TryoutAttempt; token: string 
         learningApi.saveTryoutAnswer(token, attempt.id, questionId, optionId)
       }
       onSubmit={() => learningApi.submitTryout(token, attempt.id)}
-      onSubmitted={() => router.push('/student/tryout')}
+      onSubmitted={() => {
+        for (const key of ['current-tryout', 'student-dashboard', 'assessment-history'])
+          void client.invalidateQueries({ queryKey: [key] });
+        router.push('/student/tryout');
+      }}
     />
   );
 }

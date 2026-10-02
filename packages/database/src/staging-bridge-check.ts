@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { copyFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -39,13 +39,17 @@ async function run() {
         cwd: databaseRoot, env, stdio: 'inherit',
       });
     }
-    await migrate(drizzle(client), { migrationsFolder: resolve(databaseRoot, 'drizzle') });
+    const migrationsFolder = resolve(databaseRoot, 'drizzle');
+    const journal = JSON.parse(await readFile(join(migrationsFolder, 'meta', '_journal.json'), 'utf8')) as {
+      entries: { tag: string }[];
+    };
+    await migrate(drizzle(client), { migrationsFolder });
     const [state] = await client<{ tables: number; migrations: number; withoutRls: number }[]>`
       SELECT
         (SELECT count(*)::int FROM pg_catalog.pg_tables WHERE schemaname = 'public') AS tables,
         (SELECT count(*)::int FROM drizzle.__drizzle_migrations) AS migrations,
         (SELECT count(*)::int FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND NOT rowsecurity) AS "withoutRls"`;
-    assert.deepEqual(state, { tables: 52, migrations: 4, withoutRls: 0 });
+    assert.deepEqual(state, { tables: 52, migrations: journal.entries.length, withoutRls: 0 });
     const columnsQuery = `SELECT table_name, column_name, udt_name, is_nullable
       FROM information_schema.columns WHERE table_schema = 'public'
       ORDER BY table_name, column_name`;

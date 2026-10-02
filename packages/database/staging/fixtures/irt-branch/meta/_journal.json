@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790860824323,
+      "tag": "0004_flimsy_korg",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790871930466,
+      "tag": "0005_irt_metadata_cursor_recovery",
+      "breakpoints": true
+    }
+  ]
+}

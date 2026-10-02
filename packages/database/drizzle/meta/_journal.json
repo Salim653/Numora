@@ -29,6 +29,48 @@
       "when": 1790709229920,
       "tag": "0003_unusual_manta",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790851657275,
+      "tag": "0004_workable_elektra",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790852865208,
+      "tag": "0005_aspiring_spyke",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790854978749,
+      "tag": "0006_tan_sway",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790860089783,
+      "tag": "0007_gorgeous_bulldozer",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790862061674,
+      "tag": "0008_solid_sprite",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790903375690,
+      "tag": "0009_irt_integration_metadata",
+      "breakpoints": true
     }
   ]
 }

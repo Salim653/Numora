@@ -20,8 +20,11 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         : 'An unexpected error occurred.';
     const request = host.switchToHttp().getRequest<{ url: string }>();
     const response = host.switchToHttp().getResponse<{
+      setHeader(name: string, value: string): void;
       status(code: number): { type(value: string): { json(value: unknown): void } };
     }>();
+    if (status === 429 && typeof details.retryAfter === 'number')
+      response.setHeader('Retry-After', String(Math.max(1, Math.ceil(details.retryAfter))));
     response
       .status(status)
       .type('application/problem+json')

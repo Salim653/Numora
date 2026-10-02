@@ -1,7 +1,16 @@
 import type { Metadata } from 'next';
+import localFont from 'next/font/local';
 import './globals.css';
+import './numora.css';
 import { AuthProvider } from '@/features/onboarding/auth';
 import 'katex/dist/katex.min.css';
+
+const inter = localFont({
+  src: './fonts/InterVariable.woff2',
+  display: 'swap',
+  weight: '100 900',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: 'NUMORA',
@@ -11,7 +20,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id">
-      <body>
+      <body className={inter.variable}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

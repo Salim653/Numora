@@ -1,18 +1,28 @@
 'use client';
 
 import Link from 'next/link';
+import { Icon } from '@tka/ui';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { learningApi } from './api';
 import type { DrillAttempt, DrillResult } from './types';
 import { AssessmentSession } from './assessment-session';
-import { DataState, LearningFrame, MathText, Panel, Status, StudentGate } from './ui';
+import {
+  DataState,
+  LearningFrame,
+  MathText,
+  Panel,
+  PrimaryButton,
+  Status,
+  StudentGate,
+} from './ui';
+import { RecommendedVideos, ReportForm } from './support';
 
 export function DrillScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
   return (
-    <LearningFrame title="Drill">
+    <LearningFrame title="Drill" focus>
       <StudentGate>{(token) => <DrillData token={token} attemptId={attemptId} />}</StudentGate>
     </LearningFrame>
   );
@@ -48,6 +58,8 @@ function DrillData({ token, attemptId }: { token: string; attemptId: string }) {
       token={token}
       onComplete={() => {
         void queryClient.invalidateQueries({ queryKey: ['student-progress'] });
+        void queryClient.invalidateQueries({ queryKey: ['student-dashboard'] });
+        void queryClient.invalidateQueries({ queryKey: ['assessment-history'] });
         void queryClient.invalidateQueries({ queryKey: ['subchapter'] });
         router.push(`/student/drill/${attemptId}/result`);
       }}
@@ -134,6 +146,8 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
         </p>
       )}
       <ResultSummary result={result} />
+      {result.unlockedLevelId && <ContinueDrill token={token} levelId={result.unlockedLevelId} />}
+      <RecommendedVideos token={token} attemptId={attemptId} />
       <h2 className="text-xl font-bold">Pembahasan</h2>
       {result.explanationState === 'expired' ? (
         <Status title="Pembahasan tidak tersedia">
@@ -167,6 +181,17 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
             <p className="mt-3 text-slate-700">
               <MathText value={q.explanation} />
             </p>
+            <ReportForm
+              label={`Laporkan soal ${index + 1}`}
+              submit={(category, details, clientRequestId) =>
+                learningApi.reportQuestion(token, {
+                  clientRequestId,
+                  attemptItemId: q.questionInstanceId,
+                  category,
+                  details,
+                })
+              }
+            />
           </Panel>
         ))
       )}
@@ -174,23 +199,71 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
   );
 }
 
-export function ResultSummary({ result }: { result: DrillResult }) {
+function ContinueDrill({ token, levelId }: { token: string; levelId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function start() {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const attempt = await learningApi.start(token, levelId);
+      router.push(`/student/drill/${attempt.id}`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Level berikutnya belum dapat dimulai.');
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <Panel>
+      <h2 className="font-bold">Lanjutkan level berikutnya</h2>
+      <p className="my-3 text-sm text-slate-700">
+        Level berikutnya sudah terbuka. Mulai latihan saat paket soal tersedia.
+      </p>
+      <PrimaryButton disabled={busy} onClick={() => void start()}>
+        {busy ? 'Menyiapkan Drill…' : 'Mulai level berikutnya'}
+      </PrimaryButton>
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+    </Panel>
+  );
+}
+
+export function ResultSummary({ result }: { result: DrillResult }) {
+  return (
+    <Panel className="drill-result-summary">
       <p className="text-sm font-semibold text-[var(--numora-purple)]">{result.levelTitle}</p>
-      <p className="mt-2 text-5xl font-extrabold">{result.score}</p>
+      <div className="result-score">
+        {result.score}
+        <small>dari 100</small>
+      </div>
       <p className="mt-1 text-slate-700">
         {result.correctCount} dari {result.questionCount} benar · {result.rawPoints} poin mentah
       </p>
       <p className="mt-3 font-semibold">{result.mastered ? 'Tuntas' : 'Belum tuntas'}</p>
-      {result.stars !== null && <p className="mt-1">Bintang: {result.stars}</p>}
+      {result.stars !== null && (
+        <>
+          <div className="result-stars" aria-hidden="true">
+            {Array.from({ length: 3 }, (_, index) => (
+              <Icon
+                key={index}
+                name="star"
+                fill={index < result.stars! ? 'currentColor' : 'none'}
+              />
+            ))}
+          </div>
+          <p className="mt-1">Bintang: {result.stars}</p>
+        </>
+      )}
       {result.unlockedLevelId && (
         <p className="mt-2 font-semibold text-[var(--numora-purple)]">Level berikutnya terbuka.</p>
       )}
-      <Link
-        className="mt-5 inline-block font-semibold text-[var(--numora-purple)] underline"
-        href="/student/learn"
-      >
+      <Link className="button-link mt-5" href="/student/learn">
         Kembali ke materi
       </Link>
     </Panel>

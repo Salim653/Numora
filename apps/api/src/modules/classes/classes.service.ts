@@ -1,5 +1,10 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { randomBytes } from 'node:crypto';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import {
   auditLogs,
@@ -11,6 +16,7 @@ import {
   users,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
+import { generateClassJoinCode, isJoinCodeCollision } from './join-code';
 
 @Injectable()
 export class ClassesService {
@@ -29,44 +35,57 @@ export class ClassesService {
 
   async create(authorization: string | undefined, name: string) {
     if (!name.trim())
-      throw new ConflictException({ code: 'CLASS_NAME_REQUIRED', detail: 'Nama Class wajib diisi.' });
+      throw new ConflictException({
+        code: 'CLASS_NAME_REQUIRED',
+        detail: 'Nama Class wajib diisi.',
+      });
     const teacherId = await this.teacher(authorization);
     const { db } = getDatabase();
-    const [membership] = await db
-      .select({ schoolId: teacherSchoolMemberships.schoolId })
-      .from(teacherSchoolMemberships)
-      .innerJoin(schools, eq(schools.id, teacherSchoolMemberships.schoolId))
-      .where(
-        and(
-          eq(teacherSchoolMemberships.teacherUserId, teacherId),
-          isNull(teacherSchoolMemberships.endedAt),
-          eq(schools.status, 'ACTIVE'),
-        ),
-      )
-      .limit(1);
-    if (!membership)
-      throw new ForbiddenException({
-        code: 'SCHOOL_FORBIDDEN',
-        detail: 'Sekolah aktif dan verifikasi Guru diperlukan.',
-      });
-    const joinCode = randomBytes(10).toString('base64url').toUpperCase();
-    return db.transaction(async (tx) => {
-      const [created] = await tx
-        .insert(classes)
-        .values({
-          schoolId: membership.schoolId,
-          teacherUserId: teacherId,
-          name: name.trim(),
-          joinCode,
-        })
-        .returning({ id: classes.id, name: classes.name, joinCode: classes.joinCode });
-      await tx.insert(auditLogs).values({
-        actorUserId: teacherId,
-        action: 'class_created',
-        entityType: 'class',
-        entityId: created!.id,
-      });
-      return created!;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        return await db.transaction(async (tx) => {
+          const [membership] = await tx
+            .select({ schoolId: teacherSchoolMemberships.schoolId })
+            .from(teacherSchoolMemberships)
+            .innerJoin(schools, eq(schools.id, teacherSchoolMemberships.schoolId))
+            .where(
+              and(
+                eq(teacherSchoolMemberships.teacherUserId, teacherId),
+                isNull(teacherSchoolMemberships.endedAt),
+                eq(schools.status, 'ACTIVE'),
+              ),
+            )
+            .for('share')
+            .limit(1);
+          if (!membership)
+            throw new ForbiddenException({
+              code: 'SCHOOL_FORBIDDEN',
+              detail: 'Sekolah aktif dan verifikasi Guru diperlukan.',
+            });
+          const [created] = await tx
+            .insert(classes)
+            .values({
+              schoolId: membership.schoolId,
+              teacherUserId: teacherId,
+              name: name.trim(),
+              joinCode: generateClassJoinCode(),
+            })
+            .returning({ id: classes.id, name: classes.name, joinCode: classes.joinCode });
+          await tx.insert(auditLogs).values({
+            actorUserId: teacherId,
+            action: 'class_created',
+            entityType: 'class',
+            entityId: created!.id,
+          });
+          return created!;
+        });
+      } catch (error) {
+        if (!isJoinCodeCollision(error)) throw error;
+      }
+    }
+    throw new ServiceUnavailableException({
+      code: 'CLASS_CODE_GENERATION_UNAVAILABLE',
+      detail: 'Kode kelas belum dapat dibuat. Coba lagi.',
     });
   }
 
@@ -75,30 +94,34 @@ export class ClassesService {
     if (profile.role !== 'STUDENT')
       throw new ForbiddenException({ code: 'STUDENT_REQUIRED', detail: 'Akses Siswa diperlukan.' });
     const { db } = getDatabase();
-    const [target] = await db
-      .select({ id: classes.id, name: classes.name, joinCode: classes.joinCode })
-      .from(classes)
-      .innerJoin(schools, eq(schools.id, classes.schoolId))
-      .where(
-        and(
-          eq(classes.joinCode, joinCode.trim().toUpperCase()),
-          isNull(classes.archivedAt),
-          eq(schools.status, 'ACTIVE'),
-        ),
-      )
-      .limit(1);
-    if (!target)
-      throw new NotFoundException({ code: 'CLASS_NOT_FOUND', detail: 'Kode Class tidak valid.' });
     return db.transaction(async (tx) => {
+      const [target] = await tx
+        .select({ id: classes.id, name: classes.name, joinCode: classes.joinCode })
+        .from(classes)
+        .innerJoin(schools, eq(schools.id, classes.schoolId))
+        .innerJoin(
+          teacherSchoolMemberships,
+          and(
+            eq(teacherSchoolMemberships.teacherUserId, classes.teacherUserId),
+            eq(teacherSchoolMemberships.schoolId, classes.schoolId),
+            isNull(teacherSchoolMemberships.endedAt),
+          ),
+        )
+        .where(
+          and(
+            eq(classes.joinCode, joinCode.trim().toUpperCase()),
+            isNull(classes.archivedAt),
+            eq(schools.status, 'ACTIVE'),
+          ),
+        )
+        .for('share')
+        .limit(1);
+      if (!target)
+        throw new NotFoundException({ code: 'CLASS_NOT_FOUND', detail: 'Kode Class tidak valid.' });
       const [existing] = await tx
         .select({ classId: classMemberships.classId })
         .from(classMemberships)
-        .where(
-          and(
-            eq(classMemberships.studentUserId, profile.id),
-            isNull(classMemberships.leftAt),
-          ),
-        )
+        .where(and(eq(classMemberships.studentUserId, profile.id), isNull(classMemberships.leftAt)))
         .limit(1);
       if (existing) {
         if (existing.classId === target.id) return { class: target, joined: true };
@@ -142,7 +165,13 @@ export class ClassesService {
         ),
       )
       .innerJoin(schools, eq(schools.id, classes.schoolId))
-      .where(and(eq(classes.teacherUserId, teacherId), isNull(classes.archivedAt), eq(schools.status, 'ACTIVE')))
+      .where(
+        and(
+          eq(classes.teacherUserId, teacherId),
+          isNull(classes.archivedAt),
+          eq(schools.status, 'ACTIVE'),
+        ),
+      )
       .orderBy(asc(classes.name), asc(classes.id));
     return { items };
   }
@@ -181,8 +210,11 @@ export class ClassesService {
     if (!membership) {
       throw new ForbiddenException({ code: 'SCHOOL_FORBIDDEN', detail: 'Akses sekolah ditolak.' });
     }
-    const [activeSchool] = await db.select({ id: schools.id }).from(schools)
-      .where(and(eq(schools.id, ownedClass.schoolId), eq(schools.status, 'ACTIVE'))).limit(1);
+    const [activeSchool] = await db
+      .select({ id: schools.id })
+      .from(schools)
+      .where(and(eq(schools.id, ownedClass.schoolId), eq(schools.status, 'ACTIVE')))
+      .limit(1);
     if (!activeSchool) {
       throw new ForbiddenException({ code: 'SCHOOL_FORBIDDEN', detail: 'Sekolah tidak aktif.' });
     }

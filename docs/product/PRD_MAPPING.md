@@ -65,6 +65,8 @@ Progress + XP ledger ── class leaderboard / monitoring / feedback
 
 ## Change-impact rule
 
+**ENGINEERING IMPLEMENTATION, 1 October 2026:** Ferdi's canonical Drill package APIs, Student video/report support, and IRT integration boundary are described in [FERDI_CONTENT_SUPPORT](../api/FERDI_CONTENT_SUPPORT.md). See [implementation status](../development/FERDI_IMPLEMENTATION_2026-10-01.md) for handoffs and blockers. Canonical assessment consumption/migration, the Data model, and Tryout release policy remain dependencies; this update does not resolve OPEN items or declare the MVP ready.
+
 Any PRD change must be checked against at least:
 
 - API/OpenAPI;
@@ -74,3 +76,7 @@ Any PRD change must be checked against at least:
 - test scenarios;
 - documentation;
 - data/AI content contract where applicable.
+
+## Pemetaan implementasi area siswa ? 1 Oktober 2026
+
+Dashboard/area siswa berada pada `modules/learning/student-dashboard.*` dan layout `app/student`; PvP pada `modules/pvp`, leaderboard pada `modules/leaderboards`, serta proyeksi worker `class-leaderboard.ts` yang juga membangun best record PvP. Kontrak REST/WebSocket dan migrasi 0007/0008 mencatat persistensi/versioning/idempotensi. **OPEN-07/OPEN-11 tetap OPEN**; fixture tes tidak menjadi perilaku produk. Lihat [status integrasi siswa](../development/STUDENT_AREA_IMPLEMENTATION.md).

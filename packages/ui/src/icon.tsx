@@ -1,0 +1,47 @@
+import type { SVGProps } from 'react';
+
+const paths = {
+  home: 'm3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z',
+  book: 'M12 5v16M3 4h5a4 4 0 0 1 4 2 4 4 0 0 1 4-2h5v15h-5a4 4 0 0 0-4 2 4 4 0 0 0-4-2H3Z',
+  target: 'M21 12a9 9 0 1 1-9-9m5 9a5 5 0 1 1-5-5m0 5 9-9m-5 0h5v5',
+  clipboard: 'M9 4H5v17h14V4h-4M9 2h6v5H9ZM8 12h8m-8 4h5',
+  chart: 'M4 3v18h17M8 16v-4m5 4V7m5 9v-6',
+  user: 'M20 21v-2a6 6 0 0 0-6-6h-4a6 6 0 0 0-6 6v2M16 6a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+  users:
+    'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0m4-3.87a4 4 0 0 1 0 7.75',
+  school: 'm3 10 9-7 9 7M5 9v12h14V9M9 21v-6h6v6M10 9h4',
+  clock: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0m-9-5v5l3 2',
+  arrow: 'M4 12h16m-6-6 6 6-6 6',
+  chevron: 'm9 5 7 7-7 7',
+  back: 'm15 5-7 7 7 7',
+  search: 'M20 20l-5-5m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0',
+  lock: 'M6 10h12v11H6ZM8 10V6a4 4 0 0 1 8 0v4m-4 5v2',
+  check: 'm5 12 4 4L19 6',
+  star: 'm12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9Z',
+  spark: 'm12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z',
+  logout: 'M9 4H4v16h5m0-8h12m-4-4 4 4-4 4',
+  menu: 'M4 6h16M4 12h16M4 18h16',
+  close: 'm6 6 12 12M6 18 18 6',
+  info: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0m-9-1v6m0-10v.01',
+  mail: 'M3 5h18v14H3Zm0 0 9 8 9-8',
+} as const;
+
+export type IconName = keyof typeof paths;
+export function Icon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d={paths[name]} />
+    </svg>
+  );
+}

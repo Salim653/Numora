@@ -8,7 +8,7 @@
   display: flex;
   color: var(--admin-ink);
   background: #fbfaf8;
-  font-family: "Nunito Sans", "Segoe UI", sans-serif;
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 14px;
 }
 
@@ -17,6 +17,8 @@
 .admin-preview .sidebar-brand, .admin-preview .login-brand { display: flex; align-items: center; gap: 10px; color: var(--admin-ink); text-decoration: none; font-size: 14px; font-weight: 900; letter-spacing: .04em; }
 .admin-preview .sidebar-brand { padding: 0 9px 32px; }
 .admin-preview .sidebar-brand i, .admin-preview .login-brand i { color: #a29aa8; font-size: 10px; font-style: normal; letter-spacing: .1em; margin-left: 3px; }
+.admin-preview .sidebar-brand .numora-brand,.admin-preview .login-brand .numora-brand{font-size:17px;letter-spacing:.025em}
+.admin-preview .sidebar-brand .numora-brand img,.admin-preview .login-brand .numora-brand img{width:26px;height:36px}
 .admin-preview .brand-mark { width: 32px; height: 32px; display: grid; place-items: center; color: #fff; background: var(--admin-purple); border-radius: 11px 11px 11px 4px; font-family: Georgia, serif; font-size: 21px; font-weight: 700; letter-spacing: -.08em; }
 .admin-preview .workspace-label, .admin-preview .eyebrow { color: #968d9a; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
 .admin-preview .workspace-label { padding: 0 12px 11px; }

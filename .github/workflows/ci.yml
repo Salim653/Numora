@@ -10,9 +10,20 @@ permissions:
 
 jobs:
   quality:
+    env:
+      TEACHER_TOKEN_PEPPER: fixture-only-teacher-token-pepper-not-for-deployment
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       postgres:
         image: postgres:16
         env:
@@ -55,12 +66,21 @@ jobs:
         env:
           NODE_ENV: test
           TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
+          TEST_REDIS_URL: redis://localhost:6379
           DATABASE_MIGRATION_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
         run: |
           pnpm --filter @tka/database db:migrate
           pnpm test
           pnpm --filter @tka/database db:upgrade-check
           pnpm --filter @tka/database db:staging:bridge-check
+
+      - name: Install browser for E2E
+        run: pnpm --filter @tka/web exec playwright install --with-deps chromium
+
+      - name: Browser E2E
+        env:
+          DEBUG: pw:webserver
+        run: pnpm --filter @tka/web test:e2e
 
       - name: Build
         run: pnpm build

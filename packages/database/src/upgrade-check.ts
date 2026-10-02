@@ -68,14 +68,50 @@ async function run() {
     await client`
       INSERT INTO drill_attempt_questions
         (attempt_id, question_variant_id, sort_order, stem, options, correct_option_id, explanation, selected_option_id)
-      VALUES (${attempt!.id}, ${variant!.id}, 1, '2 - 1?', ${options}::jsonb, 'A', 'One', 'A')`;
+      VALUES (${attempt!.id}, ${original!.id}, 1, '1 + 1?', ${options}::jsonb, 'B', 'Two', 'B')`;
     await client`
       INSERT INTO level_progress (student_id, level_id, latest_attempt_id, latest_score, best_score)
       VALUES (${student!.id}, ${level!.id}, ${attempt!.id}, 100, 100)`;
+    const [active] = await client<{ id: string }[]>`
+      INSERT INTO drill_attempts (student_id, level_id, package_id)
+      VALUES (${student!.id}, ${level!.id}, ${drillPackage!.id}) RETURNING id`;
+    await client`
+      INSERT INTO drill_attempt_questions
+        (attempt_id, question_variant_id, sort_order, stem, options, correct_option_id, explanation, selected_option_id)
+      VALUES (${active!.id}, ${original!.id}, 1, '1 + 1?', ${options}::jsonb, 'B', 'Two', 'A'),
+             (${active!.id}, ${variant!.id}, 2, '2 - 1?', ${options}::jsonb, 'A', 'One', null)`;
 
+    // First reach the pre-PvP schema, then rehearse backfilling a real historical row.
+    const prePvpEntries = journal.entries.slice(0, 7);
+    await writeFile(join(oldFolder, 'meta', '_journal.json'), JSON.stringify({ ...journal, entries: prePvpEntries }));
+    for (const entry of prePvpEntries) await copyFile(join(folder, `${entry.tag}.sql`), join(oldFolder, `${entry.tag}.sql`));
+    await migrate(drizzle(client), { migrationsFolder: oldFolder });
+    const [pvpPackage] = await client<{ id: string }[]>`
+      INSERT INTO assessment_packages (family_code, package_version, name, assessment_type, is_demo, scoring_policy_version_id)
+      SELECT 'UPGRADE-PVP-FIXTURE', 1, 'Upgrade fixture only', 'PVP', true, scoring_policy_version_id
+      FROM assessment_packages WHERE id = ${drillPackage!.id} RETURNING id`;
+    const [pvpItem] = await client<{ id: string; question_version_id: string }[]>`
+      INSERT INTO package_items (package_id, question_version_id, display_order, max_points)
+      SELECT ${pvpPackage!.id}, question_version_id, 1, 150 FROM package_items WHERE package_id = ${drillPackage!.id} LIMIT 1
+      RETURNING id, question_version_id`;
+    const [match] = await client<{ id: string }[]>`
+      INSERT INTO pvp_matches (room_code, package_id, creator_student_id, difficulty, status, started_at, ended_at, record_eligible)
+      VALUES ('UPGRADE-PVP', ${pvpPackage!.id}, ${student!.id}, 'easy', 'FINISHED', '2026-01-01T00:00:00Z', '2026-01-01T00:05:00Z', true) RETURNING id`;
+    await client`
+      INSERT INTO pvp_match_questions (match_id, package_id, package_item_id, display_order)
+      VALUES (${match!.id}, ${pvpPackage!.id}, ${pvpItem!.id}, 1)`;
     await migrate(drizzle(client), { migrationsFolder: folder });
+    const [pvpBackfill] = await client<{ version: string; policy: string; created: Date; ended: Date }[]>`
+      SELECT q.question_version_id::text AS version, m.scoring_policy_version_id::text AS policy, m.created_at AS created, m.ended_at AS ended
+      FROM pvp_matches m JOIN pvp_match_questions q ON q.match_id=m.id WHERE m.id=${match!.id}`;
+    assert.equal(pvpBackfill!.version, pvpItem!.question_version_id);
+    assert.ok(pvpBackfill!.policy);
+    assert.ok(pvpBackfill!.created <= pvpBackfill!.ended);
     const [result] = await client<{
       variants: number; versions: number; pinned: number; progress: number; ready: number;
+      commonPackages: number; commonItems: number; commonAttempts: number;
+      commonAttemptItems: number; commonAnswers: number; score: string;
+      answerVersion: string; unlockedLevelId: string | null;
     }[]>`
       SELECT
         (SELECT count(*)::int FROM question_variants WHERE question_id = ${question!.id}) AS variants,
@@ -84,9 +120,39 @@ async function run() {
           JOIN question_versions qv ON qv.id = pq.question_version_id AND qv.variant_id = pq.question_variant_id
           WHERE pq.package_id = ${drillPackage!.id}) AS pinned,
         (SELECT count(*)::int FROM legacy_level_progress_attempts WHERE drill_attempt_id = ${attempt!.id}) AS progress,
-        (SELECT count(*)::int FROM chapters WHERE id = ${chapter!.id} AND status = 'READY') AS ready`;
-    assert.deepEqual(result, { variants: 2, versions: 2, pinned: 2, progress: 1, ready: 1 });
-    console.log('Legacy Drill data survived the forward migration.');
+        (SELECT count(*)::int FROM chapters WHERE id = ${chapter!.id} AND status = 'READY') AS ready,
+        (SELECT count(*)::int FROM assessment_packages WHERE id = ${drillPackage!.id} AND assessment_type = 'DRILL') AS "commonPackages",
+        (SELECT count(*)::int FROM package_items WHERE package_id = ${drillPackage!.id}) AS "commonItems",
+        (SELECT count(*)::int FROM assessment_attempts WHERE id = ${attempt!.id} AND status = 'GRADED') AS "commonAttempts",
+        (SELECT count(*)::int FROM attempt_items WHERE attempt_id = ${attempt!.id}) AS "commonAttemptItems",
+        (SELECT count(*)::int FROM attempt_answers ans
+          JOIN attempt_items ai ON ai.id = ans.attempt_item_id
+          WHERE ai.attempt_id = ${attempt!.id}) AS "commonAnswers",
+        (SELECT score_0_100::text FROM assessment_attempts WHERE id = ${attempt!.id}) AS score,
+        (SELECT question_version_id::text FROM attempt_items WHERE attempt_id = ${attempt!.id} LIMIT 1) AS "answerVersion",
+        (SELECT unlocked_level_id::text FROM assessment_attempts WHERE id = ${attempt!.id}) AS "unlockedLevelId"`;
+    assert.deepEqual(result, {
+      variants: 2, versions: 2, pinned: 2, progress: 1, ready: 1,
+      commonPackages: 1, commonItems: 2, commonAttempts: 1,
+      commonAttemptItems: 1, commonAnswers: 1, score: '100.00',
+      answerVersion: (await client<{ id: string }[]>`
+        SELECT question_version_id AS id FROM drill_attempt_questions WHERE attempt_id = ${attempt!.id}`)[0]!.id,
+      unlockedLevelId: null,
+    });
+    const [activeResult] = await client<{
+      status: string; score: string | null; itemCount: number; answerCount: number; optionId: string;
+    }[]>`
+      SELECT aa.status::text, aa.score_0_100::text AS score,
+        (SELECT count(*)::int FROM attempt_items WHERE attempt_id = aa.id) AS "itemCount",
+        (SELECT count(*)::int FROM attempt_answers ans JOIN attempt_items ai ON ai.id = ans.attempt_item_id
+          WHERE ai.attempt_id = aa.id) AS "answerCount",
+        (SELECT ans.answer->>'optionId' FROM attempt_answers ans JOIN attempt_items ai ON ai.id = ans.attempt_item_id
+          WHERE ai.attempt_id = aa.id LIMIT 1) AS "optionId"
+      FROM assessment_attempts aa WHERE aa.id = ${active!.id}`;
+    assert.deepEqual(activeResult, {
+      status: 'IN_PROGRESS', score: null, itemCount: 2, answerCount: 1, optionId: 'A',
+    });
+    console.log('Legacy Drill package, completed/active attempts, answers and pinned versions survived the forward migration.');
   } finally {
     if (client) await client.end();
     await admin.unsafe(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);

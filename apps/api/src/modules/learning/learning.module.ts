@@ -1,12 +1,18 @@
 import { Module } from '@nestjs/common';
 import { IdentityModule } from '../identity/identity.module';
+import { AssessmentHistoryService } from './assessment-history.service';
+import { DrillAssessmentService } from './drill-assessment.service';
 import { LearningController } from './learning.controller';
-import { LearningService } from './learning.service';
+import { LearningCatalogService } from './learning-catalog.service';
+import { TryoutReleaseService } from './tryout-release.service';
+import { TryoutController } from './tryout.controller';
+import { TryoutService } from './tryout.service';
+import { StudentDashboardService } from './student-dashboard.service';
 
 @Module({
   imports: [IdentityModule],
-  controllers: [LearningController],
-  providers: [LearningService],
-  exports: [LearningService],
+  controllers: [LearningController, TryoutController],
+  providers: [LearningCatalogService, DrillAssessmentService, AssessmentHistoryService, TryoutReleaseService, TryoutService, StudentDashboardService],
+  exports: [LearningCatalogService, DrillAssessmentService, AssessmentHistoryService],
 })
 export class LearningModule {}

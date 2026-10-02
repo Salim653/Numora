@@ -211,6 +211,19 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Attempt limit exceeded.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Attempt limiter unavailable."
           }
         },
         "security": [
@@ -256,6 +269,41 @@
         ],
         "tags": [
           "classes"
+        ]
+      }
+    },
+    "/api/v1/students/me/dashboard": {
+      "get": {
+        "operationId": "LearningController_dashboard",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentDashboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
         ]
       }
     },
@@ -384,6 +432,41 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StudentProgressDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/students/me/assessment-results": {
+      "get": {
+        "operationId": "LearningController_history",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentHistoryDto"
                 }
               }
             }
@@ -593,6 +676,235 @@
         ]
       }
     },
+    "/api/v1/tryout/packages/current": {
+      "get": {
+        "operationId": "TryoutController_current",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentTryoutDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts": {
+      "post": {
+        "operationId": "TryoutController_start",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartTryoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts/{attemptId}": {
+      "get": {
+        "operationId": "TryoutController_attempt",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts/{attemptId}/answers/{questionInstanceId}": {
+      "patch": {
+        "operationId": "TryoutController_saveAnswer",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "questionInstanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDrillAnswerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedAnswerDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts/{attemptId}/submit": {
+      "post": {
+        "operationId": "TryoutController_submit",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutSubmitDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/attempts/{attemptId}/result": {
+      "get": {
+        "operationId": "TryoutController_result",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
     "/api/v1/classes/{classId}/students/{studentId}/progress": {
       "get": {
         "operationId": "MonitoringController_read",
@@ -704,6 +1016,19 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Attempt limit exceeded.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Attempt limiter unavailable."
           }
         },
         "security": [
@@ -1898,6 +2223,242 @@
         ]
       }
     },
+    "/api/v1/admin/content/drill-packages": {
+      "get": {
+        "operationId": "DrillPackagesController_list",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDrillPackagesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-drill-packages"
+        ]
+      },
+      "post": {
+        "operationId": "DrillPackagesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDrillPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-drill-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/drill-packages/{id}": {
+      "get": {
+        "operationId": "DrillPackagesController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDrillPackageDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-drill-packages"
+        ]
+      },
+      "patch": {
+        "operationId": "DrillPackagesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDrillPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-drill-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/drill-packages/{id}/publish": {
+      "post": {
+        "operationId": "DrillPackagesController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-drill-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/drill-packages/{id}/archive": {
+      "post": {
+        "operationId": "DrillPackagesController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-drill-packages"
+        ]
+      }
+    },
     "/api/v1/admin/dashboard": {
       "get": {
         "operationId": "AdminController_dashboard",
@@ -2085,6 +2646,113 @@
         ]
       }
     },
+    "/api/v1/students/me/drill-attempts/{attemptId}/videos": {
+      "get": {
+        "operationId": "StudentSupportController_videos",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentVideosDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "student-support"
+        ]
+      }
+    },
+    "/api/v1/students/me/question-reports": {
+      "post": {
+        "operationId": "StudentSupportController_question",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudentQuestionReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "student-support"
+        ]
+      }
+    },
+    "/api/v1/students/me/video-reports": {
+      "post": {
+        "operationId": "StudentSupportController_video",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudentVideoReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "student-support"
+        ]
+      }
+    },
     "/api/v1/admin/irt": {
       "get": {
         "operationId": "IrtController_list",
@@ -2136,6 +2804,275 @@
         ],
         "tags": [
           "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/batches": {
+      "get": {
+        "operationId": "IrtController_batches",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIrtBatchesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/pvp/availability": {
+      "get": {
+        "operationId": "PvpController_availability",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PvpAvailabilityDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pvp"
+        ]
+      }
+    },
+    "/api/v1/pvp/classmates": {
+      "get": {
+        "operationId": "PvpController_classmates",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentPeersDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pvp"
+        ]
+      }
+    },
+    "/api/v1/pvp/invitations": {
+      "get": {
+        "operationId": "PvpController_invites",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PvpInvitesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pvp"
+        ]
+      }
+    },
+    "/api/v1/pvp/matches/{matchId}": {
+      "get": {
+        "operationId": "PvpController_result",
+        "parameters": [
+          {
+            "name": "matchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PvpSnapshotDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "pvp"
+        ]
+      }
+    },
+    "/api/v1/leaderboards/pvp": {
+      "get": {
+        "operationId": "LeaderboardsController_pvp",
+        "parameters": [
+          {
+            "name": "difficulty",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "easy",
+                "medium",
+                "hard"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "leaderboards"
+        ]
+      }
+    },
+    "/api/v1/leaderboards/class": {
+      "get": {
+        "operationId": "LeaderboardsController_class",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "leaderboards"
         ]
       }
     }
@@ -2285,7 +3222,8 @@
         },
         "required": [
           "id",
-          "name"
+          "name",
+          "joinCode"
         ]
       },
       "JoinClassDto": {
@@ -2293,8 +3231,9 @@
         "properties": {
           "joinCode": {
             "type": "string",
-            "minLength": 8,
-            "maxLength": 32
+            "minLength": 6,
+            "maxLength": 32,
+            "pattern": "^(?:[A-Za-z0-9]{6}|[A-Za-z0-9_-]{8,32})$"
           }
         },
         "required": [
@@ -2348,6 +3287,194 @@
         "required": [
           "class",
           "items"
+        ]
+      },
+      "DashboardClassDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "schoolName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "schoolName"
+        ]
+      },
+      "AssessmentRecordDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "activity": {
+            "type": "string",
+            "enum": [
+              "drill",
+              "pretest",
+              "tryout"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resultState": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "waitingIrt"
+            ]
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "attemptId",
+          "activity",
+          "title",
+          "isDemo",
+          "submittedAt",
+          "resultState",
+          "score"
+        ]
+      },
+      "DashboardDrillDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string"
+          },
+          "levelId": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "attemptId",
+          "levelId",
+          "title"
+        ]
+      },
+      "StudentFeaturesDto": {
+        "type": "object",
+        "properties": {
+          "drill": {
+            "type": "boolean"
+          },
+          "tryout": {
+            "type": "boolean"
+          },
+          "pretest": {
+            "type": "boolean"
+          },
+          "pvp": {
+            "type": "boolean"
+          },
+          "classLeaderboard": {
+            "type": "boolean"
+          },
+          "pendingPolicies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "drill",
+          "tryout",
+          "pretest",
+          "pvp",
+          "classLeaderboard",
+          "pendingPolicies"
+        ]
+      },
+      "StudentDashboardDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "affiliation": {
+            "type": "string",
+            "enum": [
+              "MANDIRI",
+              "SCHOOL"
+            ]
+          },
+          "class": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DashboardClassDto"
+              }
+            ]
+          },
+          "completedLevels": {
+            "type": "number"
+          },
+          "availableLevels": {
+            "type": "number"
+          },
+          "latestDrillScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "bestDrillScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "activities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentRecordDto"
+            }
+          },
+          "activeDrill": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DashboardDrillDto"
+              }
+            ]
+          },
+          "features": {
+            "$ref": "#/components/schemas/StudentFeaturesDto"
+          }
+        },
+        "required": [
+          "displayName",
+          "affiliation",
+          "class",
+          "completedLevels",
+          "availableLevels",
+          "latestDrillScore",
+          "bestDrillScore",
+          "activities",
+          "activeDrill",
+          "features"
         ]
       },
       "ChapterDto": {
@@ -2503,6 +3630,26 @@
           "completedLevels",
           "totalLevels",
           "latestScore"
+        ]
+      },
+      "AssessmentHistoryDto": {
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentRecordDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "records",
+          "nextCursor"
         ]
       },
       "StartDrillDto": {
@@ -2671,6 +3818,31 @@
           "explanation"
         ]
       },
+      "RecommendedVideoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "url",
+          "source"
+        ]
+      },
       "DrillResultDto": {
         "type": "object",
         "properties": {
@@ -2724,6 +3896,12 @@
             "items": {
               "$ref": "#/components/schemas/ReviewedQuestionDto"
             }
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendedVideoDto"
+            }
           }
         },
         "required": [
@@ -2739,7 +3917,185 @@
           "unlockedLevelId",
           "isDemo",
           "explanationState",
+          "questions",
+          "recommendations"
+        ]
+      },
+      "CurrentTryoutDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "releaseAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "unavailable",
+              "open",
+              "inProgress",
+              "waitingIrt",
+              "resultReady"
+            ]
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "questionCount": {
+            "type": "number",
+            "nullable": true
+          },
+          "durationSeconds": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "StartTryoutDto": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "packageId"
+        ]
+      },
+      "TryoutAttemptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageTitle": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "inProgress",
+              "submitted"
+            ]
+          },
+          "deadlineAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DrillQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "packageId",
+          "packageTitle",
+          "status",
+          "deadlineAt",
           "questions"
+        ]
+      },
+      "TryoutSubmitDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "waitingIrt"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "TryoutReviewedQuestionDto": {
+        "type": "object",
+        "properties": {
+          "questionInstanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "selectedOptionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "correctOptionId": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "questionInstanceId",
+          "stem",
+          "selectedOptionId",
+          "correctOptionId",
+          "explanation"
+        ]
+      },
+      "TryoutResultDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageTitle": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "correctCount": {
+            "type": "number"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "explanation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutReviewedQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "attemptId",
+          "packageTitle",
+          "score",
+          "correctCount",
+          "questionCount",
+          "explanation"
         ]
       },
       "ClassDto": {
@@ -2882,8 +4238,9 @@
         "properties": {
           "token": {
             "type": "string",
-            "minLength": 32,
-            "maxLength": 128
+            "minLength": 8,
+            "maxLength": 128,
+            "pattern": "^(?:[A-Za-z0-9]{8}|[A-Za-z0-9_-]{32,128})$"
           }
         },
         "required": [
@@ -3816,6 +5173,144 @@
           "questionVersionIds"
         ]
       },
+      "AdminDrillPackageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "levelId": {
+            "type": "string"
+          },
+          "variantIndex": {
+            "type": "number",
+            "nullable": true
+          },
+          "scoringPolicyVersionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED",
+              "CLOSED",
+              "ARCHIVED"
+            ]
+          },
+          "releaseAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "questionVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "familyCode",
+          "packageVersion",
+          "name",
+          "levelId",
+          "variantIndex",
+          "scoringPolicyVersionId",
+          "status",
+          "releaseAt",
+          "questionVersionIds"
+        ]
+      },
+      "AdminDrillPackagesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminDrillPackageDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateDrillPackageDto": {
+        "type": "object",
+        "properties": {
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "variantIndex": {
+            "type": "number"
+          },
+          "scoringPolicyVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "questionVersionIds": {
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "familyCode",
+          "packageVersion",
+          "name",
+          "levelId",
+          "variantIndex",
+          "scoringPolicyVersionId",
+          "questionVersionIds"
+        ]
+      },
+      "UpdateDrillPackageDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "scoringPolicyVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "questionVersionIds": {
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "scoringPolicyVersionId",
+          "questionVersionIds"
+        ]
+      },
       "AdminDashboardDto": {
         "type": "object",
         "properties": {
@@ -3976,6 +5471,94 @@
           "followUp"
         ]
       },
+      "StudentVideoDto": {
+        "type": "object",
+        "properties": {
+          "mappingId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mappingId",
+          "title",
+          "url",
+          "source"
+        ]
+      },
+      "StudentVideosDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentVideoDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "StudentQuestionReportDto": {
+        "type": "object",
+        "properties": {
+          "clientRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "attemptItemId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "category",
+          "attemptItemId"
+        ]
+      },
+      "StudentVideoReportDto": {
+        "type": "object",
+        "properties": {
+          "clientRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mappingId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "category",
+          "attemptId",
+          "mappingId"
+        ]
+      },
       "AdminIrtItemDto": {
         "type": "object",
         "properties": {
@@ -4038,6 +5621,418 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "AdminIrtBatchDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "packageId": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchKind": {
+            "type": "string"
+          },
+          "modelVersion": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED"
+            ]
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "resultReleasedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "failureCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "packageId",
+          "batchKind",
+          "modelVersion",
+          "status",
+          "startedAt",
+          "finishedAt",
+          "resultReleasedAt",
+          "failureCode"
+        ]
+      },
+      "AdminIrtBatchesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminIrtBatchDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "PvpAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "reasonCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "available",
+          "reasonCode",
+          "message"
+        ]
+      },
+      "StudentPeerDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "studentId",
+          "displayName"
+        ]
+      },
+      "StudentPeersDto": {
+        "type": "object",
+        "properties": {
+          "classmates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentPeerDto"
+            }
+          }
+        },
+        "required": [
+          "classmates"
+        ]
+      },
+      "PvpInviteDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "matchId": {
+            "type": "string"
+          },
+          "roomCode": {
+            "type": "string"
+          },
+          "senderName": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "matchId",
+          "roomCode",
+          "senderName",
+          "expiresAt"
+        ]
+      },
+      "PvpInvitesDto": {
+        "type": "object",
+        "properties": {
+          "invites": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PvpInviteDto"
+            }
+          }
+        },
+        "required": [
+          "invites"
+        ]
+      },
+      "PvpPlayerDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "slot": {
+            "type": "number"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "connectionStatus": {
+            "type": "string"
+          },
+          "reconnectDeadlineAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "points": {
+            "type": "number"
+          },
+          "result": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "studentId",
+          "displayName",
+          "slot",
+          "ready",
+          "connectionStatus",
+          "reconnectDeadlineAt",
+          "points",
+          "result"
+        ]
+      },
+      "PvpQuestionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionDto"
+            }
+          },
+          "deadlineAt": {
+            "type": "string"
+          },
+          "durationSeconds": {
+            "type": "number"
+          },
+          "answered": {
+            "type": "boolean"
+          },
+          "selectedOptionId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "order",
+          "stem",
+          "options",
+          "deadlineAt",
+          "durationSeconds",
+          "answered",
+          "selectedOptionId"
+        ]
+      },
+      "PvpSnapshotDto": {
+        "type": "object",
+        "properties": {
+          "matchId": {
+            "type": "string"
+          },
+          "roomCode": {
+            "type": "string"
+          },
+          "creatorStudentId": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "WAITING",
+              "READY",
+              "RUNNING",
+              "FINISHED",
+              "CANCELLED"
+            ]
+          },
+          "serverTime": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "recordEligible": {
+            "type": "boolean"
+          },
+          "endReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PvpPlayerDto"
+            }
+          },
+          "question": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PvpQuestionDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "matchId",
+          "roomCode",
+          "creatorStudentId",
+          "difficulty",
+          "status",
+          "serverTime",
+          "isDemo",
+          "recordEligible",
+          "endReason",
+          "players",
+          "question"
+        ]
+      },
+      "LeaderboardPeriodDto": {
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string"
+          },
+          "endsAt": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "startsAt",
+          "endsAt",
+          "timezone"
+        ]
+      },
+      "LeaderboardEntryDto": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "points": {
+            "type": "number"
+          },
+          "rank": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "studentId",
+          "displayName",
+          "points",
+          "rank"
+        ]
+      },
+      "LeaderboardDto": {
+        "type": "object",
+        "properties": {
+          "policyPending": {
+            "type": "boolean"
+          },
+          "reasonCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "className": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "points",
+              "xp"
+            ]
+          },
+          "period": {
+            "$ref": "#/components/schemas/LeaderboardPeriodDto"
+          },
+          "updatedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntryDto"
+            }
+          },
+          "ownEntry": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LeaderboardEntryDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "policyPending",
+          "reasonCode",
+          "className",
+          "unit",
+          "period",
+          "updatedAt",
+          "entries",
+          "ownEntry"
         ]
       }
     }

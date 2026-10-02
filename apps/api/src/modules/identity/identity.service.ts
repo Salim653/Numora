@@ -6,7 +6,7 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { getDatabase, classMemberships, teacherSchoolMemberships, users } from '@tka/database';
+import { getDatabase, classMemberships, schools, teacherSchoolMemberships, users } from '@tka/database';
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { IdentityProfileDto, RegisterProfileDto } from './identity.dto';
@@ -56,10 +56,12 @@ export class IdentityService {
       const membership = await db
         .select({ id: teacherSchoolMemberships.id })
         .from(teacherSchoolMemberships)
+        .innerJoin(schools, eq(schools.id, teacherSchoolMemberships.schoolId))
         .where(
           and(
             eq(teacherSchoolMemberships.teacherUserId, profile.id),
             isNull(teacherSchoolMemberships.endedAt),
+            eq(schools.status, 'ACTIVE'),
           ),
         )
         .limit(1);

@@ -1,0 +1,241 @@
+/* NUMORA Design System Tokens - Engineering Baseline v1.0 */
+/* Source of truth for all design values - do not hardcode */
+
+:root {
+  /* ============================================
+   * BRAND COLORS - Canonical NUMORA Palette
+   * ============================================ */
+
+  /* Primary - Sagat Purple */
+  --numora-purple: #722cce;
+  --numora-purple-50: #f5edff;
+  --numora-purple-100: #eddfff;
+  --numora-purple-200: #ddbfff;
+  --numora-purple-300: #c99aff;
+  --numora-purple-400: #b06beb;
+  --numora-purple-500: #972cd1;
+  --numora-purple-600: #722cce;
+  --numora-purple-700: #5f20b4;
+  --numora-purple-800: #4b1891;
+  --numora-purple-900: #3d1276;
+
+  /* Secondary - Soft Purple */
+  --numora-soft: #b88ac9;
+  --numora-soft-50: #f9f3fc;
+  --numora-soft-100: #f3e7f9;
+  --numora-soft-200: #e8d0f4;
+  --numora-soft-300: #dbb2ed;
+  --numora-soft-400: #cc8ce4;
+  --numora-soft-500: #b88ac9;
+  --numora-soft-600: #9a5fae;
+  --numora-soft-700: #7c4a8f;
+  --numora-soft-800: #643974;
+  --numora-soft-900: #522f61;
+
+  /* Warm Accent - Peach */
+  --numora-peach: #fa9a71;
+  --numora-peach-50: #fff5f0;
+  --numora-peach-100: #ffebe2;
+  --numora-peach-200: #ffd9c8;
+  --numora-peach-300: #ffc0a7;
+  --numora-peach-400: #ff9d74;
+  --numora-peach-500: #fa9a71;
+  --numora-peach-600: #e57a4a;
+  --numora-peach-700: #cc5f2c;
+  --numora-peach-800: #a84a23;
+  --numora-peach-900: #8a3b1a;
+
+  /* Reward - Golden Yellow */
+  --numora-gold: #f8d080;
+  --numora-gold-50: #fffbf0;
+  --numora-gold-100: #fff6db;
+  --numora-gold-200: #ffeebb;
+  --numora-gold-300: #ffe495;
+  --numora-gold-400: #ffd56a;
+  --numora-gold-500: #f8d080;
+  --numora-gold-600: #e6b44d;
+  --numora-gold-700: #cc952a;
+  --numora-gold-800: #a67720;
+  --numora-gold-900: #875f19;
+
+  /* Background - Ivory */
+  --numora-ivory: #f6efcd;
+  --numora-ivory-50: #fffdf5;
+  --numora-ivory-100: #fbf8e8;
+  --numora-ivory-200: #f7f1d1;
+  --numora-ivory-300: #f2e9b5;
+  --numora-ivory-400: #ecdf91;
+  --numora-ivory-500: #f6efcd;
+
+  /* Surface - Pearl */
+  --numora-pearl: #f3faf8;
+  --numora-pearl-50: #ffffff;
+  --numora-pearl-100: #f3faf8;
+  --numora-pearl-200: #e6f5f0;
+  --numora-pearl-300: #d0ece4;
+  --numora-pearl-400: #aedcc9;
+  --numora-pearl-500: #f3faf8;
+
+  /* ============================================
+   * SEMANTIC TOKENS
+   * ============================================ */
+
+  /* Semantic Aliases */
+  --color-primary: var(--numora-purple);
+  --color-primary-hover: var(--numora-purple-700);
+  --color-primary-light: var(--numora-purple-50);
+
+  --color-secondary: var(--numora-soft);
+  --color-secondary-light: var(--numora-soft-50);
+
+  --color-accent: var(--numora-peach);
+  --color-accent-light: var(--numora-peach-50);
+
+  --color-reward: var(--numora-gold);
+  --color-reward-light: var(--numora-gold-50);
+
+  --color-bg: var(--numora-ivory);
+  --color-bg-light: var(--numora-ivory-50);
+
+  --color-surface: var(--numora-pearl);
+  --color-surface-raised: #ffffff;
+
+  /* Text Colors */
+  --color-text: #2f213d;
+  --color-text-muted: #675b72;
+  --color-text-light: #8b7a96;
+  --color-text-inverse: #ffffff;
+
+  /* Border */
+  --color-border: #e4ddcf;
+  --color-border-light: #f0ebe3;
+  --color-border-focus: var(--numora-purple);
+
+  /* Status Colors */
+  --color-success: #2f8f6b;
+  --color-success-light: #e8f5f0;
+  --color-warning: #a86d00;
+  --color-warning-light: #fff8e6;
+  --color-danger: #b83a45;
+  --color-danger-light: #fdeaea;
+  --color-info: #2e6f9e;
+  --color-info-light: #e6f2fa;
+
+  /* ============================================
+   * TYPOGRAPHY
+   * ============================================ */
+
+  --font-sans: var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Font Sizes */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.8125rem; /* 13px */
+  --text-base: 0.875rem; /* 14px */
+  --text-lg: 1rem; /* 16px */
+  --text-xl: 1.125rem; /* 18px */
+  --text-2xl: 1.375rem; /* 22px */
+  --text-3xl: 1.75rem; /* 28px */
+  --text-4xl: 2rem; /* 32px */
+  --text-5xl: 2.5rem; /* 40px */
+  --text-6xl: 3rem; /* 48px */
+
+  /* Line Heights */
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+
+  /* ============================================
+   * SPACING (4px base)
+   * ============================================ */
+
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
+  --space-20: 5rem; /* 80px */
+  --space-24: 6rem; /* 96px */
+
+  /* ============================================
+   * BORDER RADIUS
+   * ============================================ */
+
+  --radius-sm: 0.625rem; /* 10px */
+  --radius-md: 0.875rem; /* 14px */
+  --radius-lg: 1.125rem; /* 18px */
+  --radius-xl: 1.5rem; /* 24px */
+  --radius-2xl: 2rem; /* 32px */
+  --radius-full: 9999px;
+
+  /* ============================================
+   * SHADOWS
+   * ============================================ */
+
+  --shadow-xs: 0 1px 2px rgba(47, 33, 61, 0.04);
+  --shadow-sm: 0 2px 6px rgba(47, 33, 61, 0.06);
+  --shadow-md: 0 6px 18px rgba(47, 33, 61, 0.1);
+  --shadow-lg: 0 12px 32px rgba(47, 33, 61, 0.14);
+  --shadow-xl: 0 20px 48px rgba(47, 33, 61, 0.18);
+
+  /* ============================================
+   * TRANSITIONS
+   * ============================================ */
+
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 280ms ease;
+  --transition-spring: 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ============================================
+   * Z-INDEX SCALE
+   * ============================================ */
+
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-toast: 700;
+  --z-tooltip: 800;
+
+  /* ============================================
+   * LAYOUT
+   * ============================================ */
+
+  --page-padding-x: var(--space-4);
+  --page-max-width: 1180px;
+  --content-max-width: 680px;
+
+  /* Touch targets */
+  --touch-target-min: 44px;
+}
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+  :root {
+    --page-padding-x: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-padding-x: var(--space-8);
+  }
+}

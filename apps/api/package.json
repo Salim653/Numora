@@ -8,6 +8,8 @@
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "qa:accounts": "node scripts/create-qa-accounts.mjs",
+    "qa:smoke": "node scripts/smoke-qa-workflow.mjs",
     "openapi:generate": "pnpm build && node dist/scripts/export-openapi.js"
   },
   "dependencies": {
@@ -20,9 +22,11 @@
     "@nestjs/websockets": "12.1.0",
     "@supabase/supabase-js": "2.117.1",
     "@tka/database": "workspace:*",
+    "bullmq": "6.3.9",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "drizzle-orm": "0.45.3",
+    "ioredis": "6.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "socket.io": "4.8.4"
@@ -31,6 +35,7 @@
     "@nestjs/cli": "^12.0.0",
     "@nestjs/testing": "12.1.0",
     "@types/node": "24.19.0",
+    "socket.io-client": "4.8.4",
     "typescript": "5.9.3",
     "vitest": "5.0.2"
   }

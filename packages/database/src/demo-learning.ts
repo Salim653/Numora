@@ -8,8 +8,9 @@ import {
   questions,
   questionVersions,
   questionVariants,
-  drillPackages,
-  drillPackageQuestions,
+  assessmentPackages,
+  packageItems,
+  scoringPolicyVersions,
 } from './schema/index.js';
 
 const uuid = (n: number) => `00000000-0000-4000-8000-${n.toString().padStart(12, '0')}`;
@@ -58,6 +59,30 @@ export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['
 
   await db.insert(competencies).values({ id: competencyId, subchapterId, code: 'DEMO-OPERASI', description: 'Operasi bilangan dasar', status: 'READY' }).onConflictDoNothing();
 
+  const policyId = uuid(901);
+  await db.insert(scoringPolicyVersions).values({
+    id: policyId,
+    policyCode: 'DRILL_PG_DEMO',
+    version: 1,
+    configuration: {
+      questionType: 'SINGLE_CHOICE',
+      questionCount: 10,
+      masteryThreshold: 80,
+      stars: {
+        one: { minExclusive: 0, maxInclusive: 50 },
+        two: { minExclusive: 50, maxInclusive: 90 },
+        three: { minExclusive: 90, maxInclusive: 100 },
+      },
+    },
+    effectiveAt: new Date(),
+    status: 'PUBLISHED',
+  }).onConflictDoNothing();
+  const [policy] = await db.select({ id: scoringPolicyVersions.id })
+    .from(scoringPolicyVersions)
+    .where(eq(scoringPolicyVersions.policyCode, 'DRILL_PG_DEMO'))
+    .limit(1);
+  if (!policy) throw new Error('Demo Drill scoring policy is missing.');
+
   for (let i = 1; i <= 10; i++) {
     const questionId = uuid(200 + i);
     await db
@@ -103,24 +128,31 @@ export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['
   for (let set = 1; set <= 2; set++) {
     const packageId = uuid(500 + set);
     await db
-      .insert(drillPackages)
+      .insert(assessmentPackages)
       .values({
         id: packageId,
+        familyCode: `DEMO-DRILL-L1-V${set}`,
+        packageVersion: 1,
+        name: `Drill Level 1 Demo - Varian ${set}`,
+        assessmentType: 'DRILL',
+        chapterId,
         levelId: levelOneId,
-        variantSet: set,
+        variantIndex: set,
         isDemo: true,
-        publishedAt: new Date(),
+        scoringPolicyVersionId: policy.id,
+        releaseAt: new Date(),
+        status: 'PUBLISHED',
       })
       .onConflictDoNothing();
     for (let i = 1; i <= 10; i++) {
       await db
-        .insert(drillPackageQuestions)
+        .insert(packageItems)
         .values({
           id: uuid(600 + set * 20 + i),
           packageId,
-          questionVariantId: uuid(400 + (i - 1) * 2 + set),
           questionVersionId: uuid(300 + (i - 1) * 2 + set),
-          sortOrder: i,
+          displayOrder: i,
+          maxPoints: '1',
         })
         .onConflictDoNothing();
     }

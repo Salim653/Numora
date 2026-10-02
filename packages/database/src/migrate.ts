@@ -1,8 +1,7 @@
 import { resolve } from 'node:path';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import { requireTlsDatabaseUrl } from './client.js';
+import { migrateIntegratedDatabase } from './integrated-migrations.js';
 
 async function run() {
   const url = process.env.DATABASE_MIGRATION_URL;
@@ -17,7 +16,7 @@ async function run() {
     if (existing && existing.tables > 0 && !existing.history) {
       throw new Error('Existing public tables have no Drizzle history. Reconcile the schema before migrating.');
     }
-    await migrate(drizzle(client), { migrationsFolder });
+    await migrateIntegratedDatabase(client, migrationsFolder);
     console.log(`Applied migrations from ${migrationsFolder}`);
   } finally {
     await client.end();

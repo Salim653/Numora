@@ -6,8 +6,11 @@ const required = [
   'DATABASE_URL',
   'REDIS_URL',
   'BULLMQ_PREFIX',
+  'TEACHER_TOKEN_PEPPER',
 ];
 const problems = required.filter((name) => !process.env[name]).map((name) => `${name} is missing`);
+if (process.env.NEXT_PUBLIC_TEACHER_TOKEN_PEPPER)
+  problems.push('Remove NEXT_PUBLIC_TEACHER_TOKEN_PEPPER; teacher token pepper must stay server-side');
 
 if (process.env.NEXT_PUBLIC_SUPABASE_URL !== process.env.SUPABASE_URL)
   problems.push('Web and API Supabase URLs differ');

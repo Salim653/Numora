@@ -1,3 +1,24 @@
+import type {
+  IdentityProfileDto,
+  ClassSummaryDto,
+  StudentSummaryDto,
+  ClassesResponseDto,
+  ClassStudentsResponseDto,
+  SchoolDto,
+  TeacherStudentProgressDto,
+  AdminSchoolDto,
+  TokenSummaryDto,
+  TokenDto,
+  SchoolListDto,
+  VerifiedDto,
+  CreatedClassDto,
+  JoinedClassDto,
+  AdminSchoolsDto,
+  TokenListDto,
+  RevokedDto,
+  UpdateSchoolDto,
+} from './generated-api-types';
+
 export type HealthResponse = {
   status: 'ok';
   service: string;
@@ -7,15 +28,7 @@ export type HealthResponse = {
 
 const fallbackBaseUrl = 'http://localhost:3001/api/v1';
 
-export type IdentityProfile = {
-  id: string;
-  role: 'STUDENT' | 'TEACHER' | 'ADMIN';
-  displayName: string;
-  email: string;
-  status: 'ACTIVE' | 'DISABLED';
-  teacherVerified: boolean | null;
-  studentAffiliation: 'MANDIRI' | 'SCHOOL' | null;
-};
+export type IdentityProfile = IdentityProfileDto;
 
 export class ApiProblem extends Error {
   constructor(
@@ -27,7 +40,11 @@ export class ApiProblem extends Error {
   }
 }
 
-export async function apiRequest<T>(path: string, token: string, options?: RequestInit): Promise<T> {
+export async function apiRequest<T>(
+  path: string,
+  token: string,
+  options?: RequestInit,
+): Promise<T> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? fallbackBaseUrl;
   let response: Response;
   try {
@@ -63,44 +80,28 @@ export const registerIdentity = (token: string, role: 'STUDENT' | 'TEACHER') =>
     body: JSON.stringify({ role }),
   });
 
-// Small client shapes mirror OpenAPI until this repo has TypeScript contract generation.
-export type ClassSummary = { id: string; name: string; joinCode?: string };
-export type StudentSummary = { id: string; displayName: string };
-export type ClassesResponse = { items: ClassSummary[] };
-export type ClassStudentsResponse = { class: ClassSummary; items: StudentSummary[] };
-export type SchoolSummary = { id: string; name: string };
-export type TeacherStudentProgress = {
-  class: ClassSummary;
-  student: StudentSummary;
-  latestDrillScore: number | null;
-  levels: {
-    levelId: string;
-    chapterLabel: string;
-    subchapterLabel: string;
-    levelLabel: string;
-    accessStatus: 'LOCKED' | 'UNLOCKED';
-    inProgress: boolean;
-    latestDrillScore: number | null;
-    bestDrillScore: number | null;
-  }[];
-};
+export type ClassSummary = ClassSummaryDto;
+export type StudentSummary = StudentSummaryDto;
+export type ClassesResponse = ClassesResponseDto;
+export type ClassStudentsResponse = ClassStudentsResponseDto;
+export type SchoolSummary = SchoolDto;
+export type TeacherStudentProgress = TeacherStudentProgressDto;
 
-export const getSchools = (token: string) =>
-  apiRequest<{ items: SchoolSummary[] }>('schools', token);
+export const getSchools = (token: string) => apiRequest<SchoolListDto>('schools', token);
 export const verifyTeacher = (token: string, schoolId: string, verificationToken: string) =>
-  apiRequest<{ verified: boolean }>(`schools/${encodeURIComponent(schoolId)}/teacher-verifications`, token, {
+  apiRequest<VerifiedDto>(`schools/${encodeURIComponent(schoolId)}/teacher-verifications`, token, {
     method: 'POST',
     body: JSON.stringify({ token: verificationToken }),
   });
 
 export const getTeacherClasses = (token: string) => apiRequest<ClassesResponse>('classes', token);
 export const createTeacherClass = (token: string, name: string) =>
-  apiRequest<ClassSummary & { joinCode: string }>('classes', token, {
+  apiRequest<CreatedClassDto>('classes', token, {
     method: 'POST',
     body: JSON.stringify({ name }),
   });
 export const joinClass = (token: string, joinCode: string) =>
-  apiRequest<{ class: ClassSummary; joined: boolean }>('classes/join', token, {
+  apiRequest<JoinedClassDto>('classes/join', token, {
     method: 'POST',
     body: JSON.stringify({ joinCode }),
   });
@@ -112,44 +113,40 @@ export const getTeacherStudentProgress = (token: string, classId: string, studen
     token,
   );
 
-export type AdminSchool = SchoolSummary & {
-  code: string;
-  status: 'ACTIVE' | 'INACTIVE';
-};
-export type TeacherTokenSummary = {
-  id: string;
-  expiresAt: string;
-  usedAt: string | null;
-  revokedAt: string | null;
-};
-export type IssuedTeacherToken = { id: string; token: string; expiresAt: string };
+export type AdminSchool = AdminSchoolDto;
+export type TeacherTokenSummary = TokenSummaryDto;
+export type IssuedTeacherToken = TokenDto;
 export const listAdminSchools = (token: string) =>
-  apiRequest<{ items: AdminSchool[] }>('admin/schools', token);
+  apiRequest<AdminSchoolsDto>('admin/schools', token);
 export const createSchool = (token: string, code: string, name: string) =>
   apiRequest<AdminSchool>('admin/schools', token, {
-    method: 'POST', body: JSON.stringify({ code, name }),
+    method: 'POST',
+    body: JSON.stringify({ code, name }),
   });
-export const updateSchool = (token: string, schoolId: string, input: { name?: string; status?: 'ACTIVE' | 'INACTIVE' }) =>
+export const updateSchool = (token: string, schoolId: string, input: UpdateSchoolDto) =>
   apiRequest<AdminSchool>(`admin/schools/${encodeURIComponent(schoolId)}`, token, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   });
 export const listTeacherTokens = (token: string, schoolId: string) =>
-  apiRequest<{ items: TeacherTokenSummary[] }>(
-    `admin/schools/${encodeURIComponent(schoolId)}/teacher-tokens`, token,
-  );
+  apiRequest<TokenListDto>(`admin/schools/${encodeURIComponent(schoolId)}/teacher-tokens`, token);
 export const issueTeacherToken = (token: string, schoolId: string) =>
   apiRequest<IssuedTeacherToken>(
-    `admin/schools/${encodeURIComponent(schoolId)}/teacher-tokens`, token, { method: 'POST' },
+    `admin/schools/${encodeURIComponent(schoolId)}/teacher-tokens`,
+    token,
+    { method: 'POST' },
   );
 export const reissueTeacherToken = (token: string, schoolId: string, tokenId: string) =>
   apiRequest<IssuedTeacherToken>(
     `admin/schools/${encodeURIComponent(schoolId)}/teacher-tokens/${encodeURIComponent(tokenId)}/reissue`,
-    token, { method: 'POST' },
+    token,
+    { method: 'POST' },
   );
 export const revokeTeacherToken = (token: string, schoolId: string, tokenId: string) =>
-  apiRequest<{ revoked: boolean }>(
+  apiRequest<RevokedDto>(
     `admin/schools/${encodeURIComponent(schoolId)}/teacher-tokens/${encodeURIComponent(tokenId)}/revoke`,
-    token, { method: 'POST' },
+    token,
+    { method: 'POST' },
   );
 
 export async function getApiHealth(): Promise<HealthResponse | null> {

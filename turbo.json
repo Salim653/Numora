@@ -29,7 +29,7 @@
       "dependsOn": [
         "^build"
       ],
-      "env": ["NODE_ENV", "TEST_DATABASE_URL"],
+      "env": ["NODE_ENV", "TEST_DATABASE_URL", "TEST_REDIS_URL", "TEACHER_TOKEN_PEPPER"],
       "outputs": [
         "coverage/**"
       ]
