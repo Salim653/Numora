@@ -70,3 +70,11 @@ export type LeaderboardEntryDto = { "studentId": string; "displayName": string; 
 export type LeaderboardPeriodDto = { "startsAt": string; "endsAt": string; "timezone": string; };
 
 export type LeaderboardDto = { "policyPending": boolean; "reasonCode": string | null; "className": string | null; "unit": "points" | "xp"; "period": LeaderboardPeriodDto; "updatedAt": string | null; "entries": (LeaderboardEntryDto)[]; "ownEntry": LeaderboardEntryDto | null; };
+
+export type StudentVideoDto = { "mappingId": string; "title": string; "url": string; "source": string; };
+
+export type StudentVideosDto = { "items": (StudentVideoDto)[]; };
+
+export type StudentQuestionReportDto = { "clientRequestId"?: string; "category": string; "details"?: string; "attemptItemId": string; };
+
+export type StudentVideoReportDto = { "clientRequestId"?: string; "category": string; "details"?: string; "attemptId": string; "mappingId": string; };

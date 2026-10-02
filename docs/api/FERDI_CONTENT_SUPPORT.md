@@ -27,3 +27,21 @@ Pembacaan paket legacy mengikuti nullable schema untuk `variantIndex` dan `scori
 
 **DEPENDENCY:** paket ini berada di `assessment_packages`/`package_items`. Learning Student saat ini membaca tabel kompatibilitas `drill_*`. Migrasi dan konsumsi engine canonical milik Qurotul. Tidak ada dual-write, migrasi attempt, seed cloud, atau perubahan scoring dari pekerjaan ini.
 
+## Video dan laporan Student — #11
+
+| Method/path                                          | Input/hasil                                                                                                                         |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /students/me/drill-attempts/{attemptId}/videos` | `{items:[{mappingId,title,url,source}]}`; hanya hasil Drill milik Student, maksimal tiga mapping/video READY menurut urutan kurasi. |
+| `POST /students/me/question-reports`                 | `{attemptItemId,category,details?}`; mengembalikan `{id}`.                                                                          |
+| `POST /students/me/video-reports`                    | `{attemptId,mappingId,category,details?}`; mengembalikan `{id}`.                                                                    |
+
+**PRD RULE:** video direkomendasikan ketika skor Drill <80; tanpa video hasil tetap tersedia. Laporan merujuk item/versi atau mapping sebenarnya. Student tidak mendapat daftar laporan atau notifikasi tindak lanjut pada MVP.
+
+Rekomendasi mendukung pembacaan hasil canonical maupun hasil Drill kompatibilitas. Pertanyaan belum dinilai/Drill belum selesai tidak menghasilkan rekomendasi. Laporan video harus menunjuk salah satu rekomendasi yang valid untuk attempt milik pelapor.
+
+Laporan soal mencari item canonical milik Student dan answer tersimpan, lalu mengisi FK `question_reports.attempt_answer_id`. Item tidak tersedia ditolak `404 REPORT_ITEM_NOT_FOUND`; answer belum tersimpan ditolak `409 REPORT_ANSWER_UNAVAILABLE`. ID pertanyaan Drill kompatibilitas tidak diubah menjadi FK palsu. Form frontend sudah tersedia, tetapi pengiriman untuk Drill kompatibilitas menunggu migrasi Qurotul; kegagalan tampil dan dapat dicoba ulang. Admin membaca/menindaklanjuti laporan melalui API Reports yang sudah ada.
+
+**ENGINEERING IMPLEMENTATION:** category adalah teks 1–80 karakter; details opsional maksimal 2.000 karakter. Ini batas input engineering, bukan daftar kategori produk final. Jangan memasukkan PII dalam laporan. Metadata video impor juga diperiksa terhadap aturan HTTPS editor sebelum diberikan kepada Student.
+
+Kedua POST laporan menerima `clientRequestId` UUID opsional. Server memakai ID itu sebagai primary key laporan dan advisory transaction lock: actor, referensi soal/mapping, category, serta details yang sama mengembalikan ID tersimpan; penggunaan ID untuk actor/referensi/isi berbeda ditolak 409. Kepemilikan attempt video tetap diperiksa pada retry, termasuk ketika mapping yang sebelumnya valid sudah diarsipkan. Form mengirim ID yang sama untuk retry isi yang sama dan ID baru setelah isi diubah. Client lama tanpa ID tetap diterima, tetapi retry client lama belum idempotent. Tidak ada migrasi tambahan untuk mekanisme ini.
+

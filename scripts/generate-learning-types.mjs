@@ -38,6 +38,10 @@ const names = [
   'LeaderboardEntryDto',
   'LeaderboardPeriodDto',
   'LeaderboardDto',
+  'StudentVideoDto',
+  'StudentVideosDto',
+  'StudentQuestionReportDto',
+  'StudentVideoReportDto',
 ];
 const groups = [
   { target: 'apps/web/src/features/core-learning/generated-types.ts', names },

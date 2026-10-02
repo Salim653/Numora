@@ -10,6 +10,11 @@ import type {
   TryoutResult,
   AssessmentHistory,
 } from './types';
+import type {
+  StudentQuestionReportDto,
+  StudentVideoReportDto,
+  StudentVideosDto,
+} from './generated-types';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -119,4 +124,16 @@ export const learningApi = {
       token,
       `/students/me/assessment-results${cursor ? `?cursor=${id(cursor)}` : ''}`,
     ),
+  videos: (token: string, attemptId: string) =>
+    request<StudentVideosDto>(token, `/students/me/drill-attempts/${id(attemptId)}/videos`),
+  reportQuestion: (token: string, body: StudentQuestionReportDto) =>
+    request<{ id: string }>(token, '/students/me/question-reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  reportVideo: (token: string, body: StudentVideoReportDto) =>
+    request<{ id: string }>(token, '/students/me/video-reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
 };
