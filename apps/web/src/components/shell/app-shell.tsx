@@ -17,7 +17,10 @@ const navigation: Record<Area, { href: string; label: string; icon: IconName }[]
     { href: '/student/pvp', label: 'PvP', icon: 'users' },
     { href: '/student/leaderboards', label: 'Peringkat', icon: 'chart' },
   ],
-  teacher: [{ href: '/teacher', label: 'Kelas saya', icon: 'users' }],
+  teacher: [
+    { href: '/teacher', label: 'Kelas saya', icon: 'users' },
+    { href: '/teacher/profile', label: 'Profil', icon: 'user' },
+  ],
   admin: [
     { href: '/admin/schools', label: 'Sekolah & token', icon: 'school' },
     { href: '/admin/content', label: 'Konten & operasional', icon: 'book' },
@@ -123,42 +126,42 @@ export function AppShell({
           </span>
           <div className="topbar-actions">
             {actions}
-            {area === 'student' ? (
-              <Link href="/student/profile" className="account-link" aria-label="Buka profil">
+            {area !== 'admin' ? (
+              <Link href={`/${area}/profile`} className="account-link" aria-label="Buka profil">
                 <span className="account-avatar">
                   {profile?.displayName.slice(0, 1).toUpperCase() || 'N'}
                 </span>
                 <span className="account-name">{profile?.displayName || 'Profil'}</span>
               </Link>
             ) : (
-              <>
-                <button
-                  className="text-button"
-                  disabled={loggingOut}
-                  onClick={async () => {
-                    setLoggingOut(true);
-                    try {
-                      setLogoutError('');
-                      await logout();
-                      router.replace('/');
-                    } catch {
-                      setLogoutError('Belum dapat keluar. Coba lagi.');
-                      setLoggingOut(false);
-                    }
-                  }}
-                >
-                  <Icon name="logout" /> {loggingOut ? 'Keluar…' : 'Keluar'}
-                </button>
-                <button
-                  className="menu-toggle"
-                  aria-label="Menu navigasi"
-                  aria-expanded={menuOpen}
-                  aria-controls="mobile-menu"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                >
-                  <Icon name={menuOpen ? 'close' : 'menu'} />
-                </button>
-              </>
+              <button
+                className="text-button"
+                disabled={loggingOut}
+                onClick={async () => {
+                  setLoggingOut(true);
+                  try {
+                    setLogoutError('');
+                    await logout();
+                    router.replace('/');
+                  } catch {
+                    setLogoutError('Belum dapat keluar. Coba lagi.');
+                    setLoggingOut(false);
+                  }
+                }}
+              >
+                <Icon name="logout" /> {loggingOut ? 'Keluar…' : 'Keluar'}
+              </button>
+            )}
+            {area !== 'student' && (
+              <button
+                className="menu-toggle"
+                aria-label="Menu navigasi"
+                aria-expanded={menuOpen}
+                aria-controls="mobile-menu"
+                onClick={() => setMenuOpen(!menuOpen)}
+              >
+                <Icon name={menuOpen ? 'close' : 'menu'} />
+              </button>
             )}
           </div>
         </header>
