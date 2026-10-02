@@ -80,6 +80,13 @@ async function fixtures(
       teacherVerified = true;
       data = { verified: true };
     } else if (path === '/classes/join') {
+      const { joinCode } = route.request().postDataJSON() as { joinCode: string };
+      if (!['FIX234', 'QA_LEGACY-CLASS'].includes(joinCode))
+        return route.fulfill({
+          status: 404,
+          contentType: 'application/problem+json',
+          json: { code: 'CLASS_NOT_FOUND', detail: 'Kode Class tidak valid.' },
+        });
       school = true;
       data = { joined: true, class: { id: chapterId, name: 'IX fixture' } };
     } else if (path === '/students/me/dashboard')
@@ -330,6 +337,60 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
       expect(response?.request().redirectedFrom()).toBeNull();
     }
   });
+
+test('Mandiri keeps learning and global PvP access while class ranking stays restricted', async ({
+  page,
+}) => {
+  await fixtures(page);
+  await page.goto('/student');
+  await expect(page.getByText('Siswa mandiri', { exact: true })).toBeVisible();
+  await page.goto(`/student/drill/${attemptId}`);
+  await expect(page.getByText('Fixture: 1 + 1?')).toBeVisible();
+  await page.goto('/student/pvp');
+  await expect(page.getByRole('heading', { name: 'PvP belum tersedia' })).toBeVisible();
+  await page.goto('/student/leaderboards');
+  await expect(page.getByRole('button', { name: 'Global PvP' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('heading', { name: 'Peringkat belum tersedia' })).toBeVisible();
+  await page.getByRole('button', { name: 'Kelas', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Akses ditolak' })).toBeVisible();
+  await page.goto('/student/profile');
+  await expect(page.getByLabel('Kode kelas')).toBeVisible();
+});
+
+test('invalid class code does not change Mandiri affiliation', async ({ page }) => {
+  await fixtures(page);
+  await page.goto('/student/profile');
+  await page.getByLabel('Kode kelas').fill('BAD999');
+  await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+  await expect(page.getByText('Kode Class tidak valid.')).toBeVisible();
+  await expect(page.getByText('Belajar mandiri')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Belajar mandiri')).toBeVisible();
+});
+
+test('joined class affiliation persists after signing out and back in', async ({ page }) => {
+  await fixtures(page);
+  await page.goto('/student/profile');
+  await page.getByLabel('Kode kelas').fill(' FIX234 ');
+  await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+  await expect(page.getByText('Terhubung dengan kelas')).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
+  await page.getByRole('button', { name: 'Keluar dari akun' }).click();
+  await expect(page).toHaveURL('http://localhost:3300/');
+  await page.evaluate(() => localStorage.removeItem('test-logged-out'));
+  await page.reload();
+  await expect(page).toHaveURL(/\/student$/);
+  await page.goto('/student/profile');
+  await expect(page.getByText('Terhubung dengan kelas')).toBeVisible();
+  await expect(page.getByLabel('Kode kelas')).toHaveCount(0);
+  await page.goto('/student/leaderboards?tab=class');
+  await expect(
+    page.getByText('Aturan XP kelas sedang ditetapkan.', { exact: false }),
+  ).toBeVisible();
+});
 
 for (const width of [390, 1440]) {
   test(`Teacher class monitoring at ${width}px keeps zero scores and accessible navigation`, async ({
