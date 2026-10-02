@@ -2,6 +2,8 @@
 
 Status working tree per 1 Oktober 2026. Dokumen ini mencatat implementasi dan bukti lokal; semua perubahan masih perlu review dan belum merupakan bukti kesiapan staging. Sumber aturan produk: [Product Context](../product/PRODUCT_CONTEXT.md), [Open Decisions](../product/OPEN_DECISIONS.md), dan [PRD Mapping](../product/PRD_MAPPING.md).
 
+**PROPOSED — integrasi 2 Oktober 2026:** PR #25/#22/#23/#24 digabung pada branch integrasi untuk satu PR menuju main. Paket Admin, laporan Student dan snapshot IRT memakai engine canonical yang sama; jurnal gabungan menambahkan 0009 untuk metadata IRT. Review, bukti pengujian dan jalur upgrade ada pada [laporan integrasi](CORE_CONTENT_IRT_INTEGRATION_2026-10-02.md). Status merge aktual tetap mengikuti GitHub.
+
 ## Fondasi dan Drill
 
 - [x] Runtime Drill memakai `assessment_packages`, `assessment_attempts`, `attempt_items`, dan `attempt_answers`. Service katalog, Drill, riwayat, dan Tryout dipisahkan.

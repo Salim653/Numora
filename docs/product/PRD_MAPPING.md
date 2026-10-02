@@ -65,6 +65,8 @@ Progress + XP ledger ── class leaderboard / monitoring / feedback
 
 ## Change-impact rule
 
+**ENGINEERING IMPLEMENTATION, 1 October 2026:** Ferdi's canonical Drill package APIs, Student video/report support, and IRT integration boundary are described in [FERDI_CONTENT_SUPPORT](../api/FERDI_CONTENT_SUPPORT.md). See [implementation status](../development/FERDI_IMPLEMENTATION_2026-10-01.md) for handoffs and blockers. Canonical assessment consumption/migration, the Data model, and Tryout release policy remain dependencies; this update does not resolve OPEN items or declare the MVP ready.
+
 Any PRD change must be checked against at least:
 
 - API/OpenAPI;

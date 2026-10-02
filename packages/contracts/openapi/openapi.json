@@ -2781,6 +2781,60 @@
         ]
       }
     },
+    "/api/v1/admin/irt/batches": {
+      "get": {
+        "operationId": "IrtController_batches",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIrtBatchesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
     "/api/v1/pvp/availability": {
       "get": {
         "operationId": "PvpController_availability",
@@ -5529,6 +5583,73 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AdminIrtItemDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "AdminIrtBatchDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "packageId": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchKind": {
+            "type": "string"
+          },
+          "modelVersion": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED"
+            ]
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "resultReleasedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "failureCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "packageId",
+          "batchKind",
+          "modelVersion",
+          "status",
+          "startedAt",
+          "finishedAt",
+          "resultReleasedAt",
+          "failureCode"
+        ]
+      },
+      "AdminIrtBatchesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminIrtBatchDto"
             }
           }
         },

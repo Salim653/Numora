@@ -9,8 +9,10 @@ import {
   getDatabase,
   packageItems,
   questionVersions,
+  scoringPolicyVersions,
 } from '@tka/database';
 import { DrillPackagesService } from './drill-packages.service';
+import { IrtIntegrationService } from '../irt/irt-integration.service';
 import { databaseSuite, installFerdiFixture } from './ferdi-content.fixture';
 databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
   const fixture = installFerdiFixture();
@@ -66,6 +68,7 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
         studentId: student,
         packageId: draft,
         assessmentType: 'DRILL',
+        levelIdAtStart: fixture.level,
         scoringPolicyVersionId: policy,
         status: 'GRADED',
         rawPoints: '1',
@@ -147,6 +150,132 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
     );
     expect(publication.status).toBe(409);
     expect(await publication.json()).toMatchObject({ code: 'DRILL_PACKAGE_NOT_READY' });
+  });
+  it('plays an Admin-published package through the canonical engine, reports an answer and prepares IRT', async () => {
+    const { request, body, suffix } = fixture;
+    const draft = await request('admin/content/drill-packages', 'POST', {
+      ...body,
+      familyCode: `PLAYABLE-${suffix}`,
+      variantIndex: 2,
+    });
+    expect(draft.status).toBe(201);
+    const { id: packageId } = (await draft.json()) as { id: string };
+    expect(
+      (await request(`admin/content/drill-packages/${packageId}/publish`, 'POST')).status,
+    ).toBe(201);
+    const started = await request(
+      'assessments/drill/attempts',
+      'POST',
+      { levelId: fixture.level },
+      'student',
+    );
+    expect(started.status).toBe(201);
+    const attempt = (await started.json()) as {
+      id: string;
+      questions: { questionInstanceId: string }[];
+    };
+    expect(attempt.questions).toHaveLength(10);
+    const persisted = (
+      await getDatabase()
+        .db.select()
+        .from(assessmentAttempts)
+        .where(eq(assessmentAttempts.id, attempt.id))
+    )[0]!;
+    expect(persisted.packageId).toBe(packageId);
+    for (const question of attempt.questions) {
+      expect(
+        (
+          await request(
+            `assessment-attempts/${attempt.id}/answers/${question.questionInstanceId}`,
+            'PATCH',
+            { optionId: 'A' },
+            'student',
+          )
+        ).status,
+      ).toBe(200);
+    }
+    const result = await request(
+      `assessment-attempts/${attempt.id}/submit`,
+      'POST',
+      undefined,
+      'student',
+    );
+    expect(result.status).toBe(201);
+    const graded = await result.json();
+    expect(graded).toMatchObject({ score: 100, mastered: true });
+    expect(
+      await (
+        await request(`assessment-attempts/${attempt.id}/submit`, 'POST', undefined, 'student')
+      ).json(),
+    ).toEqual(graded);
+    const report = await request(
+      'students/me/question-reports',
+      'POST',
+      {
+        attemptItemId: attempt.questions[0]!.questionInstanceId,
+        category: 'TEST canonical report',
+        clientRequestId: randomUUID(),
+      },
+      'student',
+    );
+    expect(report.status).toBe(201);
+    const input = await new IrtIntegrationService().prepare({
+      batchId: randomUUID(),
+      batchKind: 'DAILY',
+      modelVersion: 'TEST-integrated',
+      packageId,
+      cutoffAt: new Date().toISOString(),
+    });
+    expect(input.responses).toHaveLength(10);
+    expect(
+      input.responses.every(
+        (response) =>
+          response.correct && response.scoringPolicyVersionId === persisted.scoringPolicyVersionId,
+      ),
+    ).toBe(true);
+  });
+  it('rejects publication with policies and option shapes unsupported by the canonical runtime', async () => {
+    const { db } = getDatabase();
+    const [unsupported] = await db
+      .insert(scoringPolicyVersions)
+      .values({
+        policyCode: `TEST-unsupported-${fixture.suffix}`,
+        version: 1,
+        configuration: { assessmentType: 'DRILL' },
+        status: 'PUBLISHED',
+      })
+      .returning();
+    const service = new DrillPackagesService();
+    const draft = await service.create(fixture.admin, {
+      ...fixture.body,
+      familyCode: `POLICY-${fixture.suffix}`,
+      scoringPolicyVersionId: unsupported!.id,
+    });
+    await expect(service.publish(fixture.admin, draft.id)).rejects.toMatchObject({ status: 409 });
+    const options = (
+      await db
+        .select()
+        .from(questionVersions)
+        .where(eq(questionVersions.id, fixture.versionIds[0]!))
+    )[0]!.optionsOrStatements;
+    await db
+      .update(questionVersions)
+      .set({ optionsOrStatements: (options as unknown[]).slice(0, 2) })
+      .where(eq(questionVersions.id, fixture.versionIds[0]!));
+    try {
+      const invalid = await service.create(fixture.admin, {
+        ...fixture.body,
+        familyCode: `OPTIONS-${fixture.suffix}`,
+      });
+      await expect(service.publish(fixture.admin, invalid.id)).rejects.toMatchObject({
+        status: 409,
+      });
+    } finally {
+      await db
+        .update(questionVersions)
+        .set({ optionsOrStatements: options })
+        .where(eq(questionVersions.id, fixture.versionIds[0]!));
+    }
   });
   it('rejects incomplete, unready and malformed content; rolls back audit failures', async () => {
     const { admin, body, suffix, versionIds } = fixture;

@@ -74,6 +74,8 @@ const groups = [
       'ResolveReportDto',
       'AdminIrtItemDto',
       'AdminIrtDto',
+      'AdminIrtBatchDto',
+      'AdminIrtBatchesDto',
       'AdminAuditDto',
       'AdminAuditListDto',
       'AdminDashboardDto',

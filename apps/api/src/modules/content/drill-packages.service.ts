@@ -19,6 +19,11 @@ import {
   subchapters,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
+import {
+  decodeSingleChoiceVersion,
+  DRILL_POLICY_CODE,
+  DRILL_POLICY_VERSION,
+} from '../learning/drill.policy';
 import type { ContentPageDto } from './content.dto';
 import type {
   AdminDrillPackageDto,
@@ -29,38 +34,16 @@ import type {
 
 const problem = (code: string, detail: string) => ({ code, detail });
 function playable(version: typeof questionVersions.$inferSelect) {
-  const text = (value: unknown) =>
-    value !== null &&
-    typeof value === 'object' &&
-    'text' in value &&
-    typeof value.text === 'string' &&
-    value.text.trim().length > 0;
-  if (!Array.isArray(version.optionsOrStatements)) return false;
-  const options: unknown[] = version.optionsOrStatements;
-  const ids = options.flatMap((option) =>
-    option !== null &&
-    typeof option === 'object' &&
-    'id' in option &&
-    typeof option.id === 'string' &&
-    option.id.trim().length > 0 &&
-    'content' in option &&
-    text(option.content)
-      ? [option.id]
-      : [],
-  );
-  const key = version.answerKey;
-  return (
-    text(version.stem) &&
-    text(version.explanation) &&
-    options.length >= 2 &&
-    ids.length === options.length &&
-    new Set(ids).size === ids.length &&
-    key !== null &&
-    typeof key === 'object' &&
-    'optionId' in key &&
-    typeof key.optionId === 'string' &&
-    ids.includes(key.optionId)
-  );
+  try {
+    const content = decodeSingleChoiceVersion(version);
+    return (
+      !!content.stem.trim() &&
+      !!content.explanation.trim() &&
+      content.options.every((option) => !!option.text.trim())
+    );
+  } catch {
+    return false;
+  }
 }
 function found<T>(row: T | undefined): T {
   if (!row)
@@ -175,8 +158,10 @@ export class DrillPackagesService {
       (policy.status !== 'PUBLISHED' ||
         configuration === null ||
         typeof configuration !== 'object' ||
-        !('assessmentType' in configuration) ||
-        configuration.assessmentType !== 'DRILL' ||
+        policy.policyCode !== DRILL_POLICY_CODE ||
+        policy.version !== DRILL_POLICY_VERSION ||
+        !('questionType' in configuration) ||
+        configuration.questionType !== 'SINGLE_CHOICE' ||
         [scope.level.status, scope.subchapter.status, scope.chapter.status].some(
           (s) => s !== 'READY',
         ))

@@ -53,6 +53,10 @@ export type AdminIrtItemDto = { "id": string; "batchId": string; "questionVersio
 
 export type AdminIrtDto = { "items": (AdminIrtItemDto)[]; };
 
+export type AdminIrtBatchDto = { "id": string; "packageId": string | null; "batchKind": string; "modelVersion": string; "status": "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED"; "startedAt": string; "finishedAt": string | null; "resultReleasedAt": string | null; "failureCode": string | null; };
+
+export type AdminIrtBatchesDto = { "items": (AdminIrtBatchDto)[]; };
+
 export type AdminAuditDto = { "id": string; "actorUserId": string | null; "action": string; "entityType": string; "entityId": string | null; "createdAt": string; };
 
 export type AdminAuditListDto = { "items": (AdminAuditDto)[]; };

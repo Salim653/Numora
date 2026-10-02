@@ -64,6 +64,13 @@
       "when": 1790862061674,
       "tag": "0008_solid_sprite",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790903375690,
+      "tag": "0009_irt_integration_metadata",
+      "breakpoints": true
     }
   ]
 }

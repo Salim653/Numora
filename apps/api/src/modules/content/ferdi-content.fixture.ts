@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { ForbiddenException, type INestApplication, UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe } from 'vitest';
+import { and, eq } from 'drizzle-orm';
 import {
   assessmentAttempts,
   assessmentPackages,
@@ -24,6 +25,8 @@ import { configureApplication } from '../../bootstrap';
 import { IdentityService } from '../identity/identity.service';
 import { ReportsModule } from '../reports/reports.module';
 import { IrtModule } from '../irt/irt.module';
+import { LearningModule } from '../learning/learning.module';
+import { DRILL_POLICY_CODE, DRILL_POLICY_VERSION } from '../learning/drill.policy';
 import { ContentModule } from './content.module';
 import type { CreateDrillPackageDto } from './drill-packages.dto';
 const url = process.env.TEST_DATABASE_URL;
@@ -113,14 +116,14 @@ export function installFerdiFixture() {
       .returning();
     level = lev!.id;
     const [p] = await db
-      .insert(scoringPolicyVersions)
-      .values({
-        policyCode: `DRILL-TEST-${suffix}`,
-        version: 1,
-        configuration: { assessmentType: 'DRILL', fixture: true },
-        status: 'PUBLISHED',
-      })
-      .returning();
+      .select()
+      .from(scoringPolicyVersions)
+      .where(
+        and(
+          eq(scoringPolicyVersions.policyCode, DRILL_POLICY_CODE),
+          eq(scoringPolicyVersions.version, DRILL_POLICY_VERSION),
+        ),
+      );
     policy = p!.id;
     versionIds = [];
     for (let i = 0; i < 10; i++) {
@@ -163,7 +166,7 @@ export function installFerdiFixture() {
       questionVersionIds: versionIds,
     };
     const module = await Test.createTestingModule({
-      imports: [ContentModule, ReportsModule, IrtModule],
+      imports: [ContentModule, ReportsModule, IrtModule, LearningModule],
     })
       .overrideProvider(IdentityService)
       .useValue({
@@ -231,6 +234,7 @@ export function installFerdiFixture() {
           studentId: person.id,
           packageId: pkg!.id,
           assessmentType: 'DRILL',
+          levelIdAtStart: level,
           scoringPolicyVersionId: policy,
           status: 'GRADED',
           startedAt: new Date(Date.now() - 1000),

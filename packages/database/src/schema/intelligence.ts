@@ -80,6 +80,9 @@ export const irtBatches = pgTable('irt_batches', {
   startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
   finishedAt: timestamp('finished_at', { withTimezone: true }),
   resultReleasedAt: timestamp('result_released_at', { withTimezone: true }),
+  inputSnapshot: jsonb('input_snapshot'),
+  outputDigest: text('output_digest'),
+  failureCode: text('failure_code'),
 }, (table) => [index('irt_batches_package_idx').on(table.packageId)]).enableRLS();
 
 export const irtItemResults = pgTable('irt_item_results', {

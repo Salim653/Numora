@@ -19,6 +19,20 @@ export class AdminIrtItemDto {
 export class AdminIrtDto {
   @ApiProperty({ type: [AdminIrtItemDto] }) items!: AdminIrtItemDto[];
 }
+export class AdminIrtBatchDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ type: String, nullable: true }) packageId!: string | null;
+  @ApiProperty() batchKind!: string;
+  @ApiProperty() modelVersion!: string;
+  @ApiProperty({ enum: ['PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED'] }) status!: string;
+  @ApiProperty() startedAt!: string;
+  @ApiProperty({ type: String, nullable: true }) finishedAt!: string | null;
+  @ApiProperty({ type: String, nullable: true }) resultReleasedAt!: string | null;
+  @ApiProperty({ type: String, nullable: true }) failureCode!: string | null;
+}
+export class AdminIrtBatchesDto {
+  @ApiProperty({ type: [AdminIrtBatchDto] }) items!: AdminIrtBatchDto[];
+}
 
 // Read existing batch output only. Model configuration/computation remains OPEN-12/18.
 @ApiTags('admin-irt')
@@ -31,5 +45,10 @@ export class IrtController {
   @ApiOkResponse({ type: AdminIrtDto })
   list(@Query() page: ContentPageDto) {
     return this.irt.list(page);
+  }
+  @Get('batches')
+  @ApiOkResponse({ type: AdminIrtBatchesDto })
+  batches(@Query() page: ContentPageDto) {
+    return this.irt.batches(page);
   }
 }
