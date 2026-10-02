@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
     let sequence = 0;
     let lastAccessToken: string | null | undefined;
+    let expired = false;
     let pendingTimer: ReturnType<typeof setTimeout> | undefined;
     const clearPending = () => clearTimeout(pendingTimer);
     const failIfPending = (current: number) => {
@@ -61,9 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const current = ++sequence;
       clearPending();
       if (!session) {
-        setState({ status: 'signed_out' });
+        setState({
+          status: 'signed_out',
+          ...(expired && { message: 'Sesi berakhir. Login kembali.' }),
+        });
         return;
       }
+      expired = false;
       setState({ status: 'loading', session });
       failIfPending(current);
       try {
@@ -79,7 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else if (error instanceof ApiProblem && error.code === 'ACCOUNT_DISABLED') {
           setState({ status: 'disabled', session, message: error.message });
         } else if (error instanceof ApiProblem && error.status === 401) {
-          setState({ status: 'signed_out', message: 'Sesi berakhir. Login kembali.' });
+          expired = true;
+          await client.auth.signOut({ scope: 'local' });
+          if (active && current === sequence)
+            setState({ status: 'signed_out', message: 'Sesi berakhir. Login kembali.' });
         } else {
           setState({
             status: 'error',
