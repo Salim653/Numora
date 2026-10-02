@@ -21,22 +21,26 @@ for (const args of [
 ]) {
   // All command arguments are constants; credentials travel only through child environment.
   const buildWeb = args[1] === '@tka/web' && args[2] === 'build';
-  const result = spawnSync('pnpm', args, {
-    cwd: root,
-    env: buildWeb
-      ? {
-          ...env,
-          NODE_ENV: 'production',
-          NUMORA_WEB_DIST_DIR: '.next-connected',
-          NEXT_PUBLIC_API_URL: 'http://localhost:3401/api/v1',
-          API_INTERNAL_URL: 'http://localhost:3401/api/v1',
-          NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:3402',
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'job06-fixture-public-key',
-        }
-      : env,
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  });
+  const windows = process.platform === 'win32';
+  const result = spawnSync(
+    windows ? 'cmd.exe' : 'pnpm',
+    windows ? ['/d', '/s', '/c', `pnpm ${args.join(' ')}`] : args,
+    {
+      cwd: root,
+      env: buildWeb
+        ? {
+            ...env,
+            NODE_ENV: 'production',
+            NUMORA_WEB_DIST_DIR: '.next-connected',
+            NEXT_PUBLIC_API_URL: 'http://localhost:3401/api/v1',
+            API_INTERNAL_URL: 'http://localhost:3401/api/v1',
+            NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:3402',
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'job06-fixture-public-key',
+          }
+        : env,
+      stdio: 'inherit',
+    },
+  );
   if (result.error || result.status !== 0) process.exit(result.status || 1);
 }
 if (releaseSha(root) !== sha) throw new Error('Release SHA changed during testing.');

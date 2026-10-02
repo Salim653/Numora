@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e-connected',
+  outputDir: '../../.tmp/job06-playwright',
   workers: 1,
   fullyParallel: false,
   retries: 0,
