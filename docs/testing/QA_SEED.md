@@ -9,6 +9,7 @@
 ## Prepare identities
 
 1. For temporary QA accounts, place a **rotated** `sb_secret_*` key in ignored `.env` as `SUPABASE_SECRET_KEY` and set `SUPABASE_PROJECT_REF=pkamenfnwmoeisccnrnk`. Never use a `NEXT_PUBLIC_*` secret or commit credentials. Run `pnpm qa:accounts`. It uses the Supabase Admin API to create/verify six confirmed Auth accounts, storing generated passwords only in ignored `.qa-seed/accounts.json` and IDs in `.qa-seed/actors.json`. Rerunning verifies the same accounts. Rotate any key disclosed through chat again when provisioning is finished.
+  If QA passwords were exposed or no longer match Supabase Auth, run `pnpm qa:accounts:rotate`. It replaces all six QA passwords with fresh random values in the ignored vault and updates only those QA Auth users in the named Development project.
 2. For future Google QA identities, have six new accounts sign in through Google OAuth once and create ignored `.qa-seed/actors.json` with exactly this shape. Do not commit or paste the manifest, emails, tokens, or database credentials into chat.
 
 ```json
