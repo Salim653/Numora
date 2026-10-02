@@ -1,6 +1,6 @@
 # Paket Drill, dukungan Student, dan integrasi IRT
 
-**ENGINEERING IMPLEMENTATION — 1 Oktober 2026, menunggu review FE/BE/QA.** Implementasi ini mengikuti ownership Ferdi. Aturan Drill/TryOut terbaru mengikuti [rekonsiliasi PRD fitur](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); v0.5 tetap baseline lintas fitur; kontrak integrasi statistik belum menjadi persetujuan model Data.
+**ENGINEERING IMPLEMENTATION — baseline 1 Oktober, diperluas 2 Oktober 2026; menunggu review FE/BE/QA.** Implementasi mengikuti ownership Ferdi. Aturan terbaru mengikuti [rekonsiliasi PRD fitur](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md); v0.5 tetap baseline lintas fitur. Kontrak statistik membutuhkan review Data; [status implementasi](../development/FERDI_IMPLEMENTATION_2026-10-02.md) memisahkan kode tersedia dari gate final.
 
 Semua endpoint memakai `/api/v1`, Bearer Auth, UUID, JSON camelCase, dan error `application/problem+json`. Identitas actor/reporter diambil dari sesi server. Tipe frontend dihasilkan dari OpenAPI.
 
@@ -41,9 +41,9 @@ Rekomendasi mendukung pembacaan hasil canonical maupun hasil Drill kompatibilita
 
 Laporan soal mencari item canonical milik Student dan answer tersimpan, lalu mengisi FK `question_reports.attempt_answer_id`. Item tidak tersedia ditolak `404 REPORT_ITEM_NOT_FOUND`; answer belum tersimpan ditolak `409 REPORT_ANSWER_UNAVAILABLE`. ID `questionInstanceId` dari engine canonical adalah ID `attempt_items` yang dipakai form laporan. ID pertanyaan legacy yang tidak memiliki item canonical tidak diubah menjadi FK palsu. Kegagalan tampil dan dapat dicoba ulang. Admin membaca/menindaklanjuti laporan melalui API Reports yang sudah ada.
 
-**ENGINEERING IMPLEMENTATION:** category adalah teks 1–80 karakter; details opsional maksimal 2.000 karakter. Ini batas input engineering, bukan daftar kategori produk final. Jangan memasukkan PII dalam laporan. Metadata video impor juga diperiksa terhadap aturan HTTPS editor sebelum diberikan kepada Student. **Gap terhadap Drill v1.2:** HTTPS saja belum membuktikan tujuan link YouTube; source/link yang ditampilkan harus sesuai requirement YouTube.
+**PRD RULE / ENGINEERING IMPLEMENTATION 2 Oktober:** category soal dibatasi QUESTION/OPTION/ANSWER_KEY/EXPLANATION (soal/opsi/kunci/pembahasan); category video tetap teks 1–80 karakter. Details opsional maksimal 2.000 karakter. Metadata video, termasuk impor, hanya diteruskan jika parser memvalidasi HTTPS, host YouTube, ID 11 karakter, tanpa credentials/port nondefault. Bentuk watch/shorts/embed/youtu.be didukung. Filter valid diterapkan sebelum cap tiga, termasuk DTO hasil Drill. Editor menolak aktivasi READY pada URL impor invalid. Kurasi/relevansi akademik tetap Curriculum; validasi URL bukan approval video.
 
-Kedua POST laporan menerima `clientRequestId` UUID opsional. Server memakai ID itu sebagai primary key laporan dan advisory transaction lock: actor, referensi soal/mapping, category, serta details yang sama mengembalikan ID tersimpan; penggunaan ID untuk actor/referensi/isi berbeda ditolak 409. Kepemilikan attempt video tetap diperiksa pada retry, termasuk ketika mapping yang sebelumnya valid sudah diarsipkan. Form mengirim ID yang sama untuk retry isi yang sama dan ID baru setelah isi diubah. Client lama tanpa ID tetap diterima, tetapi retry client lama belum idempotent. Tidak ada migrasi tambahan untuk mekanisme ini.
+Kedua POST menerima clientRequestId UUID opsional. Primary key/advisory lock menjaga replay actor/referensi/category/details sama; ID reuse berbeda 409. Video report baru mengikat attemptContext (attempt/level/subchapter/video) melalui migrasi 0011; replay attempt berbeda ditolak. Laporan lama tetap context null karena original attempt tidak diketahui, tetapi ownership diperiksa pada retry, termasuk setelah mapping diarsipkan. Form mempertahankan UUID untuk isi sama dan membuat UUID baru setelah perubahan. Client lama tanpa ID tetap diterima tetapi retry-nya belum idempotent.
 
 ## Integrasi IRT — #9
 
@@ -72,6 +72,14 @@ Admin membaca parameter melalui endpoint lama; `GET /admin/irt/batches` menambah
 
 **OPEN-12/18:** model, seleksi respons, skala nilai Tryout, scheduling dan failure/release policy belum disetujui. `complete` tidak mengisi resultReleasedAt dan tidak mengubah nilai/XP historis. UI/engine Tryout harus memakai gate rilis yang disepakati, bukan menganggap SUCCEEDED otomatis berarti hasil boleh dibuka.
 
+## Tambahan boundary IRT V2 — 2 Oktober
+
+**PROPOSED:** prepare menerima contractVersion "2" dan scaleId untuk TRYOUT. Default tetap "1", snapshot lama terbaca dan worker tidak otomatis berpindah. V2 membekukan attempt SUBMITTED/GRADED sampai cutoff, semua format PG/MCMA/Category dan item tanpa jawaban, raw answer, maxPoints serta awardedPoints/correct nullable. Jawaban berubah setelah cutoff menyebabkan prepare ditolak, bukan item dibuang diam-diam.
+
+Output V2 memiliki respondents: respondentId pseudonim, attemptId, scoringPolicyVersionId, scaleId dan score finite. Batch/model/input harus cocok dan tepat satu hasil per attempt. Identity/policy/scale salah, missing/duplicate/foreign respondent dan nonfinite ditolak. Completion identik concurrency diterima, output berbeda ditolak. output_snapshot nullable (0010) menyimpan output beku; item stats/digest atomik. Nilai respondent tidak dipaksakan ke score0To100 atau skala tebakan.
+
+V2 tidak mengisi resultReleasedAt, tidak mengubah score/XP attempt dan tidak menghitung ulang released history. Model/rubrik/durasi/skala/low-response serta final worker/release tetap Data/Aini/PO. SUCCEEDED bukan izin membuka hasil. Gate 30 parameter item Admin existing bukan approval universal release siswa.
+
 ## Handoff frontend dan QA
 
 - Avicenna: generated Create/Update/AdminDrillPackage DTO tersedia untuk UI paket; frontend Admin tetap ownership Avicenna.
@@ -87,4 +95,4 @@ Pengujian database harus memakai localhost dengan NODE_ENV=test; gunakan databas
 
 CRUD/publish paket Admin di dokumen ini adalah kapabilitas operasional yang sudah ada; kedua PRD fitur terbaru mengecualikan CRUD/Admin configuration UI dari scope fitur siswa dan menetapkan Curriculum sebagai pemasok konten. API ini tidak menjadi syarat baru journey siswa.
 
-TryOut v1.1 menetapkan 35 soal, tiga format, gratis semua siswa, countdown auto-submit dan release ≤3×24 jam setelah akhir batch; durasi/skala/model/XP/past access tetap TBC. Ekstraksi canonical GRADED PG dan readiness ≥30 di atas belum membuktikan dukungan PGK/initial TryOut IRT scoring atau kebijakan low-response final. Drill XP/stars/retensi dan session/fallback mengikuti DRL-OPEN, bukan formula/rentang/90 hari lama. Tidak ada endpoint/schema/runtime yang diubah oleh sinkronisasi docs ini.
+TryOut v1.1 menetapkan 35 soal, tiga format, gratis semua siswa, countdown auto-submit dan release ≤3×24 jam setelah akhir batch; durasi/skala/model/XP/past access tetap TBC. Ekstraksi canonical GRADED PG dan readiness ≥30 di atas belum membuktikan dukungan PGK/initial TryOut IRT scoring atau kebijakan low-response final. Drill XP/stars/retensi dan session/fallback mengikuti DRL-OPEN, bukan formula/rentang/90 hari lama. Sinkronisasi dokumentasi 1 Oktober tidak mengubah runtime; perubahan implementasi 2 Oktober dan dependency tersisanya dicatat pada bagian berikut dan status implementasi Ferdi.

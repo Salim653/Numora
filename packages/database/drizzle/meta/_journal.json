@@ -71,6 +71,20 @@
       "when": 1790903375690,
       "tag": "0009_irt_integration_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790947452473,
+      "tag": "0010_irt_scoring_output",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790948883503,
+      "tag": "0011_video_report_context",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "irt_batches" ADD COLUMN "output_snapshot" jsonb;

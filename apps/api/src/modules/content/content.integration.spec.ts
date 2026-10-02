@@ -364,7 +364,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
         (
           await mutation('videos', {
             title: `TEST video ${n}`,
-            url: 'https://example.test/video',
+            url: 'https://www.youtube.com/watch?v=TESTVIDEO00',
             source: 'TEST',
             subchapterId: subchapter,
             recommendationOrder: n,
@@ -445,19 +445,17 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
         { batchKind: 'TEST', modelVersion: 'TEST-pending', status: 'PENDING' },
       ])
       .returning({ id: irtBatches.id });
-    await db
-      .insert(irtItemResults)
-      .values(
-        batches.map((b, i) => ({
-          batchId: b.id,
-          questionVersionId: version,
-          sampleSize: i === 0 ? 29 : 30,
-          difficultyB: i === 0 ? null : '0.5',
-          discriminationA: i === 0 ? null : '1.0',
-          guessingC: i === 0 ? null : '0.25',
-          dataStatus: 'TEST',
-        })),
-      );
+    await db.insert(irtItemResults).values(
+      batches.map((b, i) => ({
+        batchId: b.id,
+        questionVersionId: version,
+        sampleSize: i === 0 ? 29 : 30,
+        difficultyB: i === 0 ? null : '0.5',
+        discriminationA: i === 0 ? null : '1.0',
+        guessingC: i === 0 ? null : '0.25',
+        dataStatus: 'TEST',
+      })),
+    );
     const response = (await (await request('admin/irt?limit=100')).json()) as {
       items: { batchId: string; difficultyB: string | null }[];
     };
@@ -475,5 +473,44 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
           ),
         ),
     ).toHaveLength(3);
+  });
+  it('rejects unsafe video writes and activation of invalid imported metadata', async () => {
+    for (const url of [
+      'http://youtu.be/TESTVIDEO00',
+      'https://youtube.com.example.test/watch?v=TESTVIDEO00',
+      'https://example.test/lesson',
+    ])
+      expect(
+        (
+          await request('admin/content/videos', 'POST', {
+            title: 'TEST invalid',
+            url,
+            source: 'TEST',
+            subchapterId: subchapter,
+            recommendationOrder: 1,
+            status: 'DRAFT',
+          })
+        ).status,
+      ).toBe(400);
+    const db = getDatabase().db;
+    const [video] = await db
+      .insert(learningVideos)
+      .values({ title: 'TEST invalid import', url: 'https://example.test/lesson', source: 'TEST' })
+      .returning();
+    const [mapping] = await db
+      .insert(videoSubchapterMappings)
+      .values({ videoId: video!.id, subchapterId: subchapter, recommendationOrder: 99 })
+      .returning();
+    expect(
+      (await request(`admin/content/videos/${mapping!.id}`, 'PATCH', { status: 'READY' })).status,
+    ).toBe(400);
+    expect(
+      (
+        await db
+          .select()
+          .from(videoSubchapterMappings)
+          .where(eq(videoSubchapterMappings.id, mapping!.id))
+      )[0]!.status,
+    ).toBe('DRAFT');
   });
 });
