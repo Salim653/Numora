@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ApiProblem } from '@/lib/api';
 import { AdminContentScreen } from './content';
-import { createQuestion, loadAdminWorkbench, updateTryoutDraft } from './content-api';
+import {
+  createQuestion,
+  loadAdminWorkbench,
+  publishDrillPackage,
+  resolveReport,
+  updateTryoutDraft,
+} from './content-api';
 
 const context = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 vi.mock('next/navigation', () => ({
@@ -16,12 +22,23 @@ vi.mock('./content-api', async (original) => ({
   ...(await original<object>()),
   loadAdminWorkbench: vi.fn(),
   createQuestion: vi.fn(),
+  publishDrillPackage: vi.fn(),
+  resolveReport: vi.fn(),
   updateTryoutDraft: vi.fn(),
 }));
 // Explicitly fictional UI test fixtures; no production login bypass or Supabase write.
 const data = {
   curriculum: {
     items: [
+      {
+        id: 'sub-test',
+        kind: 'SUBCHAPTER' as const,
+        parentId: 'chapter-test',
+        code: 'SUB-TEST',
+        name: 'Subbab demo',
+        displayOrder: 0,
+        status: 'READY' as const,
+      },
       {
         id: 'competency-test',
         kind: 'COMPETENCY' as const,
@@ -33,11 +50,96 @@ const data = {
       },
     ],
   },
-  versions: { items: [] },
-  videos: { items: [] },
-  reports: { items: [] },
+  versions: {
+    items: [
+      {
+        id: 'version-test',
+        questionId: 'question-test',
+        primaryCompetencyId: 'competency-test',
+        variantId: 'variant-test',
+        variantCode: 'DEMO-01',
+        variantKind: 'ORIGINAL' as const,
+        originalVariantId: null,
+        versionNumber: 1,
+        questionType: 'SINGLE_CHOICE',
+        stem: 'Soal demo',
+        options: [],
+        answerOptionId: 'A',
+        explanation: 'Pembahasan demo',
+        difficulty: 'DEMO',
+        contentStatus: 'READY' as const,
+        questionStatus: 'READY' as const,
+        reviewedByUserId: 'reviewer-test',
+        reviewedAt: '2026-10-01T00:00:00.000Z',
+      },
+    ],
+  },
+  videos: {
+    items: [
+      {
+        id: 'video-test',
+        mappingId: 'mapping-test',
+        subchapterId: 'sub-test',
+        title: 'Video demo',
+        url: 'https://www.youtube.com/watch?v=demo',
+        source: 'YouTube',
+        recommendationOrder: 1,
+        status: 'READY' as const,
+      },
+    ],
+  },
+  reports: {
+    items: [
+      {
+        id: 'question-report-test',
+        kind: 'QUESTION' as const,
+        referenceId: 'answer-reference-test',
+        category: 'Kunci jawaban',
+        details: 'Kunci tidak sesuai dengan pembahasan.',
+        status: 'OPEN' as const,
+        followUp: null,
+        reportedAt: '2026-10-02T08:00:00.000Z',
+      },
+      {
+        id: 'video-report-test',
+        kind: 'VIDEO' as const,
+        referenceId: 'mapping-test',
+        category: 'Video tidak relevan',
+        details: 'Materi video berbeda dari subbab.',
+        status: 'IN_REVIEW' as const,
+        followUp: 'Sedang diperiksa.',
+        reportedAt: '2026-10-02T09:00:00.000Z',
+      },
+    ],
+  },
   irt: { items: [] },
-  audit: { items: [] },
+  irtBatches: {
+    items: [
+      {
+        id: 'batch-test',
+        packageId: 'tryout-test',
+        batchKind: 'TRYOUT',
+        modelVersion: 'demo-model',
+        status: 'SUCCEEDED' as const,
+        startedAt: '2026-10-01T00:00:00.000Z',
+        finishedAt: '2026-10-01T01:00:00.000Z',
+        resultReleasedAt: null,
+        failureCode: null,
+      },
+    ],
+  },
+  audit: {
+    items: [
+      {
+        id: 'audit-test',
+        actorUserId: 'admin-test',
+        action: 'drill_package_published',
+        entityType: 'assessment_package',
+        entityId: 'drill-package-test',
+        createdAt: '2026-10-01T02:00:00.000Z',
+      },
+    ],
+  },
   dashboard: { schools: 0, chapters: 0, questions: 0, readyVersions: 0, openReports: 0 },
   packages: {
     items: [
@@ -51,6 +153,22 @@ const data = {
       },
     ],
   },
+  drillPackages: {
+    items: [
+      {
+        id: 'drill-package-test',
+        familyCode: 'DEMO-L1',
+        packageVersion: 1,
+        name: 'Paket Drill demo',
+        levelId: 'level-test',
+        variantIndex: 1,
+        scoringPolicyVersionId: 'policy-test',
+        status: 'DRAFT' as const,
+        releaseAt: null,
+        questionVersionIds: ['version-test'],
+      },
+    ],
+  },
 };
 beforeEach(() => {
   vi.resetAllMocks();
@@ -61,9 +179,14 @@ beforeEach(() => {
   };
   vi.mocked(loadAdminWorkbench).mockResolvedValue(data);
   vi.mocked(createQuestion).mockResolvedValue({ id: 'new-version-test' });
+  vi.mocked(publishDrillPackage).mockResolvedValue({ id: 'drill-package-test' });
+  vi.mocked(resolveReport).mockResolvedValue({ id: 'question-report-test' });
   vi.mocked(updateTryoutDraft).mockResolvedValue({ id: 'package-test' });
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 describe('Admin content UI', () => {
   it('does not fetch or render administrative data for Student', () => {
     context.state = {
@@ -129,6 +252,56 @@ describe('Admin content UI', () => {
         questionVersionIds: ['pinned-id-outside-current-page'],
       }),
     );
+  });
+  it('shows verification metadata and read-only audit history', async () => {
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Verifikasi & riwayat' }));
+    expect(await screen.findByText('Reviewer: reviewer-test')).toBeTruthy();
+    expect(screen.getByText('drill_package_published')).toBeTruthy();
+  });
+  it('publishes a Drill draft through the existing Admin endpoint', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Publikasikan paket' }));
+    await waitFor(() =>
+      expect(publishDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test'),
+    );
+    expect(await screen.findByText('Perubahan tersimpan. ID: drill-package-test')).toBeTruthy();
+  });
+  it('shows IRT batch status separately from result release state', async () => {
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'IRT' }));
+    expect(await screen.findByText('TRYOUT · SUCCEEDED')).toBeTruthy();
+    expect(screen.getByText(/Rilis belum tercatat/)).toBeTruthy();
+  });
+  it('resolves a question report with a required follow-up through the Admin API', async () => {
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Laporan' }));
+    const report = await screen.findByTestId('report-question-report-test');
+    fireEvent.change(within(report).getByLabelText('Status tindak lanjut'), {
+      target: { value: 'RESOLVED' },
+    });
+    fireEvent.change(within(report).getByLabelText('Catatan tindak lanjut'), {
+      target: { value: 'Kunci jawaban dikirim ke Curriculum untuk koreksi.' },
+    });
+    fireEvent.submit(report.querySelector('form')!);
+    await waitFor(() =>
+      expect(resolveReport).toHaveBeenCalledWith('test-token', 'QUESTION', 'question-report-test', {
+        status: 'RESOLVED',
+        followUp: 'Kunci jawaban dikirim ke Curriculum untuk koreksi.',
+      }),
+    );
+  });
+  it('filters video reports and shows their mapped destination context', async () => {
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Laporan' }));
+    fireEvent.change(await screen.findByLabelText('Jenis laporan'), { target: { value: 'VIDEO' } });
+    const report = await screen.findByTestId('report-video-report-test');
+    expect(within(report).getByText(/Video demo.*YouTube.*Subbab demo/)).toBeTruthy();
+    expect(within(report).getByRole('link', { name: 'Buka video terkait' }).getAttribute('href'))
+      .toBe('https://www.youtube.com/watch?v=demo');
+    expect(screen.queryByTestId('report-question-report-test')).toBeNull();
   });
   it('removes administrative data on logout and on an API access rejection', async () => {
     const result = render(<AdminContentScreen />);

@@ -8,6 +8,7 @@ import { ApiProblem } from '@/lib/api';
 import {
   createChapter,
   createCompetency,
+  createDrillPackage,
   createLevel,
   createQuestion,
   createSubchapter,
@@ -15,15 +16,19 @@ import {
   createVariant,
   createVideo,
   loadAdminWorkbench,
+  archiveDrillPackage,
+  publishDrillPackage,
   renameTaxon,
   resolveReport,
   reviseQuestion,
   setContentStatus,
+  updateDrillPackage,
   updateTryoutDraft,
   updateVideo,
 } from './content-api';
 import type {
   AdminTaxonDto,
+  AdminDrillPackageDto,
   AdminTryoutDraftDto,
   AdminVersionDto,
   QuestionContentDto,
@@ -31,12 +36,23 @@ import type {
 import { AppShell } from '@/components/shell';
 
 type Workbench = Awaited<ReturnType<typeof loadAdminWorkbench>>;
-type View = 'curriculum' | 'questions' | 'videos' | 'packages' | 'reports' | 'irt' | 'audit';
+type View =
+  | 'curriculum'
+  | 'questions'
+  | 'verification'
+  | 'videos'
+  | 'packages'
+  | 'drillPackages'
+  | 'reports'
+  | 'irt'
+  | 'audit';
 const views: { id: View; label: string }[] = [
   { id: 'curriculum', label: 'Materi' },
   { id: 'questions', label: 'Soal' },
+  { id: 'verification', label: 'Verifikasi & riwayat' },
   { id: 'videos', label: 'Video' },
   { id: 'packages', label: 'Draf Tryout' },
+  { id: 'drillPackages', label: 'Paket Drill' },
   { id: 'reports', label: 'Laporan' },
   { id: 'irt', label: 'IRT' },
   { id: 'audit', label: 'Audit' },
@@ -67,6 +83,7 @@ function AdminContentScreenContent() {
   const [view, setView] = useState<View>('questions');
   const [editing, setEditing] = useState<AdminVersionDto | null>(null);
   const [draft, setDraft] = useState<AdminTryoutDraftDto | null>(null);
+  const [drillDraft, setDrillDraft] = useState<AdminDrillPackageDto | null>(null);
   useEffect(() => {
     if (!token) return;
     let active = true;
@@ -147,17 +164,17 @@ function AdminContentScreenContent() {
     );
   const current = loadedFor === profileId ? data : null;
   const pageLength = current
-    ? view === 'questions'
-      ? current.versions.items.length
-      : view === 'videos'
-        ? current.videos.items.length
-        : view === 'packages'
-          ? current.packages.items.length
-          : view === 'reports'
-            ? current.reports.items.length
-            : view === 'irt'
-              ? current.irt.items.length
-              : current.audit.items.length
+    ? {
+        curriculum: 0,
+        questions: current.versions.items.length,
+        verification: Math.max(current.versions.items.length, current.audit.items.length),
+        videos: current.videos.items.length,
+        packages: current.packages.items.length,
+        drillPackages: current.drillPackages.items.length,
+        reports: current.reports.items.length,
+        irt: Math.max(current.irt.items.length, current.irtBatches.items.length),
+        audit: current.audit.items.length,
+      }[view]
     : 0;
   return (
     <AppShell area="admin">
@@ -227,6 +244,7 @@ function AdminContentScreenContent() {
                         <p>
                           Keluarga: {v.questionStatus} · Versi: {v.contentStatus}
                         </p>
+                        {v.reviewedByUserId && <small>Direview oleh: {v.reviewedByUserId}</small>}
                         <small>ID versi: {v.id}</small>
                         {v.reviewedAt && (
                           <small>Ditinjau: {new Date(v.reviewedAt).toLocaleString('id-ID')}</small>
@@ -290,6 +308,7 @@ function AdminContentScreenContent() {
                 </section>
               </>
             )}
+            {view === 'verification' && <VerificationHistory data={current} />}
             {view === 'videos' && <Videos data={current} token={token} busy={busy} run={run} />}
             {view === 'packages' && (
               <>
@@ -322,59 +341,54 @@ function AdminContentScreenContent() {
                 {!current.packages.items.length && <p>Belum ada draf Tryout pada halaman ini.</p>}
               </>
             )}
+            {view === 'drillPackages' && (
+              <DrillPackages
+                data={current}
+                token={token}
+                busy={busy}
+                run={run}
+                draft={drillDraft}
+                setDraft={setDrillDraft}
+              />
+            )}
             {view === 'reports' && (
-              <section>
-                <h2>Laporan soal dan video</h2>
-                {!current.reports.items.length && <p>Belum ada laporan pada halaman ini.</p>}
-                {current.reports.items.map((r) => (
-                  <form
-                    key={`${r.kind}-${r.id}`}
-                    className="monitoring-notice admin-content-form"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const f = new FormData(e.currentTarget);
-                      void run(() =>
-                        resolveReport(token, r.kind, r.id, {
-                          status: field(f, 'status') as
-                            'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED',
-                          followUp: field(f, 'followUp'),
-                        }),
-                      );
-                    }}
-                  >
-                    <h3>
-                      {r.kind} · {r.category}
-                    </h3>
-                    <p>{r.details || 'Tanpa detail tambahan.'}</p>
-                    <small>Referensi: {r.referenceId}</small>
-                    <Field label="Status laporan" name="status">
-                      <select name="status" defaultValue={r.status}>
-                        {['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'].map((s) => (
-                          <option key={s}>{s}</option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="Tindak lanjut" name="followUp">
-                      <textarea
-                        name="followUp"
-                        defaultValue={r.followUp ?? ''}
-                        required
-                        maxLength={2000}
-                      />
-                    </Field>
-                    <Button type="submit" disabled={busy}>
-                      Simpan tindak lanjut
-                    </Button>
-                  </form>
-                ))}
-              </section>
+              <Reports data={current} token={token} busy={busy} run={run} navigate={navigate} />
             )}
             {view === 'irt' && (
               <section>
-                <h2>Hasil batch IRT</h2>
+                <h2>Status dan riwayat batch IRT</h2>
+                <p>
+                  Status batch dan waktu rilis berasal dari API. Batch SUCCEEDED tidak otomatis
+                  berarti hasil Tryout sudah dirilis.
+                </p>
+                {!current.irtBatches.items.length && <p>Belum ada batch IRT pada halaman ini.</p>}
+                <ul className="monitoring-list">
+                  {current.irtBatches.items.map((batch) => (
+                    <li key={batch.id} className="monitoring-notice admin-content-row">
+                      <strong>
+                        {batch.batchKind} · {batch.status}
+                      </strong>
+                      <small>Model {batch.modelVersion} · Batch {batch.id}</small>
+                      <p>
+                        Mulai {new Date(batch.startedAt).toLocaleString('id-ID')} · Selesai{' '}
+                        {batch.finishedAt
+                          ? new Date(batch.finishedAt).toLocaleString('id-ID')
+                          : 'belum selesai'}
+                      </p>
+                      <p>
+                        Paket {batch.packageId ?? 'tidak terkait'} · Rilis{' '}
+                        {batch.resultReleasedAt
+                          ? new Date(batch.resultReleasedAt).toLocaleString('id-ID')
+                          : 'belum tercatat'}
+                      </p>
+                      {batch.failureCode && <small>Kode kegagalan: {batch.failureCode}</small>}
+                    </li>
+                  ))}
+                </ul>
+                <h2>Parameter IRT per versi soal</h2>
                 <p>
                   Parameter hanya tampil untuk batch SUCCEEDED dengan minimal 30 respons. Model dan
-                  jadwal publikasi resmi masih menunggu keputusan Data/PO.
+                  kebijakan rilis hasil resmi masih mengikuti keputusan Data/PO yang terbuka.
                 </p>
                 {!current.irt.items.length && <p>Belum ada output batch IRT pada halaman ini.</p>}
                 <ul className="monitoring-list">
@@ -455,6 +469,417 @@ function Field({ label, name, children }: { label: string; name: string; childre
   );
 }
 type EditorProps = { data: Workbench; token: string; busy: boolean; run: Run };
+
+function Reports({
+  data,
+  token,
+  busy,
+  run,
+  navigate,
+}: EditorProps & { navigate: (view: View) => void }) {
+  type Report = Workbench['reports']['items'][number];
+  const [kind, setKind] = useState<Report['kind'] | 'ALL'>('ALL');
+  const [status, setStatus] = useState<Report['status'] | 'ALL'>('ALL');
+  const visible = data.reports.items.filter(
+    (report) => (kind === 'ALL' || report.kind === kind) && (status === 'ALL' || report.status === status),
+  );
+  return (
+    <section>
+      <h2>Laporan soal dan video</h2>
+      <p>Daftar ini berisi laporan pada halaman yang dimuat. Filter tidak mengubah data di server.</p>
+      <div className="admin-content-actions">
+        <label>
+          Jenis laporan
+          <select aria-label="Jenis laporan" value={kind} onChange={(event) => setKind(event.target.value as typeof kind)}>
+            <option value="ALL">Semua jenis</option>
+            <option value="QUESTION">Soal</option>
+            <option value="VIDEO">Video</option>
+          </select>
+        </label>
+        <label>
+          Status laporan
+          <select aria-label="Filter status laporan" value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>
+            <option value="ALL">Semua status</option>
+            {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((value) => (
+              <option key={value} value={value}>{reportStatusLabel(value)}</option>
+            ))}
+          </select>
+        </label>
+        <span role="status">{visible.length} laporan ditampilkan</span>
+      </div>
+      {!data.reports.items.length ? (
+        <p>Belum ada laporan pada halaman ini.</p>
+      ) : !visible.length ? (
+        <p>Tidak ada laporan yang cocok dengan filter ini.</p>
+      ) : (
+        <ul className="monitoring-list">
+          {visible.map((report) => {
+            const video = report.kind === 'VIDEO'
+              ? data.videos.items.find((item) => item.mappingId === report.referenceId)
+              : undefined;
+            const subchapter = video
+              ? data.curriculum.items.find((item) => item.id === video.subchapterId)
+              : undefined;
+            return (
+              <li
+                key={`${report.kind}-${report.id}`}
+                className="monitoring-notice admin-content-row"
+                data-testid={`report-${report.id}`}
+              >
+                <div>
+                  <strong>{report.kind === 'QUESTION' ? 'Laporan soal' : 'Laporan video'}</strong>
+                  <span className="status-badge">{reportStatusLabel(report.status)}</span>
+                </div>
+                <p>Kategori: {report.category}</p>
+                <p>{report.details || 'Pelapor tidak menambahkan rincian.'}</p>
+                <small>Diterima {new Date(report.reportedAt).toLocaleString('id-ID')}</small>
+                {report.kind === 'VIDEO' ? (
+                  video ? (
+                    <div>
+                      <p>
+                        Mapping: {video.title} · {video.source} · subbab{' '}
+                        {subchapter?.name ?? video.subchapterId} · urutan {video.recommendationOrder}
+                      </p>
+                      {video.url.startsWith('https://') ? (
+                        <a href={video.url} target="_blank" rel="noreferrer">Buka video terkait</a>
+                      ) : (
+                        <p>URL mapping video belum menggunakan HTTPS.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p>Mapping video tidak ada pada halaman metadata yang sedang dimuat.</p>
+                  )
+                ) : (
+                  <p>Referensi jawaban/attempt: <code>{report.referenceId}</code></p>
+                )}
+                {report.followUp && (
+                  <p><strong>Tindak lanjut tersimpan:</strong> {report.followUp}</p>
+                )}
+                <div className="admin-content-actions">
+                  <Button
+                    type="button"
+                    className="secondary-button"
+                    disabled={busy}
+                    onClick={() => navigate(report.kind === 'VIDEO' ? 'videos' : 'questions')}
+                  >
+                    {report.kind === 'VIDEO' ? 'Kelola metadata video' : 'Buka daftar soal'}
+                  </Button>
+                </div>
+                <form
+                  className="admin-content-form"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const form = new FormData(event.currentTarget);
+                    void run(() => resolveReport(token, report.kind, report.id, {
+                      status: field(form, 'status') as Report['status'],
+                      followUp: field(form, 'followUp'),
+                    }));
+                  }}
+                >
+                  <Field label="Status tindak lanjut" name="status">
+                    <select name="status" defaultValue={report.status}>
+                      {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((value) => (
+                        <option key={value} value={value}>{reportStatusLabel(value)}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Catatan tindak lanjut" name="followUp">
+                    <textarea name="followUp" defaultValue={report.followUp ?? ''} required maxLength={2000} />
+                  </Field>
+                  <small>{report.followUp?.length ?? 0}/2000 karakter tersimpan</small>
+                  <Button type="submit" disabled={busy}>Simpan status dan tindak lanjut</Button>
+                </form>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function reportStatusLabel(status: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED') {
+  return {
+    OPEN: 'Terbuka',
+    IN_REVIEW: 'Sedang ditinjau',
+    RESOLVED: 'Selesai ditindaklanjuti',
+    REJECTED: 'Ditolak',
+  }[status];
+}
+
+function VerificationHistory({ data }: { data: Workbench }) {
+  return (
+    <>
+      <section>
+        <h2>Verifikasi versi konten</h2>
+        <p>
+          Status dan metadata peninjauan ditampilkan dari API; layar ini tidak mengubah status
+          sendiri.
+        </p>
+        {!data.versions.items.length && <p>Belum ada versi konten pada halaman ini.</p>}
+        <ul className="monitoring-list">
+          {data.versions.items.map((version) => (
+            <li className="monitoring-notice admin-content-row" key={version.id}>
+              <strong>
+                {version.variantCode} · v{version.versionNumber} · {version.questionType}
+              </strong>
+              <p>
+                Keluarga {version.questionStatus} · Versi {version.contentStatus}
+              </p>
+              <small>{version.stem || `Soal ${version.questionId}`}</small>
+              <small>Reviewer: {version.reviewedByUserId ?? 'Belum tercatat'}</small>
+              <small>
+                Waktu review:{' '}
+                {version.reviewedAt
+                  ? new Date(version.reviewedAt).toLocaleString('id-ID')
+                  : 'Belum ditinjau'}
+              </small>
+              <small>ID versi: {version.id}</small>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section>
+        <h2>Riwayat perubahan Admin</h2>
+        {!data.audit.items.length && <p>Belum ada riwayat pada halaman ini.</p>}
+        <ul className="monitoring-list">
+          {data.audit.items.map((entry) => (
+            <li className="monitoring-notice admin-content-row" key={entry.id}>
+              <strong>{entry.action}</strong>
+              <p>
+                {entry.entityType} · {new Date(entry.createdAt).toLocaleString('id-ID')}
+              </p>
+              <small>
+                Entitas: {entry.entityId ?? 'Tidak tersedia'} · Aktor:{' '}
+                {entry.actorUserId ?? 'Tidak tersedia'}
+              </small>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </>
+  );
+}
+
+function DrillPackages({
+  data,
+  token,
+  busy,
+  run,
+  draft,
+  setDraft,
+}: EditorProps & {
+  draft: AdminDrillPackageDto | null;
+  setDraft: (value: AdminDrillPackageDto | null) => void;
+}) {
+  return (
+    <section>
+      <h2>Publisher paket Drill</h2>
+      <p>
+        Publikasi divalidasi oleh API. Paket harus berisi 10 versi soal yang sudah ditinjau dan
+        materi serta kebijakan penilaiannya harus siap.
+      </p>
+      <DrillPackageEditor
+        key={draft?.id ?? 'new-drill-package'}
+        data={data}
+        token={token}
+        busy={busy}
+        run={run}
+        draft={draft}
+        close={() => setDraft(null)}
+      />
+      {!data.drillPackages.items.length && <p>Belum ada paket Drill pada halaman ini.</p>}
+      <ul className="monitoring-list">
+        {data.drillPackages.items.map((pack) => (
+          <li className="monitoring-notice admin-content-row" key={pack.id}>
+            <strong>{pack.name}</strong>
+            <p>
+              {pack.familyCode} · v{pack.packageVersion} · {pack.status} ·{' '}
+              {pack.questionVersionIds.length} versi soal
+            </p>
+            <small>
+              Level {pack.levelId} · Varian {pack.variantIndex ?? 'Belum tersedia'} · Kebijakan{' '}
+              {pack.scoringPolicyVersionId ?? 'Belum tersedia'}
+            </small>
+            <small>
+              Waktu publikasi:{' '}
+              {pack.releaseAt ? new Date(pack.releaseAt).toLocaleString('id-ID') : 'Belum terbit'}
+            </small>
+            <ul>
+              {pack.questionVersionIds.map((versionId, index) => {
+                const version = data.versions.items.find((item) => item.id === versionId);
+                return (
+                  <li key={versionId}>
+                    <small>
+                      {index + 1}. {version?.variantCode ?? 'Versi di luar halaman verifikasi'}
+                      {version ? ` v${version.versionNumber} · ${version.contentStatus}` : ''}
+                      {version?.reviewedAt
+                        ? ` · Direview ${new Date(version.reviewedAt).toLocaleString('id-ID')}`
+                        : ''}
+                    </small>
+                    {!version && <small>ID versi: {versionId}</small>}
+                  </li>
+                );
+              })}
+            </ul>
+            {pack.status === 'DRAFT' && (
+              <div className="admin-content-actions">
+                <Button disabled={busy} onClick={() => setDraft(pack)}>
+                  Edit draf
+                </Button>
+                <Button
+                  disabled={busy}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        'Terbitkan paket ini? API akan memvalidasi 10 soal, hasil review, materi, dan kebijakan penilaian.',
+                      )
+                    )
+                      void run(() => publishDrillPackage(token, pack.id));
+                  }}
+                >
+                  Publikasikan paket
+                </Button>
+              </div>
+            )}
+            {pack.status !== 'ARCHIVED' && (
+              <Button
+                disabled={busy}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      'Arsipkan paket? Riwayat dan item paket tetap disimpan, dan paket tidak dapat diterbitkan ulang.',
+                    )
+                  )
+                    void run(() => archiveDrillPackage(token, pack.id));
+                }}
+              >
+                Arsipkan paket
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function DrillPackageEditor({
+  draft,
+  data,
+  token,
+  busy,
+  run,
+  close,
+}: EditorProps & { draft: AdminDrillPackageDto | null; close: () => void }) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const values = new FormData(form);
+    const questionVersionIds = field(values, 'questionVersionIds')
+      .split(/[\s,]+/)
+      .filter(Boolean);
+    const result = await run(() =>
+      draft
+        ? updateDrillPackage(token, draft.id, {
+            name: field(values, 'name'),
+            scoringPolicyVersionId: field(values, 'scoringPolicyVersionId'),
+            questionVersionIds,
+          })
+        : createDrillPackage(token, {
+            familyCode: field(values, 'familyCode'),
+            packageVersion: Number(field(values, 'packageVersion')),
+            name: field(values, 'name'),
+            levelId: field(values, 'levelId'),
+            variantIndex: Number(field(values, 'variantIndex')),
+            scoringPolicyVersionId: field(values, 'scoringPolicyVersionId'),
+            questionVersionIds,
+          }),
+    );
+    if (result) {
+      if (draft) close();
+      else form.reset();
+    }
+  }
+  return (
+    <form className="monitoring-notice admin-content-form" onSubmit={(event) => void submit(event)}>
+      <h3>{draft ? 'Edit draf paket Drill' : 'Susun draf paket Drill'}</h3>
+      {draft ? (
+        <>
+          <p>
+            {draft.familyCode} · v{draft.packageVersion} · Level {draft.levelId} · Varian{' '}
+            {draft.variantIndex ?? 'Belum tersedia'}
+          </p>
+          <Button type="button" disabled={busy} onClick={close}>
+            Batal edit
+          </Button>
+        </>
+      ) : (
+        <>
+          <Field label="Kode keluarga" name="familyCode">
+            <input
+              name="familyCode"
+              required
+              pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*"
+              maxLength={64}
+            />
+          </Field>
+          <Field label="Versi paket" name="packageVersion">
+            <input name="packageVersion" type="number" min={1} max={100000} required />
+          </Field>
+          <Field label="Level" name="levelId">
+            <select name="levelId" required defaultValue="">
+              <option value="">Pilih level</option>
+              {data.curriculum.items
+                .filter((taxon) => taxon.kind === 'LEVEL')
+                .map((level) => (
+                  <option key={level.id} value={level.id}>
+                    {level.name} · {level.code}
+                  </option>
+                ))}
+            </select>
+          </Field>
+          <Field label="Indeks varian" name="variantIndex">
+            <input name="variantIndex" type="number" min={1} max={100000} required />
+          </Field>
+        </>
+      )}
+      <Field label="Nama paket" name="name">
+        <input name="name" required maxLength={160} defaultValue={draft?.name ?? ''} />
+      </Field>
+      <Field label="ID versi kebijakan penilaian" name="scoringPolicyVersionId">
+        <input
+          name="scoringPolicyVersionId"
+          required
+          defaultValue={draft?.scoringPolicyVersionId ?? ''}
+          aria-describedby="drill-policy-help"
+        />
+      </Field>
+      <small id="drill-policy-help">
+        API saat ini hanya dapat menerbitkan policy DRILL_PG_DEMO versi 1; masukkan ID policy yang
+        disediakan backend.
+      </small>
+      <Field label="ID versi soal (pisahkan dengan baris baru atau koma)" name="questionVersionIds">
+        <textarea
+          name="questionVersionIds"
+          defaultValue={draft?.questionVersionIds.join('\n') ?? ''}
+          aria-describedby="drill-questions-help"
+        />
+      </Field>
+      <small id="drill-questions-help">
+        Draf boleh belum lengkap. Sebelum terbit, API memerlukan tepat 10 versi unik yang READY dan
+        ditinjau.
+      </small>
+      <Button
+        type="submit"
+        disabled={busy || (!draft && !data.curriculum.items.some((taxon) => taxon.kind === 'LEVEL'))}
+      >
+        Simpan draf paket
+      </Button>
+    </form>
+  );
+}
+
 function Curriculum({ data, token, busy, run }: EditorProps) {
   const [kind, setKind] = useState<AdminTaxonDto['kind']>('CHAPTER');
   const parents = data.curriculum.items.filter(
@@ -514,7 +939,12 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
         )}
         {kind !== 'LEVEL' && (
           <Field label="Kode unik" name="code">
-            <input name="code" required maxLength={64} pattern="[A-Za-z0-9-]+" />
+            <input
+              name="code"
+              required
+              maxLength={64}
+              pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*"
+            />
           </Field>
         )}
         <Field
@@ -668,7 +1098,12 @@ function QuestionEditor({
       )}
       {(!version || variant) && (
         <Field label="Kode varian unik" name="variantCode">
-          <input name="variantCode" required pattern="[A-Za-z0-9-]+" maxLength={64} />
+          <input
+            name="variantCode"
+            required
+            pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*"
+            maxLength={64}
+          />
         </Field>
       )}
       <Field label="Teks soal (LaTeX inline diperbolehkan)" name="stem">
@@ -865,7 +1300,12 @@ function TryoutEditor({
       ) : (
         <>
           <Field label="Kode keluarga paket" name="familyCode">
-            <input name="familyCode" required pattern="[A-Za-z0-9-]+" maxLength={64} />
+            <input
+              name="familyCode"
+              required
+              pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*"
+              maxLength={64}
+            />
           </Field>
           <Field label="Versi paket" name="packageVersion">
             <input name="packageVersion" type="number" min={1} max={100000} required />

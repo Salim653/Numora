@@ -144,7 +144,7 @@ function AdminSchoolsScreenContent() {
                 onChange={(event) => setCode(event.target.value)}
                 minLength={2}
                 maxLength={32}
-                pattern="[a-zA-Z0-9-]+"
+                pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
                 required
               />
               <label htmlFor="school-name">Nama sekolah</label>
