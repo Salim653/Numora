@@ -31,6 +31,8 @@ Sebelum shared/staging deployment, operator Database harus memeriksa histori akt
 
 ## Validasi dan batas
 
-Bukti pemeriksaan final dicatat setelah suite gabungan selesai. Tes tambahan memeriksa kedua histori IRT, pengulangan migrasi, penolakan cursor asing dan rollback schema yang menyimpang, serta alur Admin publish → Student start/save/submit → laporan soal → snapshot input IRT.
+Pemeriksaan lokal: lint, validasi kontrak/types dan seluruh workspace typecheck lulus. Database 6 tes dan API 54 tes lulus; 4 tes transport Redis tidak dijalankan lokal. Rehearsal upgrade legacy Drill/PvP dan Staging bridge lulus. Empat tes Playwright lulus pada lebar 360/768/1440 px, mencakup save/resume/submit, gabung kelas dan route demo 404. Tes tambahan memeriksa kedua histori IRT, pengulangan migrasi, penolakan cursor asing dan rollback schema yang menyimpang, serta alur Admin publish → Student start/save/submit → laporan soal → snapshot input IRT.
+
+CI pertama pada branch gabungan menemukan empat tes hasil Drill #23 yang belum dibungkus konteks layout Student #25. Harness memakai `StudentAccess` yang sama dengan aplikasi dan memeriksa isolasi cache berdasarkan identitas Student, bukan perubahan access token dalam akun yang sama. Kelima tes pada file tersebut lulus setelah perbaikan. Pemeriksaan lokal penuh memakai paralelisme rendah karena keterbatasan sumber daya Windows; arsip/database uji dipindahkan ke drive D setelah drive C penuh. Status `quality` pada [PR gabungan #29](https://github.com/ayiinee/Numora/pull/29) menjadi bukti final lint/typecheck/test/build dan OpenAPI freshness pada head terbaru.
 
 CI menyediakan PostgreSQL dan Redis untuk suite transport PvP. Browser fixtures tetap bukan bukti login Google nyata. OAuth dan acceptance Admin/Guru/Siswa pada staging, review Data terhadap envelope IRT, Curriculum terhadap konten, dan QA deployment/rollback tetap menjadi gerbang rilis.

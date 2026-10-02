@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ResultScreen, ResultSummary } from './drill';
 import { LearningApiError, learningApi } from './api';
 import type { DrillResult } from './types';
+import { StudentAccess } from './student-session';
 
 const { router, auth } = vi.hoisted(() => ({
   router: { push: vi.fn(), replace: vi.fn() },
@@ -24,6 +25,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   router.push.mockClear();
   auth.state.session.access_token = 'TEST-token';
+  auth.state.profile.id = 'TEST-student';
 });
 
 const result: DrillResult = {
@@ -70,7 +72,11 @@ describe('ringkasan hasil Drill', () => {
         isDemo: true,
         questions: [],
       });
-    render(<ResultScreen />);
+    render(
+      <StudentAccess>
+        <ResultScreen />
+      </StudentAccess>,
+    );
     fireEvent.click(await screen.findByRole('button', { name: 'Mulai level berikutnya' }));
     expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Paket belum tersedia.');
     expect(router.push).not.toHaveBeenCalled();
@@ -85,21 +91,34 @@ describe('ringkasan hasil Drill', () => {
     const fetch = vi
       .spyOn(learningApi, 'result')
       .mockRejectedValue(new LearningApiError('Login atau periksa akses.', status));
-    render(<ResultScreen />);
+    render(
+      <StudentAccess>
+        <ResultScreen />
+      </StudentAccess>,
+    );
     expect(await screen.findByRole('heading', { name: title })).toBeTruthy();
     expect(screen.queryByText('80')).toBeNull();
     expect(fetch).toHaveBeenCalledTimes(1);
   });
-  it('drops the previous session cache when the authentication token changes', async () => {
+  it('drops the previous account cache when the Student identity changes', async () => {
     const fetch = vi
       .spyOn(learningApi, 'result')
       .mockResolvedValueOnce(result)
       .mockImplementation(() => new Promise(() => {}));
     vi.spyOn(learningApi, 'videos').mockResolvedValue({ items: [] });
-    const view = render(<ResultScreen />);
+    const view = render(
+      <StudentAccess>
+        <ResultScreen />
+      </StudentAccess>,
+    );
     await screen.findByText('80');
     auth.state.session.access_token = 'TEST-second-session';
-    view.rerender(<ResultScreen />);
+    auth.state.profile.id = 'TEST-second-student';
+    view.rerender(
+      <StudentAccess>
+        <ResultScreen />
+      </StudentAccess>,
+    );
     await waitFor(() => expect(fetch).toHaveBeenLastCalledWith('TEST-second-session', 'attempt'));
     expect(screen.queryByText('80')).toBeNull();
     expect(screen.getByRole('heading', { name: 'Memuat' })).toBeTruthy();
