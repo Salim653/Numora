@@ -81,6 +81,7 @@ export const irtBatches = pgTable('irt_batches', {
   finishedAt: timestamp('finished_at', { withTimezone: true }),
   resultReleasedAt: timestamp('result_released_at', { withTimezone: true }),
   inputSnapshot: jsonb('input_snapshot'),
+  outputSnapshot: jsonb('output_snapshot'),
   outputDigest: text('output_digest'),
   failureCode: text('failure_code'),
 }, (table) => [index('irt_batches_package_idx').on(table.packageId)]).enableRLS();

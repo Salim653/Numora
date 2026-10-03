@@ -29,6 +29,8 @@ For the first school trial, a simple mock UI is accepted while UI/UX designs are
 
 The six-actor Cloud Development fixture and live Google flow are described in [QA_SEED.md](QA_SEED.md). Use new QA identities; retain the existing sandbox data.
 
+For JOB-06, use the [release-chain runner and evidence gates](JOB06_RELEASE_CHAIN.md). It runs built web/API against isolated PostgreSQL/Redis on one clean SHA; its email auth fixture does not prove Google login or reviewed trial content. Repeat the complete chain on one approved deployment SHA for independent trial acceptance.
+
 ### School verification
 
 - prototype Admin UI lists/creates/edits Schools, changes School status, and issues/reissues/revokes tokens before Teacher onboarding;

@@ -9,7 +9,12 @@
 ## Prepare identities
 
 1. For temporary QA accounts, place a **rotated** `sb_secret_*` key in ignored `.env` as `SUPABASE_SECRET_KEY` and set `SUPABASE_PROJECT_REF=pkamenfnwmoeisccnrnk`. Never use a `NEXT_PUBLIC_*` secret or commit credentials. Run `pnpm qa:accounts`. It uses the Supabase Admin API to create/verify six confirmed Auth accounts, storing generated passwords only in ignored `.qa-seed/accounts.json` and IDs in `.qa-seed/actors.json`. Rerunning verifies the same accounts. Rotate any key disclosed through chat again when provisioning is finished.
-  If QA passwords were exposed or no longer match Supabase Auth, run `pnpm qa:accounts:rotate`. It replaces all six QA passwords with fresh random values in the ignored vault and updates only those QA Auth users in the named Development project.
+   If QA passwords were exposed or no longer match Supabase Auth, run `pnpm qa:accounts:rotate`. It validates all six named QA identities before updates, writes candidate passwords to ignored `.qa-seed/accounts.pending.json`, and atomically checkpoints only confirmed passwords into the active vault. A failed/ambiguous update resumes with the **same candidates** when the same command is rerun; do not delete the pending journal or start another rotation. Finish provisioning/rotation successfully before running login smoke.
+
+   `.qa-seed/provisioning.lock` prevents concurrent provisioning and rotation. Ordinary errors release the lock while retaining recovery data. After a hard crash, inspect the PID recorded in that file and confirm the original process has stopped, then remove **only the lock file** and rerun the original command. The script deliberately does not reclaim locks automatically. Keep the vault, journal, temporary files and backups private; POSIX files use mode 0600 and the directory 0700; Windows operators must protect the directory with their account's ACL. These artifacts are covered by the existing `.qa-seed/` Git ignore.
+
+   Unreadable/corrupt vaults fail closed. If the active vault was lost but the known QA Auth users remain, normal `qa:accounts` cannot verify their passwords; restore the original vault or explicitly run `qa:accounts:rotate` to re-provision only those identities. Project, email, UUID and `numora_qa` mismatches stop before any password update. Provider errors are sanitized rather than copied into logs.
+
 2. For future Google QA identities, have six new accounts sign in through Google OAuth once and create ignored `.qa-seed/actors.json` with exactly this shape. Do not commit or paste the manifest, emails, tokens, or database credentials into chat.
 
 ```json

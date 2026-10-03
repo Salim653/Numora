@@ -75,16 +75,32 @@ export function ActivityRow({ item }: { item: AssessmentRecord }) {
           {item.isDemo && <Badge>Demo</Badge>}
         </span>
         <h3>{item.title}</h3>
+        {[item.chapterTitle, item.subchapterTitle, item.levelTitle].some(Boolean) && (
+          <p className="muted">
+            {[item.chapterTitle, item.subchapterTitle, item.levelTitle].filter(Boolean).join(' · ')}
+          </p>
+        )}
         <time dateTime={item.submittedAt}>
           {new Intl.DateTimeFormat('id-ID', {
             dateStyle: 'medium',
             timeZone: 'Asia/Jakarta',
           }).format(new Date(item.submittedAt))}
         </time>
+        {(item.xpState === 'pending' || item.starsState === 'pending') && (
+          <p className="muted">
+            {item.xpState === 'pending' && item.starsState === 'pending'
+              ? 'XP dan bintang belum tersedia'
+              : item.xpState === 'pending'
+                ? 'XP belum tersedia'
+                : 'Bintang belum tersedia'}
+          </p>
+        )}
       </div>
       <div className="activity-score">
         {item.resultState === 'waitingIrt' ? (
-          <Badge variant="warning">Menunggu hasil</Badge>
+          <Badge variant="warning" style={{ whiteSpace: 'normal' }}>
+            Menunggu hasil
+          </Badge>
         ) : (
           <>
             <strong>{item.score ?? '—'}</strong>
@@ -92,10 +108,12 @@ export function ActivityRow({ item }: { item: AssessmentRecord }) {
           </>
         )}
       </div>
-      {item.activity !== 'pretest' && <Icon name="chevron" width={18} height={18} />}
+      {item.activity !== 'pretest' && item.resultState === 'ready' && (
+        <Icon name="chevron" width={18} height={18} />
+      )}
     </>
   );
-  return item.activity === 'pretest' ? (
+  return item.activity === 'pretest' || item.resultState !== 'ready' ? (
     <div className="activity-row">{content}</div>
   ) : (
     <Link

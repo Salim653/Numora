@@ -213,7 +213,7 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
       'POST',
       {
         attemptItemId: attempt.questions[0]!.questionInstanceId,
-        category: 'TEST canonical report',
+        category: 'QUESTION',
         clientRequestId: randomUUID(),
       },
       'student',

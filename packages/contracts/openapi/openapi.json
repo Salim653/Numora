@@ -453,11 +453,23 @@
         "parameters": [
           {
             "name": "cursor",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Last record from the previous page of this Student and level filter."
+          },
+          {
+            "name": "levelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Optional pinned level ID; use the same filter on every page."
           }
         ],
         "responses": {
@@ -2539,6 +2551,255 @@
         ]
       }
     },
+    "/api/v1/admin/users": {
+      "get": {
+        "operationId": "AdminOperationsController_users",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "STUDENT",
+                "TEACHER",
+                "ADMIN"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "DISABLED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{userId}": {
+      "get": {
+        "operationId": "AdminOperationsController_user",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/v1/admin/classes": {
+      "get": {
+        "operationId": "AdminOperationsController_classes",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "schoolId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "teacherId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "archived"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminClassListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/v1/admin/classes/{classId}": {
+      "get": {
+        "operationId": "AdminOperationsController_class",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminClassDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
     "/api/v1/admin/reports": {
       "get": {
         "operationId": "ReportsController_list",
@@ -2643,6 +2904,42 @@
         ],
         "tags": [
           "admin-reports"
+        ]
+      }
+    },
+    "/api/v1/students/me/learning-interactions": {
+      "post": {
+        "operationId": "StudentSupportController_interaction",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LearningInteractionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningInteractionReceiptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "student-support"
         ]
       }
     },
@@ -3075,6 +3372,293 @@
           "leaderboards"
         ]
       }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/feedback": {
+      "post": {
+        "operationId": "FeedbackController_create",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFeedbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      },
+      "get": {
+        "operationId": "FeedbackController_teacherList",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/assessment-results": {
+      "get": {
+        "operationId": "FeedbackController_history",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentHistoryDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/api/v1/students/me/feedback": {
+      "get": {
+        "operationId": "FeedbackController_studentList",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/api/v1/students/me/feedback/summary": {
+      "get": {
+        "operationId": "FeedbackController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackSummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/api/v1/students/me/feedback/{feedbackId}/read": {
+      "post": {
+        "operationId": "FeedbackController_read",
+        "parameters": [
+          {
+            "name": "feedbackId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadFeedbackDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      }
     }
   },
   "info": {
@@ -3329,6 +3913,52 @@
           "isDemo": {
             "type": "boolean"
           },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Chapter ID pinned at attempt start."
+          },
+          "chapterTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Current taxonomy label; not a historical content snapshot."
+          },
+          "subchapterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "subchapterTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Level ID pinned at attempt start; absent for non-level assessments."
+          },
+          "levelTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "xpState": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "notApplicable"
+            ],
+            "description": "Numeric XP policy/posting is pending JOB-11; Pretest never awards XP."
+          },
+          "starsState": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "notApplicable"
+            ],
+            "description": "Drill star thresholds are OPEN; other assessment types do not award Drill stars."
+          },
           "submittedAt": {
             "type": "string",
             "format": "date-time"
@@ -3382,7 +4012,8 @@
             "type": "boolean"
           },
           "tryout": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Tryout feature access for every active Student, including Mandiri. Independent of current package availability or an existing attempt."
           },
           "pretest": {
             "type": "boolean"
@@ -3943,10 +4574,12 @@
               "inProgress",
               "waitingIrt",
               "resultReady"
-            ]
+            ],
+            "description": "Current package/attempt availability. Unavailable returns only state; it does not deny Student feature access."
           },
           "eligible": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether this Student may start a new attempt for the available current package, regardless of class affiliation. False when an attempt already exists; omitted when unavailable."
           },
           "attemptId": {
             "type": "string",
@@ -3981,6 +4614,10 @@
       "TryoutAttemptDto": {
         "type": "object",
         "properties": {
+          "serverTime": {
+            "type": "string",
+            "format": "date-time"
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -5385,6 +6022,131 @@
           "items"
         ]
       },
+      "AdminUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "STUDENT",
+              "TEACHER",
+              "ADMIN"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "role",
+          "status",
+          "createdAt"
+        ]
+      },
+      "AdminUserListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserDto"
+            }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextOffset"
+        ]
+      },
+      "AdminClassDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "schoolId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "schoolName": {
+            "type": "string"
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teacherName": {
+            "type": "string"
+          },
+          "studentCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "archivedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "schoolId",
+          "schoolName",
+          "teacherId",
+          "teacherName",
+          "studentCount",
+          "createdAt",
+          "archivedAt"
+        ]
+      },
+      "AdminClassListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminClassDto"
+            }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextOffset"
+        ]
+      },
       "AdminReportDto": {
         "type": "object",
         "properties": {
@@ -5471,6 +6233,55 @@
           "followUp"
         ]
       },
+      "LearningInteractionDto": {
+        "type": "object",
+        "properties": {
+          "clientRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventName": {
+            "type": "string",
+            "enum": [
+              "tryout_opened",
+              "tryout_detail_viewed",
+              "explanation_viewed",
+              "video_clicked"
+            ]
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mappingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "clientRequestId",
+          "eventName"
+        ]
+      },
+      "LearningInteractionReceiptDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "recorded",
+              "policyPending"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
       "StudentVideoDto": {
         "type": "object",
         "properties": {
@@ -5516,7 +6327,13 @@
             "format": "uuid"
           },
           "category": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "QUESTION",
+              "OPTION",
+              "ANSWER_KEY",
+              "EXPLANATION"
+            ]
           },
           "details": {
             "type": "string"
@@ -6033,6 +6850,120 @@
           "updatedAt",
           "entries",
           "ownEntry"
+        ]
+      },
+      "CreateFeedbackDto": {
+        "type": "object",
+        "properties": {
+          "clientRequestId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Stable UUID reused for identical retries."
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "clientRequestId",
+          "body"
+        ]
+      },
+      "FeedbackDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teacherName": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "readAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "classId",
+          "studentId",
+          "teacherName",
+          "body",
+          "sentAt",
+          "readAt"
+        ]
+      },
+      "FeedbackListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackDto"
+            }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextOffset"
+        ]
+      },
+      "FeedbackSummaryDto": {
+        "type": "object",
+        "properties": {
+          "unreadCount": {
+            "type": "number"
+          },
+          "latest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackDto"
+            }
+          }
+        },
+        "required": [
+          "unreadCount",
+          "latest"
+        ]
+      },
+      "ReadFeedbackDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "readAt"
         ]
       }
     }
