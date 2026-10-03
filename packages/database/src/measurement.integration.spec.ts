@@ -49,7 +49,7 @@ describe.skipIf(!testUrl)('variant/IRT persistence and role boundaries', { timeo
     url.username = computeLogin;
     url.password = computePassword;
     compute = postgres(url.toString(), { max: 1, onnotice: () => {} });
-  });
+  }, 60_000);
   afterAll(async () => {
     await Promise.all([owner?.end(), main?.end(), compute?.end()]);
     if (admin) {
@@ -58,7 +58,7 @@ describe.skipIf(!testUrl)('variant/IRT persistence and role boundaries', { timeo
       await admin.unsafe(`DROP ROLE IF EXISTS "${computeLogin}"`);
       await admin.end();
     }
-  });
+  }, 60_000);
 
   async function fixture(partial = false, type: 'DRILL' | 'TRYOUT' = 'DRILL') {
     const key = randomUUID();
