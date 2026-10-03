@@ -114,6 +114,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (role: 'STUDENT' | 'TEACHER') => {
     const { data } = await getSupabase().auth.getSession();
     if (!data.session) throw new Error('Sesi berakhir. Login kembali.');
+    console.log('[NUMORA REGISTER]', {
+      hasSession: Boolean(data.session),
+      hasAccessToken: Boolean(data.session?.access_token),
+      accessTokenLength: data.session?.access_token?.length ?? 0,
+      role,
+    });
+
     await registerIdentity(data.session.access_token, role);
     setRevision((value) => value + 1);
   }, []);

@@ -93,24 +93,56 @@ export class IdentityService {
   }
 
   async registerProfile(
-    authorization: string | undefined,
-    input: RegisterProfileDto,
-  ): Promise<IdentityProfileDto> {
-    const authUser = await this.authenticate(authorization);
-    const googleProvider =
-      authUser.app_metadata.provider === 'google' ||
-      authUser.app_metadata.providers?.includes('google');
-    if (!googleProvider || !authUser.email) {
-      throw new ForbiddenException('Student and Teacher registration requires Google sign-in.');
-    }
+  authorization: string | undefined,
+  input: RegisterProfileDto,
+): Promise<IdentityProfileDto> {
+  console.log('[IDENTITY REGISTER] START', {
+    hasAuthorization: Boolean(authorization),
+    authorizationLength: authorization?.length ?? 0,
+    role: input.role,
+  });
 
-    const name = authUser.user_metadata.full_name ?? authUser.user_metadata.name;
-    const displayName =
-      typeof name === 'string' && name.trim()
-        ? name.trim().slice(0, 120)
-        : (authUser.email.split('@')[0] ?? authUser.email);
+  const authUser = await this.authenticate(authorization);
+
+  console.log('[IDENTITY REGISTER] AUTH OK', {
+    userId: authUser.id,
+    email: authUser.email,
+    provider: authUser.app_metadata.provider,
+  });
+
+  const googleProvider =
+    authUser.app_metadata.provider === 'google' ||
+    authUser.app_metadata.providers?.includes('google');
+
+  if (!googleProvider || !authUser.email) {
+    throw new ForbiddenException(
+      'Student and Teacher registration requires Google sign-in.',
+    );
+  }
+
+  const name =
+    authUser.user_metadata.full_name ??
+    authUser.user_metadata.name;
+
+  const displayName =
+    typeof name === 'string' && name.trim()
+      ? name.trim().slice(0, 120)
+      : (authUser.email.split('@')[0] ?? authUser.email);
+
+  console.log('[IDENTITY REGISTER] PROFILE DATA', {
+    authUserId: authUser.id,
+    role: input.role,
+    displayName,
+    email: authUser.email,
+  });
+
     const { db } = getDatabase();
+
+    console.log('[IDENTITY REGISTER] DATABASE OK');
+
     try {
+      console.log('[IDENTITY REGISTER] INSERT USERS');
+
       const inserted = await db
         .insert(users)
         .values({
@@ -119,21 +151,44 @@ export class IdentityService {
           displayName,
           email: authUser.email,
         })
-        .onConflictDoNothing({ target: users.authUserId })
-        .returning({ id: users.id });
-      if (inserted.length === 0) throw new ConflictException('Profile already exists.');
+        .onConflictDoNothing({
+          target: users.authUserId,
+        })
+        .returning({
+          id: users.id,
+        });
+
+      console.log('[IDENTITY REGISTER] INSERT RESULT', {
+        insertedCount: inserted.length,
+        inserted,
+      });
+
+      if (inserted.length === 0) {
+        throw new ConflictException('Profile already exists.');
+      }
     } catch (error) {
-      if (error instanceof ConflictException) throw error;
+      console.error('[IDENTITY REGISTER] INSERT ERROR', error);
+
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+
       if (
         typeof error === 'object' &&
         error !== null &&
         'code' in error &&
         error.code === '23505'
       ) {
-        throw new ConflictException('Profile email is already in use.');
+        throw new ConflictException(
+          'Profile email is already in use.',
+        );
       }
+
       throw error;
     }
+
+    console.log('[IDENTITY REGISTER] GET PROFILE');
+
     return this.getProfile(authorization);
   }
 }
