@@ -18,6 +18,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
+import { IsYouTubeVideoUrl } from './youtube-url';
 
 export const statuses = ['DRAFT', 'READY', 'ARCHIVED'] as const;
 export type ContentState = (typeof statuses)[number];
@@ -131,6 +132,7 @@ export class CreateVideoDto {
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(240) @Matches(/\S/) title!: string;
   @ApiProperty()
   @IsUrl({ protocols: ['https'], require_protocol: true })
+  @IsYouTubeVideoUrl()
   @MaxLength(2000)
   url!: string;
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(160) @Matches(/\S/) source!: string;

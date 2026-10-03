@@ -29,13 +29,13 @@ export type RecommendedVideoDto = { "id": string; "title": string; "url": string
 
 export type DrillResultDto = { "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": (ReviewedQuestionDto)[]; "recommendations": (RecommendedVideoDto)[]; };
 
-export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "pretest" | "tryout"; "title": string; "isDemo": boolean; "submittedAt": string; "resultState": "ready" | "waitingIrt"; "score": number | null; };
+export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "pretest" | "tryout"; "title": string; "isDemo": boolean; "chapterId"?: string | null; "chapterTitle"?: string | null; "subchapterId"?: string | null; "subchapterTitle"?: string | null; "levelId"?: string | null; "levelTitle"?: string | null; "xpState"?: "pending" | "notApplicable"; "starsState"?: "pending" | "notApplicable"; "submittedAt": string; "resultState": "ready" | "waitingIrt"; "score": number | null; };
 
 export type AssessmentHistoryDto = { "records": (AssessmentRecordDto)[]; "nextCursor": string | null; };
 
 export type CurrentTryoutDto = { "id"?: string; "title"?: string; "releaseAt"?: string; "state": "unavailable" | "open" | "inProgress" | "waitingIrt" | "resultReady"; "eligible"?: boolean; "attemptId"?: string | null; "questionCount"?: number | null; "durationSeconds"?: number | null; };
 
-export type TryoutAttemptDto = { "id": string; "packageId": string; "packageTitle": string; "status": "inProgress" | "submitted"; "deadlineAt": string | null; "questions": (DrillQuestionDto)[]; };
+export type TryoutAttemptDto = { "serverTime"?: string; "id": string; "packageId": string; "packageTitle": string; "status": "inProgress" | "submitted"; "deadlineAt": string | null; "questions": (DrillQuestionDto)[]; };
 
 export type TryoutReviewedQuestionDto = { "questionInstanceId": string; "stem": string; "selectedOptionId": string | null; "correctOptionId": string; "explanation": string; };
 
@@ -75,6 +75,10 @@ export type StudentVideoDto = { "mappingId": string; "title": string; "url": str
 
 export type StudentVideosDto = { "items": (StudentVideoDto)[]; };
 
-export type StudentQuestionReportDto = { "clientRequestId"?: string; "category": string; "details"?: string; "attemptItemId": string; };
+export type StudentQuestionReportDto = { "clientRequestId"?: string; "category": "QUESTION" | "OPTION" | "ANSWER_KEY" | "EXPLANATION"; "details"?: string; "attemptItemId": string; };
 
 export type StudentVideoReportDto = { "clientRequestId"?: string; "category": string; "details"?: string; "attemptId": string; "mappingId": string; };
+
+export type LearningInteractionDto = { "clientRequestId": string; "eventName": "tryout_opened" | "tryout_detail_viewed" | "explanation_viewed" | "video_clicked"; "attemptId"?: string; "mappingId"?: string; "packageId"?: string; };
+
+export type LearningInteractionReceiptDto = { "state": "recorded" | "policyPending"; };

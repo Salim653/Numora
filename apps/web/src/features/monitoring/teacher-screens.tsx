@@ -17,7 +17,11 @@ import {
   getTeacherStudentProgress,
 } from '@/lib/api';
 
-function TeacherGate({ children }: { children: (token: string, name: string) => ReactNode }) {
+export function TeacherGate({
+  children,
+}: {
+  children: (token: string, name: string) => ReactNode;
+}) {
   const { state, refresh } = useAuth();
   const router = useRouter();
   useEffect(() => {

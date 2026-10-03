@@ -1,0 +1,622 @@
+[
+  {
+    "externalId": "FERDI-DEMO-L2-01-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Dua buku berharga sama dan sebuah pena Rp3.000 berharga total Rp17.000. Berapa harga satu buku dalam ribu rupiah?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "5"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "7"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "6"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "8"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "B"
+    },
+    "explanation": {
+      "text": "Model persamaan: 2x + 3 = 17. Kurangi kedua ruas dengan 3 sehingga 2x = 14. Bagi kedua ruas dengan 2: x = 7. Pemeriksaan: 2 * 7 + 3 = 17."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-01",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-01-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 1,
+      "coefficients": {
+        "a": 2,
+        "b": 3,
+        "c": 17,
+        "expectedX": 7
+      }
+    }
+  },
+  {
+    "externalId": "FERDI-DEMO-L2-02-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Biaya taksi terdiri dari biaya awal Rp4.000 dan Rp3.000 tiap kilometer. Total biaya Rp28.000. Berapa kilometer perjalanan?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "6"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "7"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "8"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "9"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "C"
+    },
+    "explanation": {
+      "text": "Model persamaan: 3x + 4 = 28. Kurangi kedua ruas dengan 4 sehingga 3x = 24. Bagi kedua ruas dengan 3: x = 8. Pemeriksaan: 3 * 8 + 4 = 28."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-02",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-02-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 2,
+      "coefficients": {
+        "a": 3,
+        "b": 4,
+        "c": 28,
+        "expectedX": 8
+      }
+    }
+  },
+  {
+    "externalId": "FERDI-DEMO-L2-03-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Keliling persegi panjang 38 cm dan lebarnya 7 cm. Berapa panjangnya?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "10"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "11"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "13"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "12"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "D"
+    },
+    "explanation": {
+      "text": "Model persamaan: 2x + 14 = 38. Kurangi kedua ruas dengan 14 sehingga 2x = 24. Bagi kedua ruas dengan 2: x = 12. Pemeriksaan: 2 * 12 + 14 = 38."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-03",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-03-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 3,
+      "coefficients": {
+        "a": 2,
+        "b": 14,
+        "c": 38,
+        "expectedX": 12
+      }
+    }
+  },
+  {
+    "externalId": "FERDI-DEMO-L2-04-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Empat tiket berharga sama ditambah parkir Rp5.000 menghabiskan Rp49.000. Berapa harga satu tiket dalam ribu rupiah?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "11"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "9"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "10"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "12"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "A"
+    },
+    "explanation": {
+      "text": "Model persamaan: 4x + 5 = 49. Kurangi kedua ruas dengan 5 sehingga 4x = 44. Bagi kedua ruas dengan 4: x = 11. Pemeriksaan: 4 * 11 + 5 = 49."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-04",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-04-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 4,
+      "coefficients": {
+        "a": 4,
+        "b": 5,
+        "c": 49,
+        "expectedX": 11
+      }
+    }
+  },
+  {
+    "externalId": "FERDI-DEMO-L2-05-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Tiga kotak berisi jumlah kelereng yang sama dan 4 kelereng lepas berjumlah 31 kelereng. Berapa kelereng per kotak?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "7"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "9"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "8"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "10"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "B"
+    },
+    "explanation": {
+      "text": "Model persamaan: 3x + 4 = 31. Kurangi kedua ruas dengan 4 sehingga 3x = 27. Bagi kedua ruas dengan 3: x = 9. Pemeriksaan: 3 * 9 + 4 = 31."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-05",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-05-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 5,
+      "coefficients": {
+        "a": 3,
+        "b": 4,
+        "c": 31,
+        "expectedX": 9
+      }
+    }
+  },
+  {
+    "externalId": "FERDI-DEMO-L2-06-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Paket internet memiliki biaya awal Rp8.000 dan Rp2.000 per GB. Total biaya Rp36.000. Berapa GB yang dibeli?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "12"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "13"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "14"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "15"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "C"
+    },
+    "explanation": {
+      "text": "Model persamaan: 2x + 8 = 36. Kurangi kedua ruas dengan 8 sehingga 2x = 28. Bagi kedua ruas dengan 2: x = 14. Pemeriksaan: 2 * 14 + 8 = 36."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-06",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-06-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 6,
+      "coefficients": {
+        "a": 2,
+        "b": 8,
+        "c": 36,
+        "expectedX": 14
+      }
+    }
+  },
+  {
+    "externalId": "FERDI-DEMO-L2-07-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Lima kantong memiliki massa sama dan wadah bermassa 2 kg. Massa seluruhnya 42 kg. Berapa kg massa setiap kantong?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "6"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "7"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "9"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "8"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "D"
+    },
+    "explanation": {
+      "text": "Model persamaan: 5x + 2 = 42. Kurangi kedua ruas dengan 2 sehingga 5x = 40. Bagi kedua ruas dengan 5: x = 8. Pemeriksaan: 5 * 8 + 2 = 42."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-07",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-07-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 7,
+      "coefficients": {
+        "a": 5,
+        "b": 2,
+        "c": 42,
+        "expectedX": 8
+      }
+    }
+  },
+  {
+    "externalId": "FERDI-DEMO-L2-08-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Tabungan awal Rp6.000 bertambah Rp4.000 per minggu. Setelah beberapa minggu menjadi Rp46.000. Berapa minggu telah berlalu?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "10"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "8"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "9"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "11"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "A"
+    },
+    "explanation": {
+      "text": "Model persamaan: 4x + 6 = 46. Kurangi kedua ruas dengan 6 sehingga 4x = 40. Bagi kedua ruas dengan 4: x = 10. Pemeriksaan: 4 * 10 + 6 = 46."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-08",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-08-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 8,
+      "coefficients": {
+        "a": 4,
+        "b": 6,
+        "c": 46,
+        "expectedX": 10
+      }
+    }
+  },
+  {
+    "externalId": "FERDI-DEMO-L2-09-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Tiga roti berharga sama mendapat potongan total Rp2.000. Pembayaran Rp31.000. Berapa harga satu roti sebelum potongan dalam ribu rupiah?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "9"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "11"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "10"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "12"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "B"
+    },
+    "explanation": {
+      "text": "Model persamaan: 3x - 2 = 31. Tambahkan kedua ruas dengan 2 sehingga 3x = 33. Bagi kedua ruas dengan 3: x = 11. Pemeriksaan: 3 * 11 - 2 = 31."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-09",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-09-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 9,
+      "coefficients": {
+        "a": 3,
+        "b": -2,
+        "c": 31,
+        "expectedX": 11
+      }
+    }
+  },
+  {
+    "externalId": "FERDI-DEMO-L2-10-V2",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "DEMO-FERDI-ALG",
+    "subchapterCode": "DEMO-FERDI-LINEAR",
+    "competencyCode": "DEMO-FERDI-EQUATION-L2",
+    "levelCode": "DEMO-FERDI-L2",
+    "difficulty": "MEDIUM",
+    "stem": {
+      "text": "Sebuah tim mendapat 3 poin per kemenangan dan bonus tetap 5 poin. Total 41 poin. Berapa kemenangan tim?"
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "10"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "11"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "12"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "13"
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "C"
+    },
+    "explanation": {
+      "text": "Model persamaan: 3x + 5 = 41. Kurangi kedua ruas dengan 5 sehingga 3x = 36. Bagi kedua ruas dengan 3: x = 12. Pemeriksaan: 3 * 12 + 5 = 41."
+    },
+    "metadata": {
+      "source": "DEMO candidate prepared by Ferdi for Curriculum review, 2026-10-02",
+      "isDemo": true,
+      "contentStatus": "DRAFT",
+      "curriculumReviewed": false,
+      "reviewer": null,
+      "familyExternalId": "FERDI-DEMO-L2-10",
+      "variantCode": "V2",
+      "originalExternalId": "FERDI-DEMO-L2-10-V1",
+      "equivalenceReview": "PENDING_CURRICULUM",
+      "displayOrder": 10,
+      "coefficients": {
+        "a": 3,
+        "b": 5,
+        "c": 41,
+        "expectedX": 12
+      }
+    }
+  }
+]

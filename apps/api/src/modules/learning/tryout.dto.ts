@@ -12,15 +12,26 @@ export class CurrentTryoutDto {
   @ApiProperty({ type: String, format: 'uuid', required: false }) id?: string;
   @ApiProperty({ required: false }) title?: string;
   @ApiProperty({ type: String, format: 'date-time', required: false }) releaseAt?: string;
-  @ApiProperty({ enum: ['unavailable', 'open', 'inProgress', 'waitingIrt', 'resultReady'] })
+  @ApiProperty({
+    enum: ['unavailable', 'open', 'inProgress', 'waitingIrt', 'resultReady'],
+    description:
+      'Current package/attempt availability. Unavailable returns only state; it does not deny Student feature access.',
+  })
   state!: string;
-  @ApiProperty({ required: false }) eligible?: boolean;
-  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) attemptId?: string | null;
+  @ApiProperty({
+    required: false,
+    description:
+      'Whether this Student may start a new attempt for the available current package, regardless of class affiliation. False when an attempt already exists; omitted when unavailable.',
+  })
+  eligible?: boolean;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) attemptId?:
+    string | null;
   @ApiProperty({ type: Number, nullable: true, required: false }) questionCount?: number | null;
   @ApiProperty({ type: Number, nullable: true, required: false }) durationSeconds?: number | null;
 }
 
 export class TryoutAttemptDto {
+  @ApiProperty({ type: String, format: 'date-time', required: false }) serverTime?: string;
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) packageId!: string;
   @ApiProperty() packageTitle!: string;

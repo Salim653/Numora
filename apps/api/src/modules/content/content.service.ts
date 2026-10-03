@@ -20,6 +20,7 @@ import {
   videoSubchapterMappings,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
+import { isYouTubeVideoUrl } from './youtube-url';
 import type {
   AdminCurriculumDto,
   AdminVersionDto,
@@ -481,6 +482,8 @@ export class ContentService {
     };
   }
   createVideo(actor: string, body: CreateVideoDto) {
+    if (!isYouTubeVideoUrl(body.url))
+      throw new BadRequestException('Gunakan URL video YouTube HTTPS yang valid.');
     return adminMutation(actor, 'video_created', 'video_mapping', async (tx) => {
       const v = required(
         (
@@ -525,6 +528,21 @@ export class ContentService {
       // Preserve the target of historical video reports: changing the subchapter needs a new mapping.
       if (body.subchapterId !== undefined && body.subchapterId !== m.subchapterId)
         throw new ConflictException('Buat pemetaan video baru untuk subbab berbeda.');
+      if (body.url !== undefined || body.status === 'READY') {
+        const video = required(
+          (
+            await tx
+              .select()
+              .from(learningVideos)
+              .where(eq(learningVideos.id, m.videoId))
+              .for('update')
+          )[0],
+        );
+        if (!isYouTubeVideoUrl(body.url ?? video.url))
+          throw new BadRequestException(
+            'Gunakan URL video YouTube HTTPS yang valid sebelum rekomendasi diaktifkan.',
+          );
+      }
       if (
         body.title !== undefined ||
         body.url !== undefined ||
@@ -647,16 +665,14 @@ export class ContentService {
     )
       throw new BadRequestException('Draf hanya dapat memuat versi dan keluarga soal READY.');
     // Draft metadata only: provisional equal item weights, never official scoring configuration.
-    await tx
-      .insert(packageItems)
-      .values(
-        versionIds.map((id, index) => ({
-          packageId,
-          questionVersionId: id,
-          displayOrder: index + 1,
-          maxPoints: '1',
-        })),
-      );
+    await tx.insert(packageItems).values(
+      versionIds.map((id, index) => ({
+        packageId,
+        questionVersionId: id,
+        displayOrder: index + 1,
+        maxPoints: '1',
+      })),
+    );
   }
   publishPackage(): never {
     throw new ConflictException({

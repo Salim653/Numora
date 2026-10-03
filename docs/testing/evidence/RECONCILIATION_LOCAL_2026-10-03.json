@@ -1,0 +1,26 @@
+{
+  "releaseSha": "bd3fb4c7ad806612d0cdf0eff52c6aaac511c1b0",
+  "collectedAt": "2026-10-03T03:18:39.686Z",
+  "status": "PASS",
+  "environment": "isolated-local-postgresql-redis-chromium",
+  "authMode": "email-fixture-boundary",
+  "productApiMocks": false,
+  "content": "TEST_ONLY_DEMO",
+  "irtRelease": "TEST_ONLY_SYNTHETIC_RELEASE_NO_MODEL_EXECUTION",
+  "checks": [
+    "connected-role-chain-save-refresh-reauth-submit-monitor-retry-unlock-level2-persistence",
+    "real-http-token-ttl-revoke-reissue-expiry-races-one-class-ownership-auth",
+    "direct-url-role-refresh-logout-reauth-mandiri-drill",
+    "tryout-mandiri-school-snapshot-idempotency-irt-privacy-level-and-teacher-history"
+  ],
+  "acceptance": {
+    "google": "NOT_RUN",
+    "reviewedCurriculum": "NOT_PROVIDED",
+    "staging": "NOT_RUN",
+    "independentQa": "PENDING"
+  },
+  "services": {
+    "postgresql": "16",
+    "redis": "6.0.16 local; CI uses Redis 7"
+  }
+}
