@@ -5,6 +5,8 @@ import { ProgressBar } from '@tka/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import type { DrillQuestion } from './types';
 import { MathText, Panel, PrimaryButton, Status } from './ui';
+import { useUnsavedWarning } from './use-unsaved-warning';
+import { useAssessmentDeadline } from './use-assessment-deadline';
 
 type SavedAnswer = { questionInstanceId: string; selectedOptionId: string | null };
 
@@ -18,6 +20,9 @@ export function AssessmentSession({
   onSave,
   onSubmit,
   onSubmitted,
+  deadlineAt,
+  serverTime,
+  onFinalizationCheck,
 }: {
   title: string;
   questions: DrillQuestion[];
@@ -28,6 +33,9 @@ export function AssessmentSession({
   onSave: (questionId: string, optionId: string | null) => Promise<SavedAnswer>;
   onSubmit: () => Promise<unknown>;
   onSubmitted: () => void;
+  deadlineAt?: string | null | undefined;
+  serverTime?: string | undefined;
+  onFinalizationCheck?: () => void;
 }) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | null>>(() =>
@@ -44,15 +52,37 @@ export function AssessmentSession({
     mutationFn: ({ questionId, optionId }: { questionId: string; optionId: string | null }) =>
       onSave(questionId, optionId),
   });
-  const submit = useMutation({ mutationFn: onSubmit, onSuccess: onSubmitted });
+  const finalizing = useRef(false);
+  const submit = useMutation({
+    mutationFn: onSubmit,
+    onSuccess: onSubmitted,
+    onError: () => onFinalizationCheck?.(),
+  });
+  function finalize() {
+    if (finalizing.current) return;
+    finalizing.current = true;
+    submit.mutate(undefined, {
+      onError: () => {
+        finalizing.current = false;
+      },
+    });
+  }
+  const deadline = useAssessmentDeadline(deadlineAt, finalize, serverTime);
   const question = questions[index];
+  useUnsavedWarning(unsaved !== null);
 
   if (!question)
     return <Status title="Soal belum tersedia">Paket soal belum siap. Coba lagi nanti.</Status>;
   const emptyCount = questions.filter((item) => !answers[item.questionInstanceId]).length;
 
   async function choose(questionId: string, optionId: string | null) {
-    if (saving.current || (unsaved && unsaved.questionId !== questionId)) return;
+    if (
+      deadline.expired ||
+      finalizing.current ||
+      saving.current ||
+      (unsaved && unsaved.questionId !== questionId)
+    )
+      return;
     saving.current = true;
     setAnswers((previous) => ({ ...previous, [questionId]: optionId }));
     setUnsaved({ questionId, optionId });
@@ -74,18 +104,28 @@ export function AssessmentSession({
   }
 
   function confirmSubmit() {
-    if (unsaved || saving.current || submit.isPending) return;
-    if (window.confirm(confirmMessage(emptyCount))) submit.mutate();
+    if (deadline.expired || unsaved || saving.current || finalizing.current) return;
+    if (window.confirm(confirmMessage(emptyCount))) finalize();
   }
 
   return (
     <div className="assessment-session space-y-5">
       {notice}
+      <p className="text-sm text-slate-700">
+        Hanya jawaban berstatus Tersimpan yang telah diterima server. Refresh atau keluar dapat
+        menghilangkan perubahan yang belum tersimpan; jawaban tersimpan dimuat saat sesi dibuka
+        kembali.
+      </p>
       <Panel className="assessment-meta flex flex-wrap items-center justify-between gap-3 text-sm">
         <span className="font-semibold">
           {title} · Soal {index + 1} dari {questions.length}
         </span>
         {headerExtra}
+        {deadline.remaining !== null && (
+          <span role="timer" aria-label="Sisa waktu TryOut">
+            {Math.floor(deadline.remaining / 60)}:{String(deadline.remaining % 60).padStart(2, '0')}
+          </span>
+        )}
         <span role="status" className={saveError ? 'text-red-700' : 'text-slate-700'}>
           {save.isPending ? 'Menyimpan…' : saveError ? 'Belum tersimpan' : 'Tersimpan'}
         </span>
@@ -103,7 +143,9 @@ export function AssessmentSession({
         <fieldset
           disabled={
             save.isPending ||
+            deadline.expired ||
             submit.isPending ||
+            submit.isSuccess ||
             (!!unsaved && unsaved.questionId !== question.questionInstanceId)
           }
           className="mt-6 space-y-3"
@@ -129,7 +171,11 @@ export function AssessmentSession({
           <button
             className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"
             disabled={
-              save.isPending || (!!unsaved && unsaved.questionId !== question.questionInstanceId)
+              deadline.expired ||
+              submit.isPending ||
+              submit.isSuccess ||
+              save.isPending ||
+              (!!unsaved && unsaved.questionId !== question.questionInstanceId)
             }
             onClick={() => void choose(question.questionInstanceId, null)}
           >
@@ -137,7 +183,7 @@ export function AssessmentSession({
           </button>
         )}
       </Panel>
-      {saveError && (
+      {saveError && !deadline.expired && (
         <Status title="Jawaban belum tersimpan">
           <p role="alert">{saveError}</p>
           <button
@@ -173,7 +219,13 @@ export function AssessmentSession({
           <PrimaryButton onClick={() => setIndex(index + 1)}>Berikutnya</PrimaryButton>
         ) : (
           <PrimaryButton
-            disabled={!!unsaved || save.isPending || submit.isPending}
+            disabled={
+              deadline.expired ||
+              !!unsaved ||
+              save.isPending ||
+              submit.isPending ||
+              submit.isSuccess
+            }
             onClick={confirmSubmit}
           >
             {submitLabel}
@@ -186,9 +238,23 @@ export function AssessmentSession({
         </p>
       )}
       {submit.isError && (
-        <p role="alert" className="text-sm text-red-700">
-          {submit.error.message} Coba kirim lagi.
-        </p>
+        <div>
+          <p role="alert" className="text-sm text-red-700">
+            {submit.error.message}{' '}
+            {deadline.expired
+              ? 'Waktu berakhir. Server menggunakan jawaban yang telah diterima.'
+              : 'Coba kirim lagi.'}
+          </p>
+          {deadline.expired && (
+            <button
+              className="min-h-11 font-semibold underline"
+              disabled={submit.isPending}
+              onClick={finalize}
+            >
+              Periksa pengiriman akhir
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

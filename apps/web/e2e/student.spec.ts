@@ -20,6 +20,7 @@ async function fixtures(
   page: Page,
   role: 'STUDENT' | 'TEACHER' | 'ADMIN' = 'STUDENT',
   teacherVerified = true,
+  verificationIdentityDelayMs = 0,
 ) {
   const jwt = [
     Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'),
@@ -64,7 +65,9 @@ async function fixtures(
   await page.route('http://localhost:3301/api/v1/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
     let data: unknown;
-    if (path === '/identity/me')
+    if (path === '/identity/me') {
+      if (teacherVerified && verificationIdentityDelayMs)
+        await new Promise((resolve) => setTimeout(resolve, verificationIdentityDelayMs));
       data = {
         id: studentId,
         displayName: 'Siswa fixture',
@@ -74,12 +77,19 @@ async function fixtures(
         studentAffiliation: school ? 'SCHOOL' : 'MANDIRI',
         teacherVerified: role === 'TEACHER' ? teacherVerified : null,
       };
-    else if (path === '/schools')
+    } else if (path === '/schools')
       data = { items: [{ id: chapterId, code: 'QA', name: 'Sekolah fixture' }] };
     else if (path === `/schools/${chapterId}/teacher-verifications`) {
       teacherVerified = true;
       data = { verified: true };
     } else if (path === '/classes/join') {
+      const { joinCode } = route.request().postDataJSON() as { joinCode: string };
+      if (!['FIX234', 'QA_LEGACY-CLASS'].includes(joinCode))
+        return route.fulfill({
+          status: 404,
+          contentType: 'application/problem+json',
+          json: { code: 'CLASS_NOT_FOUND', detail: 'Kode Class tidak valid.' },
+        });
       school = true;
       data = { joined: true, class: { id: chapterId, name: 'IX fixture' } };
     } else if (path === '/students/me/dashboard')
@@ -102,6 +112,22 @@ async function fixtures(
           pendingPolicies: ['OPEN-07', 'OPEN-11'],
         },
       };
+    else if (path === '/students/me/feedback/summary')
+      data = {
+        unreadCount: 1,
+        latest: [
+          {
+            id: questionId,
+            classId: chapterId,
+            studentId,
+            teacherName: 'Guru fixture',
+            body: 'Catatan persisted fixture: lanjutkan latihan persamaan.',
+            sentAt: '2026-10-01T00:00:00Z',
+            readAt: null,
+          },
+        ],
+      };
+    else if (path === '/students/me/learning-interactions') data = { state: 'policyPending' };
     else if (path === '/chapters')
       data = { chapters: [{ id: chapterId, title: 'Aljabar fixture', order: 1 }] };
     else if (path === `/chapters/${chapterId}`)
@@ -263,7 +289,7 @@ async function fixtures(
     return route.fulfill({ json: data });
   });
 }
-for (const width of [320, 390, 768, 1440])
+for (const width of [320, 360, 390, 768, 1440])
   test(`student routes at ${width}px use real-data boundaries and accessible navigation`, async ({
     page,
   }, testInfo) => {
@@ -294,7 +320,7 @@ for (const width of [320, 390, 768, 1440])
     await page.getByRole('button', { name: 'Kirim Drill' }).click();
     await expect(page.getByText('Tuntas', { exact: true })).toBeVisible();
     for (const [label, text] of [
-      ['Tryout', 'Tryout untuk siswa sekolah'],
+      ['Tryout', 'Paket TryOut belum tersedia'],
       ['Progres', 'Menunggu hasil'],
       ['PvP', 'PvP belum tersedia'],
       ['Peringkat', 'Peringkat belum tersedia'],
@@ -427,6 +453,60 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
     }
   });
 
+test('Mandiri keeps learning and global PvP access while class ranking stays restricted', async ({
+  page,
+}) => {
+  await fixtures(page);
+  await page.goto('/student');
+  await expect(page.getByText('Siswa mandiri', { exact: true })).toBeVisible();
+  await page.goto(`/student/drill/${attemptId}`);
+  await expect(page.getByText('Fixture: 1 + 1?')).toBeVisible();
+  await page.goto('/student/pvp');
+  await expect(page.getByRole('heading', { name: 'PvP belum tersedia' })).toBeVisible();
+  await page.goto('/student/leaderboards');
+  await expect(page.getByRole('button', { name: 'Global PvP' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('heading', { name: 'Peringkat belum tersedia' })).toBeVisible();
+  await page.getByRole('button', { name: 'Kelas', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Akses ditolak' })).toBeVisible();
+  await page.goto('/student/profile');
+  await expect(page.getByLabel('Kode kelas')).toBeVisible();
+});
+
+test('invalid class code does not change Mandiri affiliation', async ({ page }) => {
+  await fixtures(page);
+  await page.goto('/student/profile');
+  await page.getByLabel('Kode kelas').fill('BAD999');
+  await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+  await expect(page.getByText('Kode Class tidak valid.')).toBeVisible();
+  await expect(page.getByText('Belajar mandiri')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Belajar mandiri')).toBeVisible();
+});
+
+test('joined class affiliation persists after signing out and back in', async ({ page }) => {
+  await fixtures(page);
+  await page.goto('/student/profile');
+  await page.getByLabel('Kode kelas').fill(' FIX234 ');
+  await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+  await expect(page.getByText('Terhubung dengan kelas')).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
+  await page.getByRole('button', { name: 'Keluar dari akun' }).click();
+  await expect(page).toHaveURL('http://localhost:3300/');
+  await page.evaluate(() => localStorage.removeItem('test-logged-out'));
+  await page.reload();
+  await expect(page).toHaveURL(/\/student$/);
+  await page.goto('/student/profile');
+  await expect(page.getByText('Terhubung dengan kelas')).toBeVisible();
+  await expect(page.getByLabel('Kode kelas')).toHaveCount(0);
+  await page.goto('/student/leaderboards?tab=class');
+  await expect(
+    page.getByText('Aturan XP kelas sedang ditetapkan.', { exact: false }),
+  ).toBeVisible();
+});
+
 for (const width of [390, 1440]) {
   test(`Teacher class monitoring at ${width}px keeps zero scores and accessible navigation`, async ({
     page,
@@ -449,6 +529,8 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await fixtures(page, 'ADMIN');
     await page.goto('/admin/schools');
+    await expect(page.getByRole('button', { name: 'Keluar', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Buka profil' })).toHaveCount(0);
     await page.getByRole('button', { name: /Sekolah fixture/ }).click();
     await page.getByRole('button', { name: 'Terbitkan token' }).click();
     await expect(page.getByText('QAAB2345', { exact: true })).toBeVisible();
@@ -459,12 +541,197 @@ for (const width of [390, 1440]) {
   });
 }
 
+test('Teacher profile owns logout and signed-out Teacher routes stay protected', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await fixtures(page, 'TEACHER');
+  await page.goto('/teacher');
+  await expect(page.getByRole('button', { name: 'Keluar', exact: true })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Buka profil' }).click();
+  await expect(page).toHaveURL(/\/teacher\/profile$/);
+  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toBeVisible();
+  await expect(page.getByText('Terverifikasi')).toBeVisible();
+  await expect(page.getByRole('link', { name: /Kelas saya/ }).last()).toHaveAttribute(
+    'href',
+    '/teacher',
+  );
+  await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
+  await page.getByRole('button', { name: 'Keluar dari akun' }).click();
+  await expect(page).toHaveURL('http://localhost:3300/');
+  await page.goto('/teacher/profile');
+  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
+});
+
+test('Student cannot open Teacher profile', async ({ page }) => {
+  await fixtures(page);
+  await page.goto('/teacher/profile');
+  await expect(page).toHaveURL('http://localhost:3300/student');
+  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
+});
+
 test('signed-out login offers Google authentication without removed demo destinations', async ({
   page,
 }) => {
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
   await expect(page.locator('a[href^="/demo/"]')).toHaveCount(0);
+});
+
+test('Drill result retry uses its server level and navigates to a new server attempt', async ({
+  page,
+}) => {
+  await fixtures(page);
+  const newId = '77777777-7777-4777-8777-777777777777';
+  const attempt = {
+    id: newId,
+    levelId,
+    levelTitle: 'TEST retry',
+    status: 'inProgress',
+    startedAt: new Date().toISOString(),
+    isDemo: true,
+    questions: [
+      {
+        questionInstanceId: questionId,
+        stem: 'TEST retry question',
+        options: [
+          { id: 'A', text: '2' },
+          { id: 'B', text: '3' },
+        ],
+        selectedOptionId: null,
+      },
+    ],
+  };
+  await page.route('http://localhost:3301/api/v1/assessments/drill/attempts', (route) =>
+    route.fulfill({ json: attempt }),
+  );
+  await page.route(`http://localhost:3301/api/v1/assessment-attempts/${newId}`, (route) =>
+    route.fulfill({ json: attempt }),
+  );
+  await page.goto(`/student/drill/${attemptId}/result`);
+  const starting = page.waitForRequest((request) =>
+    request.url().endsWith('/assessments/drill/attempts'),
+  );
+  await page.getByRole('button', { name: 'Ulangi level ini' }).click();
+  expect((await starting).postDataJSON()).toEqual({ levelId });
+  await expect(page).toHaveURL(new RegExp(`/student/drill/${newId}$`));
+  await expect(page.getByText('TEST retry question')).toBeVisible();
+});
+
+test('failed Drill save warns before refresh and can recover without claiming Saved prematurely', async ({
+  page,
+}) => {
+  await fixtures(page);
+  let failed = false;
+  await page.route(
+    `http://localhost:3301/api/v1/assessment-attempts/${attemptId}/answers/${questionId}`,
+    (route) => {
+      if (!failed) {
+        failed = true;
+        return route.abort('internetdisconnected');
+      }
+      return route.fallback();
+    },
+  );
+  await page.goto(`/student/drill/${attemptId}`);
+  await page.getByRole('radio').first().check();
+  await expect(page.getByText('Belum tersimpan', { exact: true })).toBeVisible();
+  const warning = page.waitForEvent('dialog');
+  const reload = page.reload({ timeout: 5000 }).catch(() => null);
+  const dialog = await warning;
+  expect(dialog.type()).toBe('beforeunload');
+  await dialog.dismiss();
+  await reload;
+  await expect(page.getByRole('radio').first()).toBeChecked();
+  await page.getByRole('button', { name: 'Coba simpan lagi' }).click();
+  await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('radio').first()).toBeChecked();
+});
+
+test('TEST ONLY TryOut with 35 PG questions preserves countdown on reload and recovers a lost auto-submit acknowledgement', async ({
+  page,
+}) => {
+  await fixtures(page);
+  const options = [
+    { id: 'A', text: '2' },
+    { id: 'B', text: '3' },
+  ];
+  const ids = Array.from(
+    { length: 35 },
+    (_, index) => `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`,
+  );
+  const answers = new Map<string, string | null>();
+  let deadline = 0;
+  let submitted = false;
+  let submits = 0;
+  let dialogs = 0;
+  page.on('dialog', (dialog) => {
+    dialogs++;
+    void dialog.dismiss();
+  });
+  await page.route(`http://localhost:3301/api/v1/tryout/attempts/${attemptId}`, (route) => {
+    deadline ||= Date.now() + 12_000;
+    return route.fulfill({
+      json: {
+        id: attemptId,
+        packageId: chapterId,
+        packageTitle: 'TEST ONLY countdown',
+        status: submitted ? 'submitted' : 'inProgress',
+        serverTime: new Date().toISOString(),
+        deadlineAt: new Date(deadline).toISOString(),
+        questions: submitted
+          ? []
+          : ids.map((id, index) => ({
+              questionInstanceId: id,
+              stem: `TEST question ${index + 1}`,
+              options,
+              selectedOptionId: answers.get(id) ?? null,
+            })),
+      },
+    });
+  });
+  await page.route(
+    `http://localhost:3301/api/v1/tryout/attempts/${attemptId}/answers/*`,
+    (route) => {
+      const id = new URL(route.request().url()).pathname.split('/').at(-1)!;
+      const { optionId } = route.request().postDataJSON();
+      answers.set(id, optionId);
+      return route.fulfill({ json: { questionInstanceId: id, selectedOptionId: optionId } });
+    },
+  );
+  await page.route(`http://localhost:3301/api/v1/tryout/attempts/${attemptId}/submit`, (route) => {
+    submits++;
+    submitted = true;
+    return route.abort('connectionreset');
+  });
+  await page.route(`http://localhost:3301/api/v1/tryout/attempts/${attemptId}/result`, (route) =>
+    route.fulfill({
+      status: 409,
+      json: { code: 'TRYOUT_RESULT_PENDING', detail: 'TEST result not released' },
+    }),
+  );
+  await page.goto(`/student/tryout/${attemptId}`);
+  await expect(
+    page.getByRole('navigation', { name: 'Navigasi soal' }).getByRole('button'),
+  ).toHaveCount(35);
+  await page.getByRole('radio').first().check();
+  await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+  const before = (await page.getByRole('timer').innerText()).split(':').map(Number);
+  const beforeSeconds = before[0]! * 60 + before[1]!;
+  await page.reload();
+  await expect(page.getByRole('radio').first()).toBeChecked();
+  const after = (await page.getByRole('timer').innerText()).split(':').map(Number);
+  expect(after[0]! * 60 + after[1]!).toBeLessThanOrEqual(beforeSeconds);
+  await expect(page.getByRole('heading', { name: 'Jawaban sudah dikirim' })).toBeVisible({
+    timeout: 20_000,
+  });
+  expect(submits).toBe(1);
+  expect(dialogs).toBe(0);
+  await page.goto(`/student/tryout/${attemptId}/result`);
+  await expect(page.getByRole('heading', { name: 'Menunggu hasil IRT' })).toBeVisible();
+  await expect(page.getByText('80', { exact: true })).toHaveCount(0);
 });
 
 for (const verificationToken of ['QAAB2345', 'Ab_cd-'.repeat(6)]) {
@@ -482,5 +749,44 @@ for (const verificationToken of ['QAAB2345', 'Ab_cd-'.repeat(6)]) {
     expect((await request).postDataJSON()).toEqual({ token: verificationToken });
     await expect(page).toHaveURL(/\/teacher$/);
     await expect(page.getByRole('heading', { name: 'Kelas saya', exact: true })).toBeVisible();
+  });
+}
+
+test('Teacher stays on verification while refreshed identity is pending', async ({ page }) => {
+  await fixtures(page, 'TEACHER', false, 2_000);
+  const teacherNavigations: string[] = [];
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame() && new URL(frame.url()).pathname === '/teacher')
+      teacherNavigations.push(frame.url());
+  });
+  await page.goto('/teacher/verification-required');
+  await page.getByLabel('Sekolah', { exact: true }).selectOption(chapterId);
+  await page.getByLabel('Token verifikasi').fill('QAAB2345');
+  const refreshedIdentity = page.waitForRequest((request) =>
+    request.url().endsWith('/identity/me'),
+  );
+  await page.getByRole('button', { name: 'Verifikasi dan lanjutkan' }).click();
+
+  await refreshedIdentity;
+  await page.waitForTimeout(250);
+  expect(teacherNavigations).toHaveLength(0);
+  await expect(page).toHaveURL(/\/teacher$/);
+});
+
+for (const { role, verified, path, destination } of [
+  { role: 'STUDENT', verified: true, path: '/teacher', destination: '/student' },
+  { role: 'TEACHER', verified: true, path: '/student', destination: '/teacher' },
+  {
+    role: 'TEACHER',
+    verified: false,
+    path: '/admin/schools',
+    destination: '/teacher/verification-required',
+  },
+  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin/schools' },
+] as const) {
+  test(`${role}${verified ? '' : ' unverified'} cannot enter ${path}`, async ({ page }) => {
+    await fixtures(page, role, verified);
+    await page.goto(path);
+    await expect(page).toHaveURL(new RegExp(`${destination}$`));
   });
 }

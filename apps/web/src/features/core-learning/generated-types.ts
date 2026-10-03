@@ -35,7 +35,7 @@ export type AssessmentHistoryDto = { "records": (AssessmentRecordDto)[]; "nextCu
 
 export type CurrentTryoutDto = { "id"?: string; "title"?: string; "releaseAt"?: string; "state": "unavailable" | "open" | "inProgress" | "waitingIrt" | "resultReady"; "eligible"?: boolean; "attemptId"?: string | null; "questionCount"?: number | null; "durationSeconds"?: number | null; };
 
-export type TryoutAttemptDto = { "id": string; "packageId": string; "packageTitle": string; "status": "inProgress" | "submitted"; "deadlineAt": string | null; "questions": (DrillQuestionDto)[]; };
+export type TryoutAttemptDto = { "serverTime"?: string; "id": string; "packageId": string; "packageTitle": string; "status": "inProgress" | "submitted"; "deadlineAt": string | null; "questions": (DrillQuestionDto)[]; };
 
 export type TryoutReviewedQuestionDto = { "questionInstanceId": string; "stem": string; "selectedOptionId": string | null; "correctOptionId": string; "explanation": string; };
 
@@ -75,6 +75,10 @@ export type StudentVideoDto = { "mappingId": string; "title": string; "url": str
 
 export type StudentVideosDto = { "items": (StudentVideoDto)[]; };
 
-export type StudentQuestionReportDto = { "clientRequestId"?: string; "category": string; "details"?: string; "attemptItemId": string; };
+export type StudentQuestionReportDto = { "clientRequestId"?: string; "category": "QUESTION" | "OPTION" | "ANSWER_KEY" | "EXPLANATION"; "details"?: string; "attemptItemId": string; };
 
 export type StudentVideoReportDto = { "clientRequestId"?: string; "category": string; "details"?: string; "attemptId": string; "mappingId": string; };
+
+export type LearningInteractionDto = { "clientRequestId": string; "eventName": "tryout_opened" | "tryout_detail_viewed" | "explanation_viewed" | "video_clicked"; "attemptId"?: string; "mappingId"?: string; "packageId"?: string; };
+
+export type LearningInteractionReceiptDto = { "state": "recorded" | "policyPending"; };

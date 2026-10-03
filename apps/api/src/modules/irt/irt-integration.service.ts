@@ -7,7 +7,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { isISO8601, isUUID } from 'class-validator';
-import { and, asc, eq, isNotNull, lte, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, lte, sql } from 'drizzle-orm';
 import {
   assessmentAttempts,
   assessmentPackages,
@@ -18,7 +18,12 @@ import {
   irtItemResults,
   questionVersions,
 } from '@tka/database';
-import type { IrtBatchInput, IrtBatchOutput, PrepareIrtBatch } from './irt-integration.contract';
+import type {
+  IrtBatchInput,
+  IrtBatchInputV2,
+  IrtBatchOutput,
+  PrepareIrtBatch,
+} from './irt-integration.contract';
 
 function conflict(detail: string): never {
   throw new ConflictException({ code: 'IRT_BATCH_CONFLICT', detail });
@@ -26,13 +31,38 @@ function conflict(detail: string): never {
 function validateOutput(output: IrtBatchOutput, input: IrtBatchInput) {
   if (
     !output ||
-    output.contractVersion !== '1' ||
+    output.contractVersion !== input.contractVersion ||
     output.batchId !== input.batchId ||
     output.modelVersion !== input.modelVersion ||
     !Array.isArray(output.items) ||
     output.items.some((item) => !item || typeof item !== 'object')
   )
     throw new BadRequestException('Kontrak, batch, atau versi model IRT tidak sesuai.');
+  if (output.contractVersion === '2') {
+    if (input.contractVersion !== '2' || !Array.isArray(output.respondents))
+      throw new BadRequestException('Output responden v2 tidak valid.');
+    const attempts = new Map(input.responses.map((r) => [r.attemptId, r]));
+    if (
+      !attempts.size ||
+      output.respondents.length !== attempts.size ||
+      new Set(output.respondents.map((r) => r?.attemptId)).size !== attempts.size
+    )
+      throw new BadRequestException('Output harus mencakup tepat satu hasil setiap attempt input.');
+    for (const result of output.respondents) {
+      const response = attempts.get(result?.attemptId);
+      if (
+        !response ||
+        result.respondentId !== response.respondentId ||
+        result.scoringPolicyVersionId !== response.scoringPolicyVersionId ||
+        result.scaleId !== input.scaleId ||
+        typeof result.score !== 'number' ||
+        !Number.isFinite(result.score)
+      )
+        throw new BadRequestException(
+          'Responden, attempt, policy, skala atau nilai output tidak valid.',
+        );
+    }
+  }
   const respondents = new Map<string, Set<string>>();
   for (const response of input.responses) {
     const set = respondents.get(response.questionVersionId) ?? new Set<string>();
@@ -40,7 +70,8 @@ function validateOutput(output: IrtBatchOutput, input: IrtBatchInput) {
     respondents.set(response.questionVersionId, set);
   }
   if (
-    output.items.length !== respondents.size ||
+    (output.items.length !== respondents.size &&
+      !(output.contractVersion === '2' && output.items.length === 0)) ||
     new Set(output.items.map((i) => i.questionVersionId)).size !== output.items.length
   )
     throw new BadRequestException(
@@ -86,6 +117,7 @@ function validateOutput(output: IrtBatchOutput, input: IrtBatchInput) {
 @Injectable()
 export class IrtIntegrationService {
   async prepare(input: PrepareIrtBatch): Promise<IrtBatchInput> {
+    const version = input?.contractVersion ?? '1';
     if (
       !input ||
       !isUUID(input.batchId) ||
@@ -99,7 +131,13 @@ export class IrtIntegrationService {
       !/(Z|[+-]\d{2}:\d{2})$/.test(input.cutoffAt) ||
       !Number.isFinite(Date.parse(input.cutoffAt)) ||
       Date.parse(input.cutoffAt) > Date.now() ||
-      (input.batchKind === 'TRYOUT' && !input.packageId)
+      (input.batchKind === 'TRYOUT' && !input.packageId) ||
+      !['1', '2'].includes(version) ||
+      (version === '2' &&
+        (input.batchKind !== 'TRYOUT' ||
+          typeof input.scaleId !== 'string' ||
+          !input.scaleId.trim() ||
+          input.scaleId.length > 160))
     )
       throw new BadRequestException('Input persiapan IRT tidak valid.');
     const key = process.env.IRT_PSEUDONYM_KEY;
@@ -117,7 +155,9 @@ export class IrtIntegrationService {
           snapshot.modelVersion !== input.modelVersion ||
           snapshot.packageId !== (input.packageId ?? null) ||
           snapshot.batchKind !== input.batchKind ||
-          snapshot.cutoffAt !== new Date(input.cutoffAt).toISOString()
+          snapshot.cutoffAt !== new Date(input.cutoffAt).toISOString() ||
+          snapshot.contractVersion !== version ||
+          (snapshot.contractVersion === '2' && snapshot.scaleId !== input.scaleId)
         )
           conflict('Batch ID sudah dipakai dengan input lain.');
         return snapshot;
@@ -131,26 +171,42 @@ export class IrtIntegrationService {
           throw new BadRequestException('Paket IRT tidak sesuai.');
       }
       const rows = await tx
-        .select({ attempt: assessmentAttempts, item: attemptItems, answer: attemptAnswers })
+        .select({
+          attempt: assessmentAttempts,
+          item: attemptItems,
+          answer: attemptAnswers,
+          questionType: questionVersions.questionType,
+        })
         .from(assessmentAttempts)
         .innerJoin(attemptItems, eq(attemptItems.attemptId, assessmentAttempts.id))
-        .innerJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
+        .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
         .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
         .where(
           and(
-            eq(assessmentAttempts.status, 'GRADED'),
-            eq(questionVersions.questionType, 'SINGLE_CHOICE'),
+            version === '2'
+              ? inArray(assessmentAttempts.status, ['GRADED', 'SUBMITTED'])
+              : eq(assessmentAttempts.status, 'GRADED'),
+            version === '2'
+              ? eq(assessmentAttempts.assessmentType, 'TRYOUT')
+              : eq(questionVersions.questionType, 'SINGLE_CHOICE'),
             isNotNull(assessmentAttempts.finishedAt),
             lte(assessmentAttempts.finishedAt, new Date(input.cutoffAt)),
-            isNotNull(attemptAnswers.gradedAt),
-            lte(attemptAnswers.gradedAt, new Date(input.cutoffAt)),
-            isNotNull(attemptAnswers.awardedPoints),
+            version === '1' ? isNotNull(attemptAnswers.gradedAt) : undefined,
+            version === '1' ? lte(attemptAnswers.gradedAt, new Date(input.cutoffAt)) : undefined,
+            version === '1' ? isNotNull(attemptAnswers.awardedPoints) : undefined,
             input.packageId ? eq(assessmentAttempts.packageId, input.packageId) : undefined,
           ),
         )
         .orderBy(asc(assessmentAttempts.id), asc(attemptItems.displayOrder));
-      const snapshot: IrtBatchInput = {
-        contractVersion: '1',
+      if (
+        version === '2' &&
+        rows.some((row) => row.answer && row.answer.savedAt > new Date(input.cutoffAt))
+      )
+        throw new BadRequestException(
+          'Jawaban berubah setelah cutoff; snapshot batch tidak lengkap.',
+        );
+      const base = {
+        contractVersion: '1' as const,
         batchId: input.batchId,
         batchKind: input.batchKind,
         modelVersion: input.modelVersion,
@@ -165,9 +221,42 @@ export class IrtIntegrationService {
           assessmentType: attempt.assessmentType,
           scoringPolicyVersionId: attempt.scoringPolicyVersionId,
           finishedAt: attempt.finishedAt!.toISOString(),
-          correct: Number(answer.awardedPoints) === Number(item.maxPoints),
+          correct: Number(answer?.awardedPoints) === Number(item.maxPoints),
         })),
       };
+      const snapshot: IrtBatchInput =
+        version === '1'
+          ? base
+          : ({
+              ...base,
+              contractVersion: '2',
+              scaleId: input.scaleId!,
+              responses: rows.map(({ attempt, item, answer, questionType }) => ({
+                respondentId: createHmac('sha256', key).update(attempt.studentId).digest('hex'),
+                attemptId: attempt.id,
+                attemptItemId: item.id,
+                questionVersionId: item.questionVersionId,
+                packageId: attempt.packageId,
+                assessmentType: attempt.assessmentType,
+                scoringPolicyVersionId: attempt.scoringPolicyVersionId,
+                finishedAt: attempt.finishedAt!.toISOString(),
+                questionType,
+                answer: answer?.answer ?? null,
+                maxPoints: Number(item.maxPoints),
+                awardedPoints:
+                  answer?.gradedAt &&
+                  answer.gradedAt <= new Date(input.cutoffAt) &&
+                  answer.awardedPoints !== null
+                    ? Number(answer.awardedPoints)
+                    : null,
+                correct:
+                  answer?.gradedAt &&
+                  answer.gradedAt <= new Date(input.cutoffAt) &&
+                  answer.awardedPoints !== null
+                    ? Number(answer.awardedPoints) === Number(item.maxPoints)
+                    : null,
+              })),
+            } satisfies IrtBatchInputV2);
       await tx.insert(irtBatches).values({
         id: input.batchId,
         packageId: input.packageId,
@@ -203,7 +292,26 @@ export class IrtIntegrationService {
           scaleId: i.scaleId,
         }));
       const digest = createHash('sha256')
-        .update(JSON.stringify({ modelVersion: output.modelVersion, items }))
+        .update(
+          JSON.stringify({
+            modelVersion: output.modelVersion,
+            items,
+            ...(output.contractVersion === '2'
+              ? {
+                  contractVersion: '2',
+                  respondents: [...output.respondents]
+                    .sort((a, b) => a.attemptId.localeCompare(b.attemptId))
+                    .map((r) => ({
+                      attemptId: r.attemptId,
+                      respondentId: r.respondentId,
+                      scoringPolicyVersionId: r.scoringPolicyVersionId,
+                      scaleId: r.scaleId,
+                      score: r.score,
+                    })),
+                }
+              : {}),
+          }),
+        )
         .digest('hex');
       if (batch.status === 'SUCCEEDED') {
         if (batch.outputDigest !== digest)
@@ -230,6 +338,24 @@ export class IrtIntegrationService {
           finishedAt: new Date(),
           outputDigest: digest,
           failureCode: null,
+          outputSnapshot:
+            output.contractVersion === '2'
+              ? {
+                  contractVersion: '2',
+                  batchId: output.batchId,
+                  modelVersion: output.modelVersion,
+                  items,
+                  respondents: [...output.respondents]
+                    .sort((a, b) => a.attemptId.localeCompare(b.attemptId))
+                    .map((r) => ({
+                      attemptId: r.attemptId,
+                      respondentId: r.respondentId,
+                      scoringPolicyVersionId: r.scoringPolicyVersionId,
+                      scaleId: r.scaleId,
+                      score: r.score,
+                    })),
+                }
+              : null,
         })
         .where(eq(irtBatches.id, batch.id));
       // Statistical completion is separate from approved Tryout release. Never set resultReleasedAt here.

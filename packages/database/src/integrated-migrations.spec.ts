@@ -64,7 +64,7 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 30000 }, 
           (SELECT count(*)::int FROM information_schema.columns WHERE table_name='irt_batches'
             AND column_name IN ('input_snapshot', 'output_digest', 'failure_code')) AS columns`;
         expect(schema).toEqual({ level: 'level_id_at_start', columns: 3 });
-        expect((await client`SELECT * FROM irt_batches WHERE id=${batch!.id}`)[0]).toEqual(batch);
+        expect((await client`SELECT * FROM irt_batches WHERE id=${batch!.id}`)[0]).toEqual({ ...batch, output_snapshot: null });
         const history =
           await client`SELECT hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
         expect(history.slice(0, oldHistory.length)).toEqual(oldHistory);

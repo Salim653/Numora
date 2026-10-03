@@ -1,0 +1,1 @@
+ALTER TABLE "video_reports" ADD COLUMN "attempt_context" jsonb;

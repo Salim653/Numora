@@ -14,6 +14,12 @@ import { TryoutReleaseService } from './tryout-release.service';
 const problem = (code: string, detail: string) => ({ code, detail });
 const PAGE_SIZE = 20;
 
+interface AssessmentHistoryFilters {
+  cursor?: string | undefined;
+  classId?: string | undefined;
+  levelId?: string | undefined;
+}
+
 @Injectable()
 export class AssessmentHistoryService {
   constructor(
@@ -25,10 +31,11 @@ export class AssessmentHistoryService {
     const user = await this.identity.me(authorization);
     if (user.role !== 'STUDENT')
       throw new ForbiddenException(problem('STUDENT_REQUIRED', 'Akses Student diperlukan.'));
-    return this.listForStudent(user.id, cursor, levelId);
+    return this.listForStudent(user.id, { cursor, levelId });
   }
 
-  async listForStudent(studentId: string, cursor?: string, levelId?: string) {
+  async listForStudent(studentId: string, filters: AssessmentHistoryFilters = {}) {
+    const { cursor, classId, levelId } = filters;
     const { db } = getDatabase();
     // A cursor must belong to the same visible result set as the requested page.
     const visible = and(
@@ -37,19 +44,23 @@ export class AssessmentHistoryService {
       isNotNull(assessmentAttempts.finishedAt),
       or(
         eq(assessmentAttempts.status, 'GRADED'),
-        and(eq(assessmentAttempts.assessmentType, 'TRYOUT'), eq(assessmentAttempts.status, 'SUBMITTED')),
+        and(
+          eq(assessmentAttempts.assessmentType, 'TRYOUT'),
+          eq(assessmentAttempts.status, 'SUBMITTED'),
+        ),
       ),
+      classId ? eq(assessmentAttempts.classIdAtStart, classId) : undefined,
       levelId ? eq(assessmentAttempts.levelIdAtStart, levelId) : undefined,
     );
     const [position] = cursor
       ? await db
           // Keep PostgreSQL microseconds: converting the boundary to Date loses precision.
-          .select({ id: assessmentAttempts.id, finishedAt: sql<string>`${assessmentAttempts.finishedAt}::text` })
+          .select({
+            id: assessmentAttempts.id,
+            finishedAt: sql<string>`${assessmentAttempts.finishedAt}::text`,
+          })
           .from(assessmentAttempts)
-          .where(and(
-            eq(assessmentAttempts.id, cursor),
-            visible,
-          ))
+          .where(and(eq(assessmentAttempts.id, cursor), visible))
           .limit(1)
       : [];
     if (cursor && (!position || !position.finishedAt))
@@ -69,7 +80,9 @@ export class AssessmentHistoryService {
         chapterId: assessmentAttempts.chapterIdAtStart,
         chapterTitle: chapters.name,
         levelId: assessmentAttempts.levelIdAtStart,
-        levelTitle: sql<string | null>`coalesce(${levels.description}, 'Level ' || ${levels.levelNumber})`,
+        levelTitle: sql<
+          string | null
+        >`coalesce(${levels.description}, 'Level ' || ${levels.levelNumber})`,
         subchapterId: subchapters.id,
         subchapterTitle: subchapters.name,
       })
@@ -78,28 +91,31 @@ export class AssessmentHistoryService {
       .leftJoin(chapters, eq(chapters.id, assessmentAttempts.chapterIdAtStart))
       .leftJoin(levels, eq(levels.id, assessmentAttempts.levelIdAtStart))
       .leftJoin(subchapters, eq(subchapters.id, levels.subchapterId))
-      .where(and(
-        visible,
-        position && cursorTime
-          ? or(
-              lt(assessmentAttempts.finishedAt, cursorTime),
-              and(
-                eq(assessmentAttempts.finishedAt, cursorTime),
-                lt(assessmentAttempts.id, position.id),
-              ),
-            )
-          : undefined,
-      ))
+      .where(
+        and(
+          visible,
+          position && cursorTime
+            ? or(
+                lt(assessmentAttempts.finishedAt, cursorTime),
+                and(
+                  eq(assessmentAttempts.finishedAt, cursorTime),
+                  lt(assessmentAttempts.id, position.id),
+                ),
+              )
+            : undefined,
+        ),
+      )
       .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
       .limit(PAGE_SIZE + 1);
     const page = rows.slice(0, PAGE_SIZE);
-    const tryoutIds = [...new Set(page
-      .filter((row) => row.assessmentType === 'TRYOUT')
-      .map((row) => row.packageId))];
+    const tryoutIds = [
+      ...new Set(page.filter((row) => row.assessmentType === 'TRYOUT').map((row) => row.packageId)),
+    ];
     const releasedPackages = await this.releases.releasedPackageIds(tryoutIds);
     return {
       records: page.map((row) => {
-        const ready = row.assessmentType !== 'TRYOUT' ||
+        const ready =
+          row.assessmentType !== 'TRYOUT' ||
           (row.status === 'GRADED' && releasedPackages.has(row.packageId));
         return {
           attemptId: row.id,
@@ -112,8 +128,10 @@ export class AssessmentHistoryService {
           subchapterTitle: row.subchapterTitle,
           levelId: row.levelId,
           levelTitle: row.levelTitle,
-          xpState: row.assessmentType === 'PRETEST' ? ('notApplicable' as const) : ('pending' as const),
-          starsState: row.assessmentType === 'DRILL' ? ('pending' as const) : ('notApplicable' as const),
+          xpState:
+            row.assessmentType === 'PRETEST' ? ('notApplicable' as const) : ('pending' as const),
+          starsState:
+            row.assessmentType === 'DRILL' ? ('pending' as const) : ('notApplicable' as const),
           submittedAt: row.finishedAt!.toISOString(),
           resultState: ready ? ('ready' as const) : ('waitingIrt' as const),
           score: ready && row.score !== null ? Number(row.score) : null,

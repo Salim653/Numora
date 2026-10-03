@@ -1,0 +1,52 @@
+{
+  "status": "AWAITING_CURRICULUM",
+  "productionEligible": false,
+  "canonicalPackageIds": [],
+  "notes": "Review artifacts only. Curriculum must confirm taxonomy, level fit, variants, explanation and video before normal Admin content workflow. No database writes or publication.",
+  "packages": [
+    {
+      "file": "level-1-variant-1.json",
+      "levelNumber": 1,
+      "variantIndex": 1,
+      "questionCount": 10,
+      "contentStatus": "DRAFT",
+      "isDemo": true,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "published": false
+    },
+    {
+      "file": "level-1-variant-2.json",
+      "levelNumber": 1,
+      "variantIndex": 2,
+      "questionCount": 10,
+      "contentStatus": "DRAFT",
+      "isDemo": true,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "published": false
+    },
+    {
+      "file": "level-2-variant-1.json",
+      "levelNumber": 2,
+      "variantIndex": 1,
+      "questionCount": 10,
+      "contentStatus": "DRAFT",
+      "isDemo": true,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "published": false
+    },
+    {
+      "file": "level-2-variant-2.json",
+      "levelNumber": 2,
+      "variantIndex": 2,
+      "questionCount": 10,
+      "contentStatus": "DRAFT",
+      "isDemo": true,
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "published": false
+    }
+  ]
+}

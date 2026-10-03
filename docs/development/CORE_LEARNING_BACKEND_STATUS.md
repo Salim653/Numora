@@ -1,10 +1,18 @@
 # Status backend Core Learning
 
-Status working tree per 1 Oktober 2026. Dokumen ini mencatat implementasi dan bukti lokal; semua perubahan masih perlu review dan belum merupakan bukti kesiapan staging. Sumber aturan produk: [Product Context](../product/PRODUCT_CONTEXT.md), [Open Decisions](../product/OPEN_DECISIONS.md), dan [PRD Mapping](../product/PRD_MAPPING.md).
+Catatan baseline 1 Oktober 2026 dengan pembaruan integrasi 3 Oktober 2026. Setiap bagian mempertahankan scope dan tanggal buktinya; bukti lokal/CI belum merupakan bukti kesiapan staging. Sumber aturan produk: [Product Context](../product/PRODUCT_CONTEXT.md), [Open Decisions](../product/OPEN_DECISIONS.md), dan [PRD Mapping](../product/PRD_MAPPING.md).
 
 **PROPOSED — integrasi 2 Oktober 2026:** PR #25/#22/#23/#24 digabung pada branch integrasi untuk satu PR menuju main. Paket Admin, laporan Student dan snapshot IRT memakai engine canonical yang sama; jurnal gabungan menambahkan 0009 untuk metadata IRT. Review, bukti pengujian dan jalur upgrade ada pada [laporan integrasi](CORE_CONTENT_IRT_INTEGRATION_2026-10-02.md). Status merge aktual tetap mengikuti GitHub.
 
 **ENGINEERING DECISION — perluasan integrasi 2 Oktober 2026:** atas instruksi pemilik, #26/#27/#28 ditambahkan ke PR #29. Token guru baru delapan karakter memakai HMAC berversi dengan pepper server; token lama tetap berlaku sampai kedaluwarsa. Kode kelas baru enam karakter tetap dapat dipakai beberapa siswa; hanya token guru yang single-use. UI responsif mempertahankan engine canonical, isolasi cache per identitas, histori/IRT, laporan/video, dan akses PvP/peringkat sesuai availability API. Detail dan gate validasi ada pada [rekonsiliasi onboarding dan UI](ONBOARDING_UI_INTEGRATION_2026-10-02.md). Ini belum menyatakan merge ke main atau kesiapan staging.
+
+## Integrasi tim - 3 Oktober 2026
+
+**ENGINEERING DECISION - permintaan Aini:** integrasi melalui [#34](https://github.com/ayiinee/Numora/pull/34), [#35](https://github.com/ayiinee/Numora/pull/35), [#36](https://github.com/ayiinee/Numora/pull/36), lalu [#42](https://github.com/ayiinee/Numora/pull/42) → [#43](https://github.com/ayiinee/Numora/pull/43) → [#44](https://github.com/ayiinee/Numora/pull/44). Cakupan: profil/logout Teacher, session/route/join regression; kandidat konten DEMO/DRAFT; feedback/Admin read/support/IRT opt-in; recovery/retry/countdown consumer Student. Base PR bertumpuk diselaraskan ke main. Konflik import tes UI mempertahankan tes profil Teacher dan feedback/leaderboard Student.
+
+**Bukti gabungan lokal:** 59 tes web dan 27 Chromium E2E fixture lulus; workspace typecheck/build dan generated-type checks lulus. Validator meluluskan 40 soal kandidat, tanpa menyatakan approval Curriculum. CI PostgreSQL/Redis, migration/upgrade rehearsal, browser, build dan freshness wajib hijau pada head terbaru sebelum tiap merge; bukti run dicatat pada PR terkait. Migrasi 0010/0011 menambah kolom nullable `irt_batches.output_snapshot` dan `video_reports.attempt_context`; tidak mengubah skor historis atau otomatis merilis hasil.
+
+**Batas integrasi:** JOB-07 akses Student [#41](https://github.com/ayiinee/Numora/pull/41) dan JOB-12 history [#45](https://github.com/ayiinee/Numora/pull/45) tetap PR terpisah. Rekonsiliasi berikutnya harus mempertahankan filter snapshot kelas untuk history Guru dari #43 dan filter level/presisi cursor dari #45. Konten belum dipublikasikan, analytics PROPOSED tetap default off, dan keputusan Curriculum/Data/PO tetap OPEN. JOB-06 masih memerlukan satu release SHA, login Google nyata, bukti lintas peran dan persistence di environment trial yang disetujui; fixture CI tidak menggantikannya.
 
 ## Fondasi dan Drill
 
@@ -95,3 +103,11 @@ Sumber: [rekonsiliasi Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPD
 - [ ] XP Drill base/gagal/speed formula, star thresholds, retensi dan session/exit policy ditetapkan sebelum final acceptance; jangan memakai formula/rentang/90 hari lama sebagai PRD terbaru.
 - [ ] Drill <15min eligibility, warning refresh/exit, Save failed tidak Saved, YouTube/report contexts, retry fallback, best score monotonic/history seluruh attempt diverifikasi terhadap DRL-AC.
 - [ ] Seluruh 49 AC ditinjau FE/BE/Data/Curriculum/QA; keputusan OPEN ditutup oleh owner terkait, bukan otomatis oleh docs.
+
+## Rekonsiliasi JOB-12 history - 3 Oktober 2026
+
+**ENGINEERING DECISION - instruksi Aini:** PR #45 mempertahankan snapshot kelas history Guru dari #43 serta filter level, presisi mikrodetik cursor dan konteks/pending reward JOB-12. Service internal memakai objek `{ cursor?, classId?, levelId? }`; filter class/level berlaku bersama pada baris dan cursor, sehingga argumen class Guru tidak tertukar sebagai level. Endpoint Student tidak membuka query classId; kepemilikan kelas tetap diperiksa service Guru.
+
+Tes PostgreSQL menambahkan pagination dan penolakan cursor beda kelas/level, Mandiri dan record non-visible. OpenAPI/shared types digenerasikan dari DTO akhir; tidak ada endpoint/migrasi baru. Review/CI terbaru dan satu SHA connected gabungan #46/#41/#45 masih gate; Google/trial, konten reviewed, XP/star/IRT/retention final tetap belum acceptance.
+
+**Bukti rekonsiliasi lokal:** 23 tes Learning/Feedback PostgreSQL tanpa skip dan 65 tes web lulus; lint, workspace typecheck dan generated-type freshness lulus. CI terbaru melengkapi build/migration/browser gates sebelum merge.

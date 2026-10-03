@@ -7,6 +7,8 @@ import {
   assessmentAttempts,
   assessmentPackages,
   chapters,
+  classes,
+  schools,
   closeDatabaseConnection,
   getDatabase,
   levels,
@@ -286,6 +288,80 @@ integration('Assessment history PostgreSQL and HTTP boundary', () => {
     expect(actual).toEqual(expected.map((r) => r.id));
     expect(new Set(actual).size).toBe(actual.length);
     expect(ids.every((id) => actual.includes(id))).toBe(true);
+  });
+
+  it('intersects historical class and level for rows and precise cursors without leaking another class', async () => {
+    const db = getDatabase().db;
+    const [teacher] = await db
+      .insert(users)
+      .values({
+        authUserId: randomUUID(),
+        role: 'TEACHER',
+        displayName: 'History teacher fixture',
+        email: `history-teacher-${randomUUID()}@example.test`,
+      })
+      .returning();
+    const [school] = await db
+      .insert(schools)
+      .values({
+        code: `H-${randomUUID()}`,
+        name: 'History school fixture',
+      })
+      .returning();
+    const classRows = await db
+      .insert(classes)
+      .values(
+        [1, 2].map((n) => ({
+          schoolId: school!.id,
+          teacherUserId: teacher!.id,
+          name: `History class ${n}`,
+          joinCode: randomUUID(),
+        })),
+      )
+      .returning();
+    const classId = classRows[0]!.id;
+    const foreignClassId = classRows[1]!.id;
+    const expected: string[] = [];
+    for (let n = 0; n < 25; n++) {
+      const id = await addAttempt({ classIdAtStart: classId });
+      expected.push(id);
+      await db
+        .update(assessmentAttempts)
+        .set({
+          finishedAt: sql`'2026-10-01T12:00:02.123000Z'::timestamptz + ${n % 3} * interval '1 microsecond'`,
+        })
+        .where(eq(assessmentAttempts.id, id));
+    }
+    const foreign = await addAttempt({ classIdAtStart: foreignClassId });
+    const differentLevel = await addAttempt({
+      classIdAtStart: classId,
+      packageId: otherPackageId,
+      levelIdAtStart: otherLevelId,
+    });
+    const mandiri = await addAttempt({ classIdAtStart: null });
+    const cancelled = await addAttempt({ classIdAtStart: classId, status: 'CANCELLED' });
+    for (const cursor of [foreign, differentLevel, mandiri, cancelled]) {
+      await expect(
+        history.listForStudent(studentId, { cursor, classId, levelId }),
+      ).rejects.toMatchObject({
+        response: { code: 'CURSOR_NOT_FOUND' },
+      });
+    }
+    const actual: string[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await history.listForStudent(studentId, { cursor, classId, levelId });
+      actual.push(...page.records.map((r) => r.attemptId));
+      cursor = page.nextCursor ?? undefined;
+    } while (cursor);
+    expect(actual).toHaveLength(expected.length);
+    expect(new Set(actual).size).toBe(expected.length);
+    expect([...actual].sort()).toEqual([...expected].sort());
+    expect(
+      (await history.listForStudent(studentId, { classId: foreignClassId, levelId })).records.map(
+        (r) => r.attemptId,
+      ),
+    ).toEqual([foreign]);
   });
 
   it('retains finished records and stored scores after source taxonomy/package archive', async () => {
