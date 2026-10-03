@@ -1,12 +1,12 @@
 # Reconciliation release chain - 3 October 2026
 
-**ENGINEERING DECISION - instruksi Aini:** rekonsiliasi #41/#45 tetap dua PR fitur. #46 adalah fondasi connected chain dan fix offline. GitHub mewajibkan satu approval reviewer; merge langsung/auto-merge ditolak, sehingga kandidat gabungan diuji sebelum main berubah.
+**ENGINEERING DECISION - instruksi Aini, 3 Oktober 2026:** rekonsiliasi #41/#45 tetap dua PR fitur. #46 menyediakan connected chain dan fix offline; #47 menambah pengujian gabungan. Setelah penolakan merge biasa karena required review, pemilik secara eksplisit mengizinkan admin bypass untuk rangkaian ini. CI head terbaru tetap wajib lulus sebelum merge; bypass bukan bukti reviewer approval atau QA independen. Pengaturan branch protection tidak diubah.
 
-## Candidate and review order
+## Merge and verification order
 
-Urutan merge tetap #46 -> #41 -> #45. #41 direkonsiliasi terhadap main; #45 sementara berbasis branch #41 agar review hanya history dan dua penambahan tes browser tidak berbenturan. Setelah #41 masuk main, ubah base #45 ke main, merge main terbaru, lalu ulangi CI sebelum merge #45. Jangan force-push atau ikut mendorong commit worker/Redis dari branch JOB-07 lokal.
+Urutan merge #46 -> #41 -> #45 -> #47. #46 dan #41 sudah masuk main. #45 telah diubah base ke main dan disinkronkan dengan hasil merge sebelumnya. Validation PR #47 kemudian retarget ke main dan disinkronkan sebelum CI dan merge. Tidak force-push atau ikut mendorong commit worker/Redis dari branch JOB-07 lokal.
 
-Branch kandidat menggabungkan head ketiga PR dari remote/worktree bersih. Dedicated validation PR hanya menambahkan harness/test/bukti, berbasis branch kandidat baseline; bukan jalan bypass approval atau PR pengganti fitur. Setelah ketiga PR masuk main, retarget validation PR ke main agar diff tetap scope pengujian dan jalankan ulang satu SHA final.
+Hasil CI kandidat dipertahankan sebagai bukti untuk SHA masing-masing. Setelah #47 masuk main, workflow push main harus menjalankan semua gate dan empat kasus connected tanpa skip pada satu SHA merge final. Status merged, SHA main, run CI dan artifact yang sesuai SHA dicatat pada [PR #47](https://github.com/ayiinee/Numora/pull/47), agar bukti tidak keliru menggunakan synthetic merge SHA PR atau mengklaim hasil run yang belum terjadi.
 
 ## Required connected evidence
 
@@ -28,4 +28,4 @@ Dedicated test versions include synthetic review metadata owned by the harness A
 
 **Engineering PASS:** production-build SHA `bd3fb4c7ad806612d0cdf0eff52c6aaac511c1b0` ran all four connected cases without skip (3 October 2026, 10:18 WIB). [Sanitized local evidence](evidence/RECONCILIATION_LOCAL_2026-10-03.json) records the SHA, checks and explicit acceptance limits. PostgreSQL 16 and Redis 6.0.16 were isolated locally; Redis 7 and the complete workspace/migration/browser/build/contract gates run in CI. Local PASS is not a claim that the separate PvP/BullMQ suite works on Redis 6.
 
-PR #41 CI `37091048108` and stacked #45 CI `37091262143` passed on their reconciled heads. Combined candidate CI/artifact belongs to draft [#47](https://github.com/ayiinee/Numora/pull/47); use the actual checkout/synthetic merge SHA in its artifact, not the feature heads or local evidence SHA. Documentation commits after the local evidence do not change which SHA that local run validated. Final merge/deployment still requires a fresh run on its one SHA.
+PR #41 CI `37091048108` and stacked #45 CI `37091262143` passed on their reconciled heads. Combined candidate CI/artifact belongs to [#47](https://github.com/ayiinee/Numora/pull/47); use the actual checkout/synthetic merge SHA in its artifact, not the feature heads or local evidence SHA. Documentation commits after the local evidence do not change which SHA that local run validated. Final merge/deployment still requires a fresh run on its one SHA.
