@@ -24,6 +24,7 @@ import {
   scoringPolicyVersions,
   subchapters,
 } from '@tka/database';
+import { databaseTime, recordDomainEvent, saveChoiceWithEvent } from '@tka/assessment-engine';
 import { and, asc, desc, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
@@ -95,6 +96,7 @@ export class DrillAssessmentService {
           eq(assessmentAttempts.studentId, studentId),
           eq(assessmentAttempts.levelIdAtStart, levelId),
           eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
           eq(assessmentAttempts.status, 'IN_PROGRESS'),
         ))
         .limit(1);
@@ -116,6 +118,8 @@ export class DrillAssessmentService {
         )
         .where(and(
           eq(assessmentPackages.assessmentType, 'DRILL'),
+          eq(assessmentPackages.purpose, 'REGULAR'),
+          sql`public.package_can_distribute(${assessmentPackages.id})`,
           eq(assessmentPackages.levelId, levelId),
           eq(assessmentPackages.status, 'PUBLISHED'),
           or(isNull(assessmentPackages.releaseAt), lte(assessmentPackages.releaseAt, new Date())),
@@ -135,6 +139,7 @@ export class DrillAssessmentService {
           eq(assessmentAttempts.studentId, studentId),
           eq(assessmentAttempts.levelIdAtStart, levelId),
           eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
           eq(assessmentAttempts.status, 'GRADED'),
         ))
         .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
@@ -208,6 +213,8 @@ export class DrillAssessmentService {
         displayOrder: item.displayOrder,
         maxPoints: item.maxPoints,
       })));
+      await recordDomainEvent(tx, attempt.id, { eventName: 'drill_started', questionCount: items.length },
+        await databaseTime(tx));
       // PROPOSED Data mapping, gated off by default; retry creation and event are atomic.
       if (last) await recordSupportEvent(tx, {
         id: attempt.id, actorUserId: studentId, eventName: 'level_retry',
@@ -259,6 +266,7 @@ export class DrillAssessmentService {
       .where(and(
         eq(assessmentAttempts.id, attemptId),
         eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
       ))
       .limit(1);
     if (!attempt || attempt.studentId !== studentId || !attempt.levelId)
@@ -266,6 +274,7 @@ export class DrillAssessmentService {
     if (attempt.status !== 'IN_PROGRESS' && attempt.status !== 'GRADED')
       throw new ConflictException(problem('ATTEMPT_NOT_ACTIVE', 'Drill tidak aktif.'));
     const rows = attempt.status === 'GRADED' ? [] : await this.questionRows(attemptId);
+    if (rows.length) await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`);
     return {
       id: attempt.id,
       levelId: attempt.levelId,
@@ -302,13 +311,14 @@ export class DrillAssessmentService {
         .select({
           studentId: assessmentAttempts.studentId,
           assessmentType: assessmentAttempts.assessmentType,
+          purpose: assessmentAttempts.purpose,
           status: assessmentAttempts.status,
         })
         .from(assessmentAttempts)
         .where(eq(assessmentAttempts.id, attemptId))
         .for('update')
         .limit(1);
-      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'DRILL')
+      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'DRILL' || attempt.purpose !== 'REGULAR')
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Drill sudah selesai.'));
@@ -333,13 +343,8 @@ export class DrillAssessmentService {
       const content = decodeSingleChoiceVersion(item);
       if (optionId !== null && !content.options.some((option) => option.id === optionId))
         throw new ConflictException(problem('OPTION_INVALID', 'Pilihan jawaban tidak tersedia.'));
-      await tx
-        .insert(attemptAnswers)
-        .values({ attemptItemId: item.id, answer: { optionId }, savedAt: new Date() })
-        .onConflictDoUpdate({
-          target: attemptAnswers.attemptItemId,
-          set: { answer: { optionId }, savedAt: new Date(), awardedPoints: null, gradedAt: null },
-        });
+      await saveChoiceWithEvent(tx, { attemptId, questionInstanceId: item.id, optionId,
+        now: await databaseTime(tx) });
       return { questionInstanceId, selectedOptionId: optionId };
     });
   }
@@ -354,7 +359,7 @@ export class DrillAssessmentService {
         .where(eq(assessmentAttempts.id, attemptId))
         .for('update')
         .limit(1);
-      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'DRILL')
+      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'DRILL' || attempt.purpose !== 'REGULAR')
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
       if (attempt.status === 'GRADED') return;
       if (attempt.status !== 'IN_PROGRESS')
@@ -402,7 +407,7 @@ export class DrillAssessmentService {
             ))
             .limit(1)
         : [];
-      const now = new Date();
+      const now = await databaseTime(tx);
       for (const item of graded) {
         await tx
           .insert(attemptAnswers)
@@ -458,8 +463,8 @@ export class DrillAssessmentService {
               : sql`${levelProgress.completionAttemptId}`,
           },
         });
-      if (next)
-        await tx
+      if (next) {
+        const unlocked = await tx
           .insert(levelProgress)
           .values({
             studentId,
@@ -475,17 +480,25 @@ export class DrillAssessmentService {
               unlockSource: sql`case when ${levelProgress.unlockedAt} is null then 'DRILL' else ${levelProgress.unlockSource} end`,
               unlockingAttemptId: sql`coalesce(${levelProgress.unlockingAttemptId}, ${attemptId}::uuid)`,
             },
-          });
+            setWhere: isNull(levelProgress.unlockedAt),
+          }).returning({ id: levelProgress.id });
+        if (unlocked.length) await recordDomainEvent(tx, attemptId,
+          { eventName: 'level_unlocked', unlockedLevelId: next.id }, now);
+      }
       const [packageRow] = await tx
         .select({ isDemo: assessmentPackages.isDemo })
         .from(assessmentPackages)
         .where(eq(assessmentPackages.id, attempt.packageId))
         .limit(1);
+      await recordDomainEvent(tx, attemptId, { eventName: 'drill_submitted',
+        submissionType: 'manual', questionCount: rows.length,
+        answeredCount: rows.filter(row => selectedOptionId(row.answer) !== null).length,
+      }, now);
       await tx.insert(analyticsOutbox).values({
         eventName: 'drill_completed',
         actorUserId: studentId,
         entityType: 'assessmentAttempt',
-        entityId: attemptId,
+        entityId: attemptId, correlationId: attemptId, occurredAt: now,
         payload: { score: scored.score, mastered: scored.mastered, isDemo: packageRow?.isDemo ?? false },
       });
     });
@@ -515,6 +528,7 @@ export class DrillAssessmentService {
       .where(and(
         eq(assessmentAttempts.id, attemptId),
         eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
       ))
       .limit(1);
     if (!attempt || attempt.studentId !== studentId || !attempt.levelId)
@@ -532,6 +546,7 @@ export class DrillAssessmentService {
       .limit(1);
     const available = explanationAvailable(attempt.completedAt);
     const rows = available ? await this.questionRows(attemptId) : [];
+    if (rows.length) await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
     const score = Number(attempt.score);
     const rawPoints = Number(attempt.rawPoints ?? counts?.correctCount ?? 0);
     const recommendations = score < 80
