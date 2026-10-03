@@ -14,6 +14,14 @@ Catatan baseline 1 Oktober 2026 dengan pembaruan integrasi 3 Oktober 2026. Setia
 
 **Batas integrasi:** JOB-07 akses Student [#41](https://github.com/ayiinee/Numora/pull/41) dan JOB-12 history [#45](https://github.com/ayiinee/Numora/pull/45) tetap PR terpisah. Rekonsiliasi berikutnya harus mempertahankan filter snapshot kelas untuk history Guru dari #43 dan filter level/presisi cursor dari #45. Konten belum dipublikasikan, analytics PROPOSED tetap default off, dan keputusan Curriculum/Data/PO tetap OPEN. JOB-06 masih memerlukan satu release SHA, login Google nyata, bukti lintas peran dan persistence di environment trial yang disetujui; fixture CI tidak menggantikannya.
 
+## JOB-06 — bukti connected release chain, 3 Oktober 2026
+
+**ENGINEERING DECISION — instruksi Aini:** pengujian browser terhubung dan defect save offline dikerjakan pada PR baru, setelah #34–36/#42–44 terverifikasi sudah `MERGED` dan otomatis tertutup. Ownership Farel/Salim tidak diganti.
+
+**Engineering PASS:** tiga kasus tanpa skip pada production-build SHA `af850c47e091d33783dd75de4658bc7d24d2af3e`, memakai Next → API Nest → PostgreSQL/Redis terisolasi → Teacher monitoring. Save/resume/re-auth, submit ganda/outbox, skor 80 → retry 70 dengan best 80, Level 2 skor 0, token/join race dan role/ownership denial teruji bersama. Defect offline save yang tertahan `Menyimpan…` diperbaiki menjadi kegagalan terlihat/explicit retry.
+
+**Batas acceptance:** identitas email fixture, paket L2 TEST ONLY DEMO dan layanan lokal bukan Google/staging atau approval Curriculum. Environment/akun Google trial, konten reviewed, scope trial dan acceptance independen Salim masih diperlukan; JOB-06 belum DONE. Bukti, cara rerun pada satu SHA dan gate tersisa: [JOB06 release chain](../testing/JOB06_RELEASE_CHAIN.md). CI baru menjalankan chain lengkap sendiri; CI masing-masing PR lama tidak menjadi acceptance gabungan.
+
 ## Fondasi dan Drill
 
 - [x] Runtime Drill memakai `assessment_packages`, `assessment_attempts`, `attempt_items`, dan `attempt_answers`. Service katalog, Drill, riwayat, dan Tryout dipisahkan.
