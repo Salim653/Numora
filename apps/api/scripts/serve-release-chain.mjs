@@ -62,6 +62,58 @@ await db.insert(packageItems).values(
   })),
 );
 
+const actors = {};
+for (const [alias, role] of [
+  ['admin', 'ADMIN'],
+  ['teacher', 'TEACHER'],
+  ['foreignTeacher', 'TEACHER'],
+  ['unverified', 'TEACHER'],
+  ['raceTeacher', 'TEACHER'],
+  ['student', 'STUDENT'],
+  ['otherStudent', 'STUDENT'],
+  ['raceStudent', 'STUDENT'],
+  ['disabled', 'STUDENT'],
+]) {
+  const id = randomUUID();
+  const user = {
+    id,
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: `${id}@example.test`,
+    app_metadata: { provider: 'email', providers: ['email'] },
+    user_metadata: { name: `JOB06 ${alias}` },
+    created_at: new Date().toISOString(),
+  };
+  const jwt = [
+    Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'),
+    Buffer.from(
+      JSON.stringify({ sub: id, exp: Math.floor(Date.now() / 1000) + 3600, role: 'authenticated' }),
+    ).toString('base64url'),
+    randomUUID(),
+  ].join('.');
+  const [profile] = await db
+    .insert(users)
+    .values({
+      authUserId: id,
+      role,
+      displayName: user.user_metadata.name,
+      email: user.email,
+      status: alias === 'disabled' ? 'DISABLED' : 'ACTIVE',
+    })
+    .returning({ id: users.id });
+  actors[alias] = {
+    profileId: profile.id,
+    session: {
+      access_token: jwt,
+      refresh_token: 'fixture-only-refresh',
+      token_type: 'bearer',
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      user,
+    },
+  };
+}
+
 // TEST ONLY access/release fixture: two PG items, not an approved 35-item package or IRT model.
 // Archive only prior fixtures created by this guarded harness so reruns cannot select stale packages.
 await client`update assessment_packages set status = 'ARCHIVED'
@@ -117,6 +169,8 @@ for (let i = 0; i < 2; i++) {
     explanation: { text: `TEST ONLY: ${i + 2} + 3 = ${i + 5}.` },
     difficulty: 'EASY',
     contentStatus: 'READY',
+    reviewedByUserId: actors.admin.profileId,
+    reviewedAt: new Date(),
   });
   tryoutVersions.push(versionId);
 }
@@ -128,58 +182,6 @@ await db.insert(packageItems).values(
     maxPoints: '1',
   })),
 );
-
-const actors = {};
-for (const [alias, role] of [
-  ['admin', 'ADMIN'],
-  ['teacher', 'TEACHER'],
-  ['foreignTeacher', 'TEACHER'],
-  ['unverified', 'TEACHER'],
-  ['raceTeacher', 'TEACHER'],
-  ['student', 'STUDENT'],
-  ['otherStudent', 'STUDENT'],
-  ['raceStudent', 'STUDENT'],
-  ['disabled', 'STUDENT'],
-]) {
-  const id = randomUUID();
-  const user = {
-    id,
-    aud: 'authenticated',
-    role: 'authenticated',
-    email: `${id}@example.test`,
-    app_metadata: { provider: 'email', providers: ['email'] },
-    user_metadata: { name: `JOB06 ${alias}` },
-    created_at: new Date().toISOString(),
-  };
-  const jwt = [
-    Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'),
-    Buffer.from(
-      JSON.stringify({ sub: id, exp: Math.floor(Date.now() / 1000) + 3600, role: 'authenticated' }),
-    ).toString('base64url'),
-    randomUUID(),
-  ].join('.');
-  const [profile] = await db
-    .insert(users)
-    .values({
-      authUserId: id,
-      role,
-      displayName: user.user_metadata.name,
-      email: user.email,
-      status: alias === 'disabled' ? 'DISABLED' : 'ACTIVE',
-    })
-    .returning({ id: users.id });
-  actors[alias] = {
-    profileId: profile.id,
-    session: {
-      access_token: jwt,
-      refresh_token: 'fixture-only-refresh',
-      token_type: 'bearer',
-      expires_in: 3600,
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-      user,
-    },
-  };
-}
 
 const authServer = createServer(async (req, res) => {
   // SDK auth boundary only. Every product request uses real Nest services/guards/transactions.
