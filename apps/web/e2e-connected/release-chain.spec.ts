@@ -640,7 +640,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     mandiri.once('dialog', (dialog) => dialog.accept());
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
-    await expect(mandiri.getByText(/Hasil Tryout menunggu rilis IRT/)).toBeVisible();
+    await expect(
+      mandiri.getByRole('heading', { name: 'Menunggu hasil IRT', exact: true }),
+    ).toBeVisible();
     for (const [alias, attempt] of [
       ['student', affiliated],
       ['otherStudent', independent],
