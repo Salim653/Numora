@@ -95,6 +95,7 @@ export class DrillAssessmentService {
           eq(assessmentAttempts.studentId, studentId),
           eq(assessmentAttempts.levelIdAtStart, levelId),
           eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
           eq(assessmentAttempts.status, 'IN_PROGRESS'),
         ))
         .limit(1);
@@ -116,6 +117,8 @@ export class DrillAssessmentService {
         )
         .where(and(
           eq(assessmentPackages.assessmentType, 'DRILL'),
+          eq(assessmentPackages.purpose, 'REGULAR'),
+          sql`public.package_can_distribute(${assessmentPackages.id})`,
           eq(assessmentPackages.levelId, levelId),
           eq(assessmentPackages.status, 'PUBLISHED'),
           or(isNull(assessmentPackages.releaseAt), lte(assessmentPackages.releaseAt, new Date())),
@@ -135,6 +138,7 @@ export class DrillAssessmentService {
           eq(assessmentAttempts.studentId, studentId),
           eq(assessmentAttempts.levelIdAtStart, levelId),
           eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
           eq(assessmentAttempts.status, 'GRADED'),
         ))
         .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
@@ -259,6 +263,7 @@ export class DrillAssessmentService {
       .where(and(
         eq(assessmentAttempts.id, attemptId),
         eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
       ))
       .limit(1);
     if (!attempt || attempt.studentId !== studentId || !attempt.levelId)
@@ -266,6 +271,7 @@ export class DrillAssessmentService {
     if (attempt.status !== 'IN_PROGRESS' && attempt.status !== 'GRADED')
       throw new ConflictException(problem('ATTEMPT_NOT_ACTIVE', 'Drill tidak aktif.'));
     const rows = attempt.status === 'GRADED' ? [] : await this.questionRows(attemptId);
+    if (rows.length) await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`);
     return {
       id: attempt.id,
       levelId: attempt.levelId,
@@ -302,13 +308,14 @@ export class DrillAssessmentService {
         .select({
           studentId: assessmentAttempts.studentId,
           assessmentType: assessmentAttempts.assessmentType,
+          purpose: assessmentAttempts.purpose,
           status: assessmentAttempts.status,
         })
         .from(assessmentAttempts)
         .where(eq(assessmentAttempts.id, attemptId))
         .for('update')
         .limit(1);
-      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'DRILL')
+      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'DRILL' || attempt.purpose !== 'REGULAR')
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Drill sudah selesai.'));
@@ -354,7 +361,7 @@ export class DrillAssessmentService {
         .where(eq(assessmentAttempts.id, attemptId))
         .for('update')
         .limit(1);
-      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'DRILL')
+      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'DRILL' || attempt.purpose !== 'REGULAR')
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
       if (attempt.status === 'GRADED') return;
       if (attempt.status !== 'IN_PROGRESS')
@@ -515,6 +522,7 @@ export class DrillAssessmentService {
       .where(and(
         eq(assessmentAttempts.id, attemptId),
         eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
       ))
       .limit(1);
     if (!attempt || attempt.studentId !== studentId || !attempt.levelId)
@@ -532,6 +540,7 @@ export class DrillAssessmentService {
       .limit(1);
     const available = explanationAvailable(attempt.completedAt);
     const rows = available ? await this.questionRows(attemptId) : [];
+    if (rows.length) await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
     const score = Number(attempt.score);
     const rawPoints = Number(attempt.rawPoints ?? counts?.correctCount ?? 0);
     const recommendations = score < 80

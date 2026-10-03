@@ -117,3 +117,8 @@ When a joint decision is reached, record its owner/date and update the PRD or mo
 ## Catatan implementasi area siswa ? 1 Oktober 2026
 
 **ENGINEERING DECISION:** desain pratinjau dipindahkan ke area siswa terautentikasi dengan dashboard NestJS, engine PvP teruji fixture, serta endpoint/proyeksi leaderboard. Ini tidak menutup **OPEN-07** atau **OPEN-11**: akun nyata tidak dapat memulai PvP, kebijakan fixture tidak tersedia melalui konfigurasi runtime, dan tidak ada XP Drill/Tryout otomatis. **PROPOSED:** peringkat seri 1,1,3 tetap menunggu review produk sebelum rilis. Lihat [kontrak area siswa](../api/STUDENT_AREA_CONTRACT.md).
+
+
+## Variant / IRT persistence ? 3 October 2026
+
+**ENGINEERING DECISION:** separate compute ownership and one shared migration stream follow [ADR-011](../adr/ADR-011-separated-irt-compute.md). [Persistence specification](../data/VARIANT_IRT_DATABASE.md) maps content lineage, scoring categories, trial/exposure, immutable inputs/results and Tryout finalization. **OPEN:** academic gates, rubrics, cohort/reference design, adjustment limits, score mapping/ties, release/fallback/correction and retention remain unresolved. Database capability does not approve or activate those product policies.

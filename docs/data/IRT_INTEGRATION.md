@@ -1,5 +1,9 @@
 # IRT Integration
 
+**ENGINEERING UPDATE — 3 October 2026:** the additive separated-service persistence
+and contract v3 are documented in [Variant and IRT persistence](VARIANT_IRT_DATABASE.md).
+The existing v1/v2 API release behavior below remains the transition path.
+
 ## Baseline item-analysis requirements and latest TryOut rules
 
 PRD v0.5 states:

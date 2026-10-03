@@ -64,7 +64,10 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 30000 }, 
           (SELECT count(*)::int FROM information_schema.columns WHERE table_name='irt_batches'
             AND column_name IN ('input_snapshot', 'output_digest', 'failure_code')) AS columns`;
         expect(schema).toEqual({ level: 'level_id_at_start', columns: 3 });
-        expect((await client`SELECT * FROM irt_batches WHERE id=${batch!.id}`)[0]).toEqual({ ...batch, output_snapshot: null });
+        expect((await client`SELECT * FROM irt_batches WHERE id=${batch!.id}`)[0]).toMatchObject({
+          ...batch,
+          output_snapshot: null,
+        });
         const history =
           await client`SELECT hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
         expect(history.slice(0, oldHistory.length)).toEqual(oldHistory);
@@ -75,6 +78,20 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 30000 }, 
       });
     },
   );
+
+  it('moves existing generation configuration IDs and payloads without overwriting history', async () => {
+    await fixture(12, async (client, folder) => {
+      const [config] =
+        await client`INSERT INTO public.generator_configs(template_or_competency_id,config_version,parameters,curriculum_limits) VALUES('TEST-preserved',1,'{"seed":123}','{"fixture":true}') RETURNING *`;
+      await migrateIntegratedDatabase(client, folder);
+      expect(
+        (await client`SELECT * FROM irt_compute.generator_configs WHERE id=${config!.id}`)[0],
+      ).toMatchObject(config!);
+      expect(
+        (await client`SELECT * FROM public.generator_configs WHERE id=${config!.id}`)[0],
+      ).toMatchObject(config!);
+    });
+  });
 
   it('rejects an unrecognized cursor before changing schema or history', async () => {
     await fixture(4, async (client, folder) => {

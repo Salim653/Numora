@@ -50,6 +50,8 @@ export class TryoutService {
       .where(
         and(
           eq(assessmentPackages.assessmentType, 'TRYOUT'),
+          eq(assessmentPackages.purpose, 'REGULAR'),
+          sql`public.package_can_distribute(${assessmentPackages.id})`,
           eq(assessmentPackages.status, 'PUBLISHED'),
           lte(assessmentPackages.releaseAt, new Date()),
         ),
@@ -153,6 +155,7 @@ export class TryoutService {
   private async presentAttempt(studentId: string, attemptId: string) {
     const attempt = await this.forStudent(studentId, attemptId);
     const rows = attempt.status === 'IN_PROGRESS' ? await this.questionRows(attemptId) : [];
+    if (rows.length) await getDatabase().db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`);
     return {
       id: attempt.id,
       packageId: attempt.packageId,
@@ -430,6 +433,7 @@ export class TryoutService {
       .where(eq(assessmentAttempts.id, attemptId))
       .limit(1);
     const rows = await this.questionRows(attemptId);
+    if (rows.length) await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
     return {
       attemptId,
       packageTitle: attempt.title,
