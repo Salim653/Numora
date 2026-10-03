@@ -157,3 +157,13 @@ Tes PostgreSQL menambahkan pagination dan penolakan cursor beda kelas/level, Man
 **Verification:** real PostgreSQL 16 localhost: worker recovery/runtime 8 tests and learning modules 18 tests passed without skip. They cover manual/auto races, recovery on a later cycle, invalid attempt isolation, outbox-trigger rollback/retry, Drill exclusion, Mandiri/Sekolah snapshots, authorization and unreleased privacy. Further clean-SHA CI gates are recorded on the feature PR. These results do not replace independent QA or the school Google trial.
 
 **OPEN:** official duration and package close vs deadline (TBC-06), PGK/35-item delivery and final IRT/batch/release policy remain unresolved. JOB-09 mechanics consume persisted deadlineAt; no production policy activated, no Drill timeout, no released-score recalculation. Runbook: [TryOut recovery](TRYOUT_RECOVERY_RUNBOOK.md).
+
+### JOB-09 clean-SHA evidence
+
+**Engineering PASS:** PR #52 head `f0449c3767773def7ef9fcba58c7c941f04bd98e`, [CI 37110430471](https://github.com/ayiinee/Numora/actions/runs/37110430471) passed all gates. Connected artifact records actual PR merge checkout/release SHA `70d018dcf17e4f9db8456e3d378d53c11ac75f2d`: four cases, real API/PostgreSQL 16/Redis 7/Chromium, TEST ONLY content/auth/synthetic IRT release. This is a PR candidate, not deployed-main evidence. Clock-skew and lock-wait late-save tests passed on PostgreSQL. Human review, real Google, Curriculum and independent QA remain separate.
+
+## JOB-20 Aini domain and worker - 3 October 2026
+
+**ENGINEERING DECISION:** reuse durable outbox/dedup consumer; preserve correlation, add PostgreSQL-only status CLI and minute-bounded aggregate metrics, with nullable correlation migration. PostgreSQL tests inject failures to prove rollback/retry/replay; skipped tests do not count as passing.
+
+**PROPOSED / default off:** canonical Drill start, changed PG answers, Drill/TryOut submission and actual unlock write pinned server context in domain transactions. `DOMAIN_ANALYTICS_ENABLED=false` until Data reviews the proposed schema/trigger/dedup mapping. No XP/star, PGK, Pretest or IRT/release policy invented. [Inventory/runbook](JOB20_ANALYTICS_INVENTORY.md) records existing support hooks, missing other-owner hooks and dependencies. Auth/join/monitoring remain Farel's handoff. JOB-20 overall is partial pending owners, Data activation and independent QA; Aini's implemented scope is reviewable separately.

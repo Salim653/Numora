@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { checkDatabaseConnection, closeDatabaseConnection } from '@tka/database';
-import { drainOutboxBatch } from './outbox.js';
+import { drainOutboxBatch, outboxStatus } from './outbox.js';
 import { projectClassLeaderboard } from './class-leaderboard.js';
 import { recoverOverdueTryouts, type RecoveryCursor } from './tryout-recovery.js';
 
@@ -40,6 +40,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
   let recoveryCursor: RecoveryCursor | undefined;
   let lastRecoveryLogAt = 0;
   let outboxBusy = false;
+  let lastOutboxStatusAt = 0;
   let leaderboardBusy = false;
   let stopping = false;
   let shutdownPromise: Promise<void> | undefined;
@@ -145,6 +146,10 @@ export async function runWorker(exit: (code: number) => void = (code) => process
       try {
         const result = await drainOutboxBatch();
         if (result.processed || result.failed) console.log('[outbox] batch', result);
+        if (Date.now() - lastOutboxStatusAt >= 60_000) {
+          console.log('[outbox] status', await outboxStatus());
+          lastOutboxStatusAt = Date.now();
+        }
       } catch {
         reportError(new Error('OUTBOX_POLL_FAILED'));
       } finally {

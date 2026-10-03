@@ -2,18 +2,12 @@ import {
   analyticsOutbox, assessmentAttempts, attemptAnswers, attemptItems,
   getDatabase, questionVersions,
 } from '@tka/database';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { databaseTime } from './database-time.js';
 import { AssessmentFinalizationError } from './errors.js';
+import { recordDomainEvent } from './domain-events.js';
 import { decodeSingleChoice } from './single-choice.js';
 
-type Transaction = Parameters<Parameters<ReturnType<typeof getDatabase>['db']['transaction']>[0]>[0];
-
-export async function databaseTime(tx: Pick<Transaction, 'execute'>): Promise<Date> {
-  // Unlike transaction_timestamp(), this advances while a request waits for a row lock.
-  const [clock] = await tx.execute<{ value: string }>(sql`select clock_timestamp()::text as value`);
-  if (!clock) throw new Error('DATABASE_CLOCK_UNAVAILABLE');
-  return new Date(clock.value);
-}
 
 type Request =
   | { kind: 'manual'; attemptId: string; studentId: string }
@@ -77,6 +71,11 @@ export async function finalizeTryout(request: Request) {
       status: 'GRADED', finishedAt: now, rawPoints: String(raw),
       score0To100: String(Math.round(raw * 100 / maximum)),
     }).where(eq(assessmentAttempts.id, attempt.id));
+    await recordDomainEvent(tx, attempt.id, { eventName: 'tryout_submitted',
+      submissionType: expired ? 'deadline' : 'manual', questionCount: rows.length,
+      answeredCount: rows.filter(row => row.answer && typeof row.answer === 'object' &&
+        'optionId' in row.answer && typeof row.answer.optionId === 'string').length,
+    }, now);
     await tx.insert(analyticsOutbox).values({
       eventName: 'tryout_completed', actorUserId: attempt.studentId,
       entityType: 'assessmentAttempt', entityId: attempt.id,

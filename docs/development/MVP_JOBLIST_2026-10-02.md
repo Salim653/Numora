@@ -300,6 +300,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Bukti selesai:** refresh/repeated request/job retry tidak menggandakan final contribution; event context versi/attempt/time benar; consumer replay aman; queue failures/backlog dapat diketahui. Tidak menghitung consumer existing sebagai belum dibuat.
 - **Batas file:** aliwafa tidak mengubah auth/callback/monitoring existing untuk analytics selama task Farel aktif. Payload/trigger disepakati dengan Data, lalu integrasi di file tersebut dilakukan Farel atau diteruskan melalui handoff setelah merge.
 
+- **Status Aini - 3 October 2026:** domain/worker engineering delivered separately after JOB-09 CI PASS: proposed default-off canonical start/answer/submission/unlock producers, pinned context, correlation preservation and outbox status/rollback/retry/replay tests. [Inventory/runbook](JOB20_ANALYTICS_INVENTORY.md) records existing support producers, auth/join handoff (Farel), views (Ferdi) and Pretest/reward/release dependencies. JOB-20 overall remains PARSIAL; DRL-OPEN-08/Data activation and independent QA remain open.
+
 ### JOB-21 — Acceptance dan operasi release untuk scope yang akan diaktifkan
 
 - **Owner:** Farel DRI regression awal sebelum/sesudah fixing sesuai sembilan task aktif; Salim gate/evidence dan acceptance independen setelah handoff; seluruh feature owner fixes hanya pada task/area yang diserahkan; operator Database/DevOps release. **Asal:** LAMA-05,16 dan seluruh fitur.

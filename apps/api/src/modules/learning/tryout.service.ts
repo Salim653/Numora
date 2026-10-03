@@ -19,7 +19,7 @@ import {
   questionVariants,
   questionVersions,
 } from '@tka/database';
-import { AssessmentFinalizationError, databaseTime, finalizeTryout } from '@tka/assessment-engine';
+import { AssessmentFinalizationError, databaseTime, finalizeTryout, saveChoiceWithEvent } from '@tka/assessment-engine';
 import { and, asc, desc, eq, isNull, lte, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { selectedOptionId } from './drill.policy';
@@ -273,7 +273,7 @@ export class TryoutService {
         eventName: 'tryout_started',
         actorUserId: studentId,
         entityType: 'assessmentAttempt',
-        entityId: attempt.id,
+        entityId: attempt.id, correlationId: attempt.id, occurredAt: now,
         payload: { packageId },
       });
       return attempt.id;
@@ -333,13 +333,14 @@ export class TryoutService {
       const now = await databaseTime(tx);
       if (attempt.deadlineAt && attempt.deadlineAt <= now)
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
-      await tx
-        .insert(attemptAnswers)
-        .values({ attemptItemId: item.id, answer: { optionId }, savedAt: now })
-        .onConflictDoUpdate({
-          target: attemptAnswers.attemptItemId,
-          set: { answer: { optionId }, savedAt: now, awardedPoints: null, gradedAt: null },
-        });
+      try {
+        await saveChoiceWithEvent(tx, { attemptId, questionInstanceId: item.id, optionId, now,
+          deadlineAt: attempt.deadlineAt });
+      } catch (error) {
+        if (error instanceof AssessmentFinalizationError && error.code === 'TRYOUT_DEADLINE_PASSED')
+          throw new ConflictException(problem(error.code, error.message));
+        throw error;
+      }
       return { questionInstanceId, selectedOptionId: optionId };
     });
   }
