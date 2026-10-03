@@ -49,6 +49,9 @@ export function AssessmentSession({
   const [saveError, setSaveError] = useState<string | null>(null);
   const saving = useRef(false);
   const save = useMutation({
+    // Fail visibly when already offline instead of silently pausing the save queue.
+    // Only a server acknowledgement may clear unsaved state; retry remains explicit.
+    networkMode: 'always',
     mutationFn: ({ questionId, optionId }: { questionId: string; optionId: string | null }) =>
       onSave(questionId, optionId),
   });
