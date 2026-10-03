@@ -10,15 +10,35 @@ export class ReportsService {
   async list(page: ContentPageDto): Promise<AdminReportsDto> {
     const { db } = getDatabase();
     // Each source is paged separately so a busy question queue cannot hide video reports.
+    // Columns are listed explicitly instead of selecting whole rows: videoReports carries
+    // attemptContext, which only newer databases have, and a bare `select()` made this
+    // endpoint fail outright wherever migration 0011 had not been applied yet. The admin
+    // queue never reads that column.
     const [q, v] = await Promise.all([
       db
-        .select()
+        .select({
+          id: questionReports.id,
+          referenceId: questionReports.attemptAnswerId,
+          category: questionReports.category,
+          details: questionReports.details,
+          status: questionReports.status,
+          followUp: questionReports.followUp,
+          reportedAt: questionReports.reportedAt,
+        })
         .from(questionReports)
         .orderBy(desc(questionReports.reportedAt), desc(questionReports.id))
         .limit(page.limit)
         .offset(page.offset),
       db
-        .select()
+        .select({
+          id: videoReports.id,
+          referenceId: videoReports.mappingId,
+          category: videoReports.category,
+          details: videoReports.details,
+          status: videoReports.status,
+          followUp: videoReports.followUp,
+          reportedAt: videoReports.reportedAt,
+        })
         .from(videoReports)
         .orderBy(desc(videoReports.reportedAt), desc(videoReports.id))
         .limit(page.limit)
@@ -29,7 +49,7 @@ export class ReportsService {
         ...q.map((r) => ({
           id: r.id,
           kind: 'QUESTION' as const,
-          referenceId: r.attemptAnswerId,
+          referenceId: r.referenceId,
           category: r.category,
           details: r.details,
           status: r.status,
@@ -39,7 +59,7 @@ export class ReportsService {
         ...v.map((r) => ({
           id: r.id,
           kind: 'VIDEO' as const,
-          referenceId: r.mappingId,
+          referenceId: r.referenceId,
           category: r.category,
           details: r.details,
           status: r.status,

@@ -30,7 +30,7 @@ import type {
 } from './generated-types';
 import { AppShell } from '@/components/shell';
 
-type Workbench = Awaited<ReturnType<typeof loadAdminWorkbench>>;
+type Workbench = Awaited<ReturnType<typeof loadAdminWorkbench>>['data'];
 type View = 'curriculum' | 'questions' | 'videos' | 'packages' | 'reports' | 'irt' | 'audit';
 const views: { id: View; label: string }[] = [
   { id: 'curriculum', label: 'Materi' },
@@ -73,7 +73,10 @@ function AdminContentScreenContent() {
     loadAdminWorkbench(token, offset).then(
       (result) => {
         if (active) {
-          setData(result);
+          setData(result.data);
+          // Panel-level failures no longer block the console; they are listed so the
+          // admin knows which tab is incomplete instead of seeing a blank page.
+          setError(result.failures.join(' · '));
           setLoading(false);
           setDenied(false);
         }
@@ -186,7 +189,7 @@ function AdminContentScreenContent() {
         )}
         {error && (
           <div role="alert" className="form-error">
-            <p>{error}</p>
+            <p>{current ? `Sebagian panel gagal dimuat — ${error}` : error}</p>
             <Button onClick={retry} disabled={busy}>
               Muat ulang data
             </Button>

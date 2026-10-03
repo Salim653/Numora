@@ -23,20 +23,69 @@ import type {
 } from './generated-types';
 import type { AdminTaxonDto, UpdateVideoDto } from './generated-types';
 
+export type AdminWorkbench = Awaited<ReturnType<typeof loadAdminWorkbench>>['data'];
+
+const emptyPanel = { items: [] };
+
+const EMPTY_DASHBOARD = {
+  schools: 0,
+  chapters: 0,
+  questions: 0,
+  readyVersions: 0,
+  openReports: 0,
+};
+
+const reason = (cause: unknown) =>
+  cause instanceof Error ? cause.message : 'Permintaan gagal. Coba lagi.';
+
+/**
+ * Every admin panel is loaded independently. A single failing endpoint used to reject the
+ * whole `Promise.all`, which blanked the entire console on "Memuat data Admin…" even when
+ * the other seven panels were healthy. Now a failed panel degrades to an empty list, its
+ * failure is reported per panel, and the rest of the console stays usable.
+ */
 export async function loadAdminWorkbench(token: string, offset: number) {
   const page = `?limit=20&offset=${offset}`;
+  const load = async <T>(label: string, fallback: T, path: string) => {
+    try {
+      return { value: await apiRequest<T>(path, token), error: null as string | null };
+    } catch (cause) {
+      return { value: fallback, error: `${label}: ${reason(cause)}` };
+    }
+  };
   const [curriculum, versions, videos, reports, irt, audit, dashboard, packages] =
     await Promise.all([
-      apiRequest<AdminCurriculumDto>('admin/content/curriculum', token),
-      apiRequest<AdminVersionsDto>(`admin/content/versions${page}`, token),
-      apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token),
-      apiRequest<AdminReportsDto>(`admin/reports${page}`, token),
-      apiRequest<AdminIrtDto>(`admin/irt${page}`, token),
-      apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token),
-      apiRequest<AdminDashboardDto>('admin/dashboard', token),
-      apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
+      load<AdminCurriculumDto>('Materi', emptyPanel, 'admin/content/curriculum'),
+      load<AdminVersionsDto>('Soal', emptyPanel, `admin/content/versions${page}`),
+      load<AdminVideosDto>('Video', emptyPanel, `admin/content/videos${page}`),
+      load<AdminReportsDto>('Laporan', emptyPanel, `admin/reports${page}`),
+      load<AdminIrtDto>('IRT', emptyPanel, `admin/irt${page}`),
+      load<AdminAuditListDto>('Audit', emptyPanel, `admin/audit-logs${page}`),
+      load<AdminDashboardDto>('Ringkasan', EMPTY_DASHBOARD, 'admin/dashboard'),
+      load<AdminTryoutDraftsDto>('Draf Tryout', emptyPanel, `admin/content/tryout-packages${page}`),
     ]);
-  return { curriculum, versions, videos, reports, irt, audit, dashboard, packages };
+  return {
+    data: {
+      curriculum: curriculum.value,
+      versions: versions.value,
+      videos: videos.value,
+      reports: reports.value,
+      irt: irt.value,
+      audit: audit.value,
+      dashboard: dashboard.value,
+      packages: packages.value,
+    },
+    failures: [
+      curriculum.error,
+      versions.error,
+      videos.error,
+      reports.error,
+      irt.error,
+      audit.error,
+      dashboard.error,
+      packages.error,
+    ].filter((value): value is string => value !== null),
+  };
 }
 function mutation(token: string, path: string, body: object, method = 'POST') {
   return apiRequest<ContentMutationDto>(path, token, { method, body: JSON.stringify(body) });

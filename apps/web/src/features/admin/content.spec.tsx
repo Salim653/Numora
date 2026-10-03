@@ -52,6 +52,7 @@ const data = {
     ],
   },
 };
+const loaded = { data, failures: [] as string[] };
 beforeEach(() => {
   vi.resetAllMocks();
   context.state = {
@@ -59,7 +60,7 @@ beforeEach(() => {
     profile: { id: 'admin-test', role: 'ADMIN', displayName: 'Admin test' },
     session: { access_token: 'test-token' },
   };
-  vi.mocked(loadAdminWorkbench).mockResolvedValue(data);
+  vi.mocked(loadAdminWorkbench).mockResolvedValue(loaded);
   vi.mocked(createQuestion).mockResolvedValue({ id: 'new-version-test' });
   vi.mocked(updateTryoutDraft).mockResolvedValue({ id: 'package-test' });
 });
@@ -84,6 +85,19 @@ describe('Admin content UI', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Muat ulang data' }));
     await screen.findByLabelText('Kompetensi');
     expect(loadAdminWorkbench).toHaveBeenCalledTimes(2);
+  });
+  // Regression: one failing endpoint used to reject the shared Promise.all and leave the
+  // whole console on "Memuat data Admin…". A partial failure must keep the rest usable.
+  it('keeps the console usable when one panel fails to load', async () => {
+    vi.mocked(loadAdminWorkbench).mockResolvedValue({
+      data: { ...data, reports: { items: [] } },
+      failures: ['Laporan: An unexpected error occurred.'],
+    });
+    render(<AdminContentScreen />);
+    await screen.findByLabelText('Kompetensi');
+    expect(screen.getByText(/Sebagian panel gagal dimuat/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Laporan' }));
+    expect(screen.getByText('Belum ada laporan pada halaman ini.')).toBeTruthy();
   });
   it('sends a complete PG draft through the shared authenticated API client', async () => {
     render(<AdminContentScreen />);
