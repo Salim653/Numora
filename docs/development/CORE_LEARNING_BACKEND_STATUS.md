@@ -137,3 +137,7 @@ Review dan CI pada head terbaru masih menjadi gate merge. PR #46 menyediakan con
 Tes PostgreSQL menambahkan pagination dan penolakan cursor beda kelas/level, Mandiri dan record non-visible. OpenAPI/shared types digenerasikan dari DTO akhir; tidak ada endpoint/migrasi baru. Review/CI terbaru dan satu SHA connected gabungan #46/#41/#45 masih gate; Google/trial, konten reviewed, XP/star/IRT/retention final tetap belum acceptance.
 
 **Bukti rekonsiliasi lokal:** 23 tes Learning/Feedback PostgreSQL tanpa skip dan 65 tes web lulus; lint, workspace typecheck dan generated-type freshness lulus. CI terbaru melengkapi build/migration/browser gates sebelum merge.
+
+## Kandidat rekonsiliasi gabungan - 3 Oktober 2026
+
+**ENGINEERING DECISION - instruksi Aini:** #41/#45 sudah direkonsiliasi dan dipush terpisah; #45 sementara berbasis #41. Merge #46 terhalang approval reviewer GitHub dan auto-merge tidak diaktifkan repo. Kandidat menggabungkan ketiga head untuk empat kasus connected pada satu SHA. Rincian, fixture release sintetis dan batas acceptance ada pada [reconciliation release chain](../testing/RECONCILIATION_RELEASE_CHAIN_2026-10-03.md). Bukti/acceptance JOB-06 sebelumnya tetap berlaku sesuai SHA dan batasnya.

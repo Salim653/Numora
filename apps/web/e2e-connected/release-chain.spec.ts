@@ -12,6 +12,9 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type {
   DrillAttemptDto,
+  TryoutAttemptDto,
+  CurrentTryoutDto,
+  TryoutResultDto,
   DrillResultDto,
   StudentDashboardDto,
   SubchapterDetailDto,
@@ -126,11 +129,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
         {
           releaseSha: fixtures?.sha,
           collectedAt: new Date().toISOString(),
-          status: unchanged && checks.length === 3 ? 'PASS' : 'FAIL',
+          status: unchanged && checks.length === 4 ? 'PASS' : 'FAIL',
           environment: 'isolated-local-postgresql-redis-chromium',
           authMode: 'email-fixture-boundary',
           productApiMocks: false,
           content: 'TEST_ONLY_DEMO',
+          irtRelease: 'TEST_ONLY_SYNTHETIC_RELEASE_NO_MODEL_EXECUTION',
           checks,
           acceptance: {
             google: 'NOT_RUN',
@@ -541,5 +545,202 @@ test.describe.serial('JOB-06 connected release chain', () => {
       await invalid.evaluate(() => localStorage.getItem('sb-localhost-auth-token')),
     ).toBeNull();
     checks.push('direct-url-role-refresh-logout-reauth-mandiri-drill');
+  });
+  test('reconciled TryOut access and history retain class privacy through real browser/API/persistence', async ({
+    browser,
+    request,
+  }) => {
+    const mandiri = await login(browser, 'otherStudent');
+    await mandiri.goto('/student/tryout');
+    await expect(
+      mandiri.getByRole('heading', { name: 'Paket belum tersedia', exact: true }),
+    ).toBeVisible();
+    await expect(mandiri.getByRole('link', { name: 'Latihan dulu' })).toBeVisible();
+    const { packageId } = await (await request.get(`${fixtureBase}/tryout-fixture`)).json();
+    expect((await request.post(`${fixtureBase}/tryout-fixture/publish`)).status()).toBe(200);
+    for (const alias of ['student', 'otherStudent']) {
+      expect(await body<CurrentTryoutDto>(request, alias, 'tryout/packages/current')).toMatchObject(
+        { id: packageId, state: 'open', eligible: true },
+      );
+      expect(
+        (await body<StudentDashboardDto>(request, alias, 'students/me/dashboard')).features.tryout,
+      ).toBe(true);
+    }
+    await call(request, null, 'tryout/packages/current', 'GET', undefined, 401);
+    for (const alias of ['teacher', 'admin'])
+      await call(request, alias, 'tryout/attempts', 'POST', { packageId }, 403);
+    await mandiri.reload();
+    await mandiri.getByRole('button', { name: 'Detail dan aturan paket' }).click();
+    await mandiri.getByLabel('Saya memahami aturan pengerjaan.').check();
+    const started = mandiri.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().endsWith('/tryout/attempts'),
+    );
+    await mandiri.getByRole('button', { name: 'Mulai TryOut', exact: true }).click();
+    const independent = (await (await started).json()) as TryoutAttemptDto;
+    await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}$`));
+    expect(independent.serverTime).toBeTruthy();
+    expect(independent.deadlineAt).toBeTruthy();
+    expect(JSON.stringify(independent)).not.toMatch(/correctOptionId|answerKey|explanation/);
+    const repeats = await Promise.all(
+      Array.from({ length: 6 }, () =>
+        body<TryoutAttemptDto>(
+          request,
+          'otherStudent',
+          'tryout/attempts',
+          'POST',
+          { packageId },
+          201,
+        ),
+      ),
+    );
+    expect(new Set(repeats.map((a) => a.id))).toEqual(new Set([independent.id]));
+    const schoolStarts = await Promise.all(
+      Array.from({ length: 6 }, () =>
+        body<TryoutAttemptDto>(request, 'student', 'tryout/attempts', 'POST', { packageId }, 201),
+      ),
+    );
+    const affiliated = schoolStarts[0]!;
+    expect(new Set(schoolStarts.map((a) => a.id))).toEqual(new Set([affiliated.id]));
+    await call(request, 'student', `tryout/attempts/${independent.id}`, 'GET', undefined, 404);
+    await call(request, 'otherStudent', `tryout/attempts/${affiliated.id}`, 'GET', undefined, 404);
+    const saved = mandiri.waitForResponse(
+      (r) =>
+        r.request().method() === 'PATCH' && r.url().includes('/answers/') && r.status() === 200,
+    );
+    await mandiri.getByRole('radio', { name: /^B\./ }).check();
+    await saved;
+    await mandiri.reload();
+    await expect(mandiri.getByRole('radio', { name: /^B\./ })).toBeChecked();
+    await call(request, 'otherStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
+    expect(
+      (
+        await body<TryoutAttemptDto>(
+          request,
+          'otherStudent',
+          'tryout/attempts',
+          'POST',
+          { packageId },
+          201,
+        )
+      ).id,
+    ).toBe(independent.id);
+    const submissions = await Promise.all(
+      Array.from({ length: 3 }, () =>
+        body<{ state: string }>(
+          request,
+          'student',
+          `tryout/attempts/${affiliated.id}/submit`,
+          'POST',
+          undefined,
+          201,
+        ),
+      ),
+    );
+    expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt' }));
+    mandiri.once('dialog', (dialog) => dialog.accept());
+    await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
+    await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
+    await expect(mandiri.getByText(/Hasil Tryout menunggu rilis IRT/)).toBeVisible();
+    for (const [alias, attempt] of [
+      ['student', affiliated],
+      ['otherStudent', independent],
+    ] as const) {
+      const pending = await call(
+        request,
+        alias,
+        `tryout/attempts/${attempt.id}/result`,
+        'GET',
+        undefined,
+        409,
+      );
+      expect(JSON.stringify(await pending.json())).not.toMatch(
+        /correctOptionId|answerKey|explanation|"score"/,
+      );
+      const records = (
+        await body<AssessmentHistoryDto>(request, alias, 'students/me/assessment-results')
+      ).records;
+      expect(records.find((r) => r.attemptId === attempt.id)).toMatchObject({
+        score: null,
+        resultState: 'waitingIrt',
+      });
+      expect(await body<CurrentTryoutDto>(request, alias, 'tryout/packages/current')).toMatchObject(
+        { eligible: false, state: 'waitingIrt' },
+      );
+    }
+    await mandiri.goto('/student/assessment');
+    await expect(mandiri.getByRole('link', { name: /JOB06 TEST ONLY DEMO TryOut/ })).toHaveCount(0);
+    const teacherPath = `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/assessment-results`;
+    const teacherHistory = await body<AssessmentHistoryDto>(request, 'teacher', teacherPath);
+    expect(teacherHistory.records.find((r) => r.attemptId === affiliated.id)).toMatchObject({
+      score: null,
+      resultState: 'waitingIrt',
+    });
+    await call(request, 'foreignTeacher', teacherPath, 'GET', undefined, 403);
+    expect(
+      (
+        await body<AssessmentHistoryDto>(
+          request,
+          'teacher',
+          `classes/${cls.id}/students/${fixtures.actors.otherStudent!.profileId}/assessment-results`,
+        )
+      ).records,
+    ).toEqual([]);
+    await call(
+      request,
+      'teacher',
+      `${teacherPath}?cursor=${independent.id}`,
+      'GET',
+      undefined,
+      404,
+    );
+    const levelHistory = await body<AssessmentHistoryDto>(
+      request,
+      'student',
+      `students/me/assessment-results?levelId=${levelOne}`,
+    );
+    expect(levelHistory.records.map((r) => r.score).sort()).toEqual([70, 80]);
+    expect(levelHistory.records.every((r) => r.levelId === levelOne)).toBe(true);
+    await call(
+      request,
+      'student',
+      `students/me/assessment-results?levelId=${levelOne}&cursor=${affiliated.id}`,
+      'GET',
+      undefined,
+      404,
+    );
+    expect((await request.post(`${fixtureBase}/tryout-fixture/release`)).status()).toBe(200);
+    await mandiri.reload();
+    await mandiri.getByRole('link', { name: /JOB06 TEST ONLY DEMO TryOut/ }).click();
+    await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
+    const result = await body<TryoutResultDto>(
+      request,
+      'otherStudent',
+      `tryout/attempts/${independent.id}/result`,
+    );
+    expect(result.score).toBe(50);
+    expect(result.explanation).toHaveLength(2);
+    const persistence = await (
+      await request.get(`${fixtureBase}/tryout-fixture/persistence`)
+    ).json();
+    expect(persistence.attempts).toHaveLength(2);
+    expect(
+      persistence.events.filter((e: { event_name: string }) => e.event_name === 'tryout_started'),
+    ).toHaveLength(2);
+    expect(
+      persistence.events.filter((e: { event_name: string }) => e.event_name === 'tryout_completed'),
+    ).toHaveLength(2);
+    expect(persistence.pins).toHaveLength(4);
+    expect(
+      persistence.attempts.find((a: { id: string }) => a.id === independent.id).class_id_at_start,
+    ).toBeNull();
+    expect(
+      persistence.attempts.find((a: { id: string }) => a.id === affiliated.id).class_id_at_start,
+    ).toBe(cls.id);
+    expect(
+      (await body<AssessmentHistoryDto>(request, 'teacher', teacherPath)).records.find(
+        (r) => r.attemptId === affiliated.id,
+      ),
+    ).toMatchObject({ score: 0, resultState: 'ready' });
+    checks.push('tryout-mandiri-school-snapshot-idempotency-irt-privacy-level-and-teacher-history');
   });
 });

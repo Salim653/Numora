@@ -20,8 +20,15 @@ Object.assign(process.env, {
   CORS_ORIGINS: 'http://localhost:3400',
   IRT_ENABLED: 'false',
 });
-const { getDatabase, closeDatabaseConnection, users, assessmentPackages, packageItems } =
-  await import('@tka/database');
+const {
+  getDatabase,
+  closeDatabaseConnection,
+  users,
+  assessmentPackages,
+  packageItems,
+  irtBatches,
+  irtItemResults,
+} = await import('@tka/database');
 const { seedDemoLearning } = await import('../../../packages/database/dist/demo-learning.js');
 const { db, client } = getDatabase();
 await seedDemoLearning(db);
@@ -47,6 +54,40 @@ await db.insert(packageItems).values(
   Array.from({ length: 10 }, (_, i) => ({
     packageId: continuationId,
     questionVersionId: `00000000-0000-4000-8000-${String(301 + i * 2).padStart(12, '0')}`,
+    displayOrder: i + 1,
+    maxPoints: '1',
+  })),
+);
+
+// TEST ONLY access/release fixture: two PG items, not an approved 35-item package or IRT model.
+// Archive only prior fixtures created by this guarded harness so reruns cannot select stale packages.
+await client`update assessment_packages set status = 'ARCHIVED'
+  where family_code like 'JOB06-TRYOUT-TEST-%' and is_demo = true and status = 'PUBLISHED'`;
+const tryoutId = randomUUID();
+const local = new Date(Date.now() + 7 * 3600_000);
+local.setUTCDate(local.getUTCDate() - ((local.getUTCDay() + 6) % 7));
+local.setUTCHours(0, 0, 0, 0);
+await db.insert(assessmentPackages).values({
+  id: tryoutId,
+  familyCode: `JOB06-TRYOUT-TEST-${tryoutId}`,
+  packageVersion: 1,
+  name: 'JOB06 TEST ONLY DEMO TryOut',
+  assessmentType: 'TRYOUT',
+  isDemo: true,
+  chapterId: '00000000-0000-4000-8000-000000000100',
+  scoringPolicyVersionId: '00000000-0000-4000-8000-000000000901',
+  releaseAt: new Date(local.getTime() - 7 * 3600_000),
+  closeAt: new Date(Date.now() + 24 * 3600_000),
+  durationSeconds: 3600,
+  status: 'DRAFT',
+});
+const tryoutVersions = [301, 303].map(
+  (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`,
+);
+await db.insert(packageItems).values(
+  tryoutVersions.map((questionVersionId, i) => ({
+    packageId: tryoutId,
+    questionVersionId,
     displayOrder: i + 1,
     maxPoints: '1',
   })),
@@ -137,6 +178,47 @@ const authServer = createServer(async (req, res) => {
     } catch {
       return send(400, { message: 'Invalid test fixture request' });
     }
+  }
+  if (req.url === '/tryout-fixture' && req.method === 'GET')
+    return send(200, { packageId: tryoutId, content: 'TEST_ONLY_DEMO' });
+  if (req.url === '/tryout-fixture/publish' && req.method === 'POST') {
+    await client`update assessment_packages set status = 'PUBLISHED' where id = ${tryoutId}`;
+    return send(200, { published: true });
+  }
+  if (req.url === '/tryout-fixture/release' && req.method === 'POST') {
+    // Synthetic Data boundary only: no model execution or approved low-response policy is claimed.
+    const [batch] = await db
+      .insert(irtBatches)
+      .values({
+        packageId: tryoutId,
+        batchKind: 'TEST_ONLY',
+        modelVersion: 'TEST_ONLY_SYNTHETIC_RELEASE',
+        status: 'SUCCEEDED',
+        finishedAt: new Date(),
+        resultReleasedAt: new Date(),
+        inputSnapshot: { fixture: true },
+      })
+      .returning();
+    await db.insert(irtItemResults).values(
+      tryoutVersions.map((questionVersionId) => ({
+        batchId: batch.id,
+        questionVersionId,
+        sampleSize: 30,
+        dataStatus: 'SUFFICIENT',
+      })),
+    );
+    return send(200, { released: true, source: 'TEST_ONLY_SYNTHETIC_RELEASE' });
+  }
+  if (req.url === '/tryout-fixture/persistence' && req.method === 'GET') {
+    const attempts =
+      await client`select id, student_id, class_id_at_start, scoring_policy_version_id, score_0_100
+      from assessment_attempts where package_id = ${tryoutId}`;
+    const events = await client`select o.entity_id, o.event_name from analytics_outbox o
+      join assessment_attempts a on a.id = o.entity_id where a.package_id = ${tryoutId}
+      and o.event_name in ('tryout_started', 'tryout_completed')`;
+    const pins = await client`select ai.attempt_id, ai.question_version_id from attempt_items ai
+      join assessment_attempts a on a.id = ai.attempt_id where a.package_id = ${tryoutId}`;
+    return send(200, { attempts, events, pins });
   }
   if (req.url === '/persistence') {
     const attempts =
