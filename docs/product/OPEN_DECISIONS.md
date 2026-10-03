@@ -121,3 +121,7 @@ When a joint decision is reached, record its owner/date and update the PRD or mo
 ## DRL-OPEN-08 engineering preparation - 3 October 2026
 
 **PROPOSED:** Aini prepared default-off domain producers and a payload/trigger/dedup schema, plus durable consumer correlation and backlog status. [Inventory](../development/JOB20_ANALYTICS_INVENTORY.md) is the Data review/handoff reference. Exact mapping, activation and other-owner producers remain OPEN; no reward/model policy is resolved.
+
+## Variant / IRT persistence ? 3 October 2026
+
+**ENGINEERING DECISION:** separate compute ownership and one shared migration stream follow [ADR-011](../adr/ADR-011-separated-irt-compute.md). [Persistence specification](../data/VARIANT_IRT_DATABASE.md) maps content lineage, scoring categories, trial/exposure, immutable inputs/results and Tryout finalization. **OPEN:** academic gates, rubrics, cohort/reference design, adjustment limits, score mapping/ties, release/fallback/correction and retention remain unresolved. Database capability does not approve or activate those product policies.
