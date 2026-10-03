@@ -1,10 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentSession } from './assessment-session';
 
 afterEach(() => {
   cleanup();
+  onlineManager.setOnline(true);
   vi.useRealTimers();
   vi.restoreAllMocks();
 });
@@ -50,6 +51,26 @@ function mount(
 }
 
 describe('sesi asesmen', () => {
+  it('reports a save failure when already offline and requires an acknowledged retry', async () => {
+    onlineManager.setOnline(false);
+    const onSave = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Jaringan putus'))
+      .mockResolvedValueOnce({ questionInstanceId: 'question-1', selectedOptionId: 'A' });
+    const { onSubmit } = mount(onSave);
+    fireEvent.click(screen.getByRole('radio', { name: /^A\./ }));
+    await screen.findByText('Jaringan putus');
+    expect(onSave).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status').textContent).toBe('Belum tersimpan');
+    expect(screen.getByRole('button', { name: 'Kirim Drill' }).hasAttribute('disabled')).toBe(true);
+    onlineManager.setOnline(true);
+    // Reconnection alone must not claim persistence or silently create another save.
+    expect(onSave).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('button', { name: 'Coba simpan lagi' }));
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Tersimpan'));
+    expect(onSave).toHaveBeenCalledTimes(2);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
   it('locks answers after successful finalization while navigation is still pending', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const save = vi.fn();

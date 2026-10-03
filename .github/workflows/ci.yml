@@ -82,6 +82,23 @@ jobs:
           DEBUG: pw:webserver
         run: pnpm --filter @tka/web test:e2e
 
+      - name: Connected release chain (real API, PostgreSQL and Redis)
+        env:
+          PGPASSWORD: test_only
+          TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test_job06?sslmode=disable
+          TEST_REDIS_URL: redis://localhost:6379
+        run: |
+          psql -h localhost -U postgres -d postgres -c 'CREATE DATABASE numora_test_job06'
+          pnpm test:release-chain
+
+      - name: Upload sanitized release-chain evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: job06-connected-${{ github.sha }}
+          path: .tmp/job06-evidence/connected.json
+          if-no-files-found: warn
+
       - name: Build
         run: pnpm build
 

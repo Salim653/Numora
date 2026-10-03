@@ -172,6 +172,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-06 — Buktikan trial chain nyata dan otorisasi lintas peran
 
+**Update engineering, 3 Oktober 2026 — instruksi Aini:** tiga kasus connected pada satu production-build SHA lulus dengan API/PostgreSQL/Redis sebenarnya dan identitas email fixture. Defect offline save diperbaiki; runner dan artifact per SHA ditambahkan ke CI. [Evidence dan gate tersisa](../testing/JOB06_RELEASE_CHAIN.md). **Belum DONE/acceptance trial:** login Google nyata, environment trial yang disetujui, konten reviewed dan acceptance Salim belum tersedia. Farel tetap DRI frontend; perubahan ini adalah pekerjaan integrasi/defect yang diotorisasi, bukan pengalihan seluruh ownership.
+
 - **Owner:** Farel DRI integrasi browser, regression dan fixing frontend dalam sembilan task aktifnya; Salim acceptance akhir setelah handoff; Avicenna Admin/content, Ferdi Drill/content, Aini domain backend hanya untuk bagian fitur/defect yang diserahkan. **Asal:** LAMA-01,02,05 dan pekerjaan aktif Farel pada gambar.
 - **Kerjakan:** pada satu release SHA, Admin sekolah/token → Guru Google login/verifikasi/create class → Student Google login/join/save/resume/submit Drill → Guru latest/best/progres siswa sendiri. Uji token 72 jam/single-use/revoke/reissue/race, satu kelas, foreign Teacher/Student denial, refresh/re-auth/double-submit; sertakan Level 2 continuation sebagai gate kelanjutan belajar.
 - **Output:** testcase/evidence per environment/role/commit, daftar defect, konten reviewed dan scope trial yang disetujui. Reuse Playwright; fixture CI bukan bukti seluruh rantai ini.
