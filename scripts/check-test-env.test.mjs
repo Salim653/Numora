@@ -36,3 +36,14 @@ test('local test guard rejects cloud targets and inherited runtime credentials w
     assert.doesNotMatch(result.stderr, /secret@|test_only@/);
   }
 });
+
+// A missing prepare alias breaks every documented development mode before startup.
+test('documented dev and isolated test entrypoints resolve', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  for (const name of ['dev', 'dev:worker', 'dev:full'])
+    assert.ok(manifest.scripts[name].startsWith('pnpm dev:prepare &&'));
+  assert.ok(manifest.scripts['dev:prepare'].includes('pnpm env:check'));
+  for (const name of ['test:local', 'db:migrate:test'])
+    assert.ok(manifest.scripts[name].includes('node scripts/check-test-env.mjs &&'));
+});
