@@ -680,7 +680,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       score: null,
       resultState: 'waitingIrt',
     });
-    await call(request, 'foreignTeacher', teacherPath, 'GET', undefined, 403);
+    await call(request, 'foreignTeacher', teacherPath, 'GET', undefined, 404);
     expect(
       (
         await body<AssessmentHistoryDto>(
