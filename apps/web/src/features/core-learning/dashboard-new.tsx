@@ -256,24 +256,20 @@ function HomeTryout({ token }: { token: string }) {
       ) : (
         <>
           <Badge variant={query.data.state === 'unavailable' ? 'default' : 'primary'}>
-            {!query.data.eligible
-              ? 'Belum tersedia untuk akun ini'
-              : query.data.state === 'unavailable'
-                ? 'Belum tersedia'
-                : query.data.state === 'waitingIrt'
-                  ? 'Menunggu hasil'
-                  : query.data.state === 'resultReady'
-                    ? 'Hasil tersedia'
-                    : query.data.state === 'inProgress'
-                      ? 'Sedang dikerjakan'
-                      : 'Tersedia'}
+            {query.data.state === 'unavailable'
+              ? 'Belum tersedia'
+              : query.data.state === 'waitingIrt'
+                ? 'Menunggu hasil'
+                : query.data.state === 'resultReady'
+                  ? 'Hasil tersedia'
+                  : query.data.state === 'inProgress'
+                    ? 'Sedang dikerjakan'
+                    : 'Tersedia'}
           </Badge>
           <p>
-            {!query.data.eligible
-              ? 'Tryout gratis untuk siswa Mandiri dan Sekolah. Ketersediaan akun mengikuti status server.'
-              : query.data.state === 'unavailable'
-                ? 'Paket yang sudah diterbitkan akan muncul di sini.'
-                : 'Lihat status paket dan aktivitas Tryout kamu.'}
+            {query.data.state === 'unavailable'
+              ? 'Paket yang sudah diterbitkan akan muncul di sini.'
+              : 'Lihat status paket dan aktivitas Tryout kamu.'}
           </p>
           <Link className="section-link" href="/student/tryout">
             Lihat Tryout <Icon name="arrow" width={18} height={18} />

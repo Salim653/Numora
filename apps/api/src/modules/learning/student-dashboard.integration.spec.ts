@@ -62,6 +62,7 @@ integration('Student dashboard ownership, affiliation and IRT privacy', () => {
     );
     const initial = await service.dashboard('other');
     expect(initial.affiliation).toBe('MANDIRI');
+    expect(initial.features.tryout).toBe(true);
     expect(initial.class).toBeNull();
     expect(initial.latestDrillScore).toBeNull();
     expect(initial.bestDrillScore).toBeNull();

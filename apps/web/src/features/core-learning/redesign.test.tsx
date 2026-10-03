@@ -42,6 +42,7 @@ vi.mock('./api', async (original) => ({
     catalog: vi.fn(),
     assessmentHistory: vi.fn(),
     currentTryout: vi.fn(),
+    startTryout: vi.fn(),
     subchapter: vi.fn(),
     start: vi.fn(),
   },
@@ -76,7 +77,7 @@ beforeEach(() => {
     activeDrill: null,
     features: {
       drill: true,
-      tryout: false,
+      tryout: true,
       pvp: false,
       classLeaderboard: false,
       pretest: false,
@@ -90,7 +91,7 @@ beforeEach(() => {
   });
   vi.mocked(learningApi.catalog).mockResolvedValue({ chapters: [] });
   vi.mocked(learningApi.assessmentHistory).mockResolvedValue({ records: [], nextCursor: null });
-  vi.mocked(learningApi.currentTryout).mockResolvedValue({ state: 'unavailable', eligible: false });
+  vi.mocked(learningApi.currentTryout).mockResolvedValue({ state: 'unavailable' });
   vi.mocked(request).mockResolvedValue({ unreadCount: 0, latest: [] });
 });
 afterEach(cleanup);
@@ -152,8 +153,8 @@ describe('responsive learning composition', () => {
     renderStudent(<NewStudentDashboard />);
     await screen.findByText('0 / 100');
     expect(screen.getByText('Materi sedang disiapkan')).toBeTruthy();
-    expect(await screen.findByText('Belum tersedia untuk akun ini')).toBeTruthy();
-    expect(screen.getByText(/Tryout gratis untuk siswa Mandiri dan Sekolah/)).toBeTruthy();
+    expect(await screen.findByText('Belum tersedia')).toBeTruthy();
+    expect(screen.queryByText('Memerlukan kelas')).toBeNull();
     expect(screen.queryByRole('progressbar')).toBeNull();
     expect(screen.queryByText('XP')).toBeNull();
     expect(document.querySelector('a[href^="/demo"]')).toBeNull();
@@ -192,12 +193,79 @@ describe('responsive learning composition', () => {
       await waitFor(() => expect(context.refresh).toHaveBeenCalledOnce());
     },
   );
-  it('keeps unavailable TryOut honest without requiring class membership', async () => {
+  it('offers practice when no Tryout package exists, without a class prerequisite', async () => {
     renderStudent(<TryoutScreen />);
-    const link = await screen.findByRole('link', { name: 'Latihan dulu' });
+    const link = await screen.findByRole('link', { name: 'Latihan dulu' }, { timeout: 5000 });
     expect(link.getAttribute('href')).toBe('/student/learn');
-    expect(screen.queryByText(/Bergabung dengan kelas.*akses Tryout/)).toBeNull();
+    expect(screen.getByText('Paket belum tersedia')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Gabung kelas' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Mulai TryOut/ })).toBeNull();
+  });
+  it('starts a free Tryout for a Mandiri Student', async () => {
+    vi.mocked(learningApi.currentTryout).mockResolvedValue({
+      id: 'package-test',
+      title: 'Paket Fiktif',
+      releaseAt: '2026-09-27T17:00:00Z',
+      state: 'open',
+      eligible: true,
+      attemptId: null,
+      questionCount: 2,
+      durationSeconds: 3600,
+    });
+    vi.mocked(learningApi.startTryout).mockResolvedValue({
+      id: 'attempt-test',
+      packageId: 'package-test',
+      packageTitle: 'Paket Fiktif',
+      status: 'inProgress',
+      deadlineAt: null,
+      questions: [],
+    });
+    renderStudent(<TryoutScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Detail dan aturan paket' }));
+    fireEvent.click(screen.getByLabelText('Saya memahami aturan pengerjaan.'));
+    fireEvent.click(screen.getByRole('button', { name: 'Mulai TryOut' }));
+    await waitFor(() =>
+      expect(learningApi.startTryout).toHaveBeenCalledWith('test-token', 'package-test'),
+    );
+    await waitFor(() => expect(context.push).toHaveBeenCalledWith('/student/tryout/attempt-test'));
+    expect(screen.getByText(/TryOut gratis untuk seluruh siswa/)).toBeTruthy();
+  });
+  it.each(['inProgress', 'waitingIrt', 'resultReady'] as const)(
+    'shows the existing %s attempt without a class warning or new start action',
+    async (state) => {
+      vi.mocked(learningApi.currentTryout).mockResolvedValue({
+        id: 'package-test',
+        title: 'Paket Fiktif',
+        releaseAt: '2026-09-27T17:00:00Z',
+        state,
+        eligible: false,
+        attemptId: 'attempt-test',
+      });
+      renderStudent(<TryoutScreen />);
+      await screen.findByText('Paket Fiktif');
+      expect(screen.queryByRole('button', { name: /Mulai TryOut/ })).toBeNull();
+      expect(screen.queryByText(/sudah bergabung ke kelas/)).toBeNull();
+      if (state === 'inProgress') {
+        expect(screen.getByRole('link', { name: 'Lanjutkan TryOut' }).getAttribute('href')).toBe(
+          '/student/tryout/attempt-test',
+        );
+      } else if (state === 'resultReady') {
+        expect(
+          screen.getByRole('link', { name: 'Lihat hasil simulasi' }).getAttribute('href'),
+        ).toBe('/student/tryout/attempt-test/result');
+      } else {
+        expect(screen.getByRole('status').textContent).toContain('pembahasan belum tersedia');
+        expect(screen.queryByRole('link', { name: 'Lihat hasil simulasi' })).toBeNull();
+      }
+    },
+  );
+  it('allows retry after a Tryout network error', async () => {
+    vi.mocked(learningApi.currentTryout).mockRejectedValue(new Error('Koneksi terputus'));
+    renderStudent(<TryoutScreen />);
+    await screen.findByText('Koneksi terputus', {}, { timeout: 3000 });
+    vi.mocked(learningApi.currentTryout).mockResolvedValue({ state: 'unavailable' });
+    fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
+    await screen.findByText('Paket belum tersedia');
   });
   it('mounts Teacher queries under a provider and rejects a Student account', async () => {
     context.state = {
