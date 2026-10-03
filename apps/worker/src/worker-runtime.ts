@@ -3,6 +3,7 @@ import { Redis } from 'ioredis';
 import { checkDatabaseConnection, closeDatabaseConnection } from '@tka/database';
 import { drainOutboxBatch } from './outbox.js';
 import { projectClassLeaderboard } from './class-leaderboard.js';
+import { recoverOverdueTryouts, type RecoveryCursor } from './tryout-recovery.js';
 
 const OPERATION_TIMEOUT_MS = 5_000;
 const ERROR_LOG_INTERVAL_MS = 60_000;
@@ -34,6 +35,10 @@ export async function runWorker(exit: (code: number) => void = (code) => process
   let worker: Worker | undefined;
   let outboxTimer: ReturnType<typeof setInterval> | undefined;
   let leaderboardTimer: ReturnType<typeof setTimeout> | undefined;
+  let tryoutTimer: ReturnType<typeof setInterval> | undefined;
+  let tryoutBusy = false;
+  let recoveryCursor: RecoveryCursor | undefined;
+  let lastRecoveryLogAt = 0;
   let outboxBusy = false;
   let leaderboardBusy = false;
   let stopping = false;
@@ -44,6 +49,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
     if (shutdownPromise) return shutdownPromise;
     stopping = true;
     if (outboxTimer) clearInterval(outboxTimer);
+    if (tryoutTimer) clearInterval(tryoutTimer);
     if (leaderboardTimer) clearTimeout(leaderboardTimer);
     process.off('SIGINT', onSignal);
     process.off('SIGTERM', onSignal);
@@ -53,7 +59,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
           Promise.all([
             worker?.close(force),
             (async () => {
-              while (outboxBusy || leaderboardBusy) {
+              while (outboxBusy || leaderboardBusy || tryoutBusy) {
                 await new Promise((resolve) => setTimeout(resolve, 50));
               }
             })(),
@@ -166,6 +172,22 @@ export async function runWorker(exit: (code: number) => void = (code) => process
         3_600_000 - (Date.now() % 3_600_000),
       );
     };
+    const recover = async () => {
+      if (stopping || tryoutBusy) return;
+      tryoutBusy = true;
+      try {
+        const result = await recoverOverdueTryouts(100, recoveryCursor);
+        recoveryCursor = result.nextCursor;
+        if (result.finalized || ((result.failed || result.backlog) && Date.now() - lastRecoveryLogAt >= ERROR_LOG_INTERVAL_MS)) {
+          lastRecoveryLogAt = Date.now();
+          console.log('[tryout] recovery', { ...result, nextCursor: undefined });
+        }
+      } catch { reportError(new Error('TRYOUT_RECOVERY_FAILED')); }
+      finally { tryoutBusy = false; }
+    };
+    await recover();
+    if (stopping) return;
+    tryoutTimer = setInterval(() => void recover(), 5_000);
     await poll();
     if (stopping) return;
     outboxTimer = setInterval(() => void poll(), 5_000);
