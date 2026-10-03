@@ -3,7 +3,9 @@ import type {
   AdminAuditListDto,
   AdminCurriculumDto,
   AdminDashboardDto,
+  AdminDrillPackagesDto,
   AdminIrtDto,
+  AdminIrtBatchesDto,
   AdminReportsDto,
   AdminTryoutDraftsDto,
   AdminVersionsDto,
@@ -11,6 +13,7 @@ import type {
   ContentMutationDto,
   CreateChapterDto,
   CreateCompetencyDto,
+  CreateDrillPackageDto,
   CreateLevelDto,
   CreateQuestionDto,
   CreateSubchapterDto,
@@ -20,23 +23,47 @@ import type {
   QuestionContentDto,
   ResolveReportDto,
   UpdateTryoutDraftDto,
+  UpdateDrillPackageDto,
 } from './generated-types';
 import type { AdminTaxonDto, UpdateVideoDto } from './generated-types';
 
 export async function loadAdminWorkbench(token: string, offset: number) {
   const page = `?limit=20&offset=${offset}`;
-  const [curriculum, versions, videos, reports, irt, audit, dashboard, packages] =
-    await Promise.all([
-      apiRequest<AdminCurriculumDto>('admin/content/curriculum', token),
-      apiRequest<AdminVersionsDto>(`admin/content/versions${page}`, token),
-      apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token),
-      apiRequest<AdminReportsDto>(`admin/reports${page}`, token),
-      apiRequest<AdminIrtDto>(`admin/irt${page}`, token),
-      apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token),
-      apiRequest<AdminDashboardDto>('admin/dashboard', token),
-      apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
-    ]);
-  return { curriculum, versions, videos, reports, irt, audit, dashboard, packages };
+  const [
+    curriculum,
+    versions,
+    videos,
+    reports,
+    irt,
+    irtBatches,
+    audit,
+    dashboard,
+    packages,
+    drillPackages,
+  ] = await Promise.all([
+    apiRequest<AdminCurriculumDto>('admin/content/curriculum', token),
+    apiRequest<AdminVersionsDto>(`admin/content/versions${page}`, token),
+    apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token),
+    apiRequest<AdminReportsDto>(`admin/reports${page}`, token),
+    apiRequest<AdminIrtDto>(`admin/irt${page}`, token),
+    apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token),
+    apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token),
+    apiRequest<AdminDashboardDto>('admin/dashboard', token),
+    apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
+    apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token),
+  ]);
+  return {
+    curriculum,
+    versions,
+    videos,
+    reports,
+    irt,
+    irtBatches,
+    audit,
+    dashboard,
+    packages,
+    drillPackages,
+  };
 }
 function mutation(token: string, path: string, body: object, method = 'POST') {
   return apiRequest<ContentMutationDto>(path, token, { method, body: JSON.stringify(body) });
@@ -73,6 +100,14 @@ export function renameTaxon(token: string, taxon: AdminTaxonDto, name: string) {
 }
 export const createTryoutDraft = (t: string, b: CreateTryoutDraftDto) =>
   mutation(t, 'admin/content/tryout-packages', b);
+export const createDrillPackage = (t: string, b: CreateDrillPackageDto) =>
+  mutation(t, 'admin/content/drill-packages', b);
+export const updateDrillPackage = (t: string, id: string, b: UpdateDrillPackageDto) =>
+  mutation(t, `admin/content/drill-packages/${encodeURIComponent(id)}`, b, 'PATCH');
+export const publishDrillPackage = (t: string, id: string) =>
+  mutation(t, `admin/content/drill-packages/${encodeURIComponent(id)}/publish`, {});
+export const archiveDrillPackage = (t: string, id: string) =>
+  mutation(t, `admin/content/drill-packages/${encodeURIComponent(id)}/archive`, {});
 export const updateTryoutDraft = (t: string, id: string, b: UpdateTryoutDraftDto) =>
   mutation(t, `admin/content/tryout-packages/${encodeURIComponent(id)}`, b, 'PATCH');
 export const resolveReport = (
