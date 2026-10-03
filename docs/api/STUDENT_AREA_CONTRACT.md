@@ -10,6 +10,8 @@ Respons mencakup `displayName`, `affiliation`, `class` (id/nama/sekolah atau nul
 
 **PRD RULE:** skor Tryout pada aktivitas tetap null dengan `waitingIrt` sampai aturan rilis IRT terpenuhi. Dashboard menggunakan service riwayat yang sama dengan Penilaian. Jawaban/kunci tidak dikembalikan pada dashboard.
 
+**ENGINEERING DECISION — JOB-07 tahap pertama, 2 Oktober 2026:** `features.tryout: true` untuk seluruh Student aktif, baik Mandiri maupun Sekolah. Field ini menyatakan hak akses fitur; tidak menyatakan paket sudah tersedia atau siswa boleh membuat attempt kedua. Gunakan state/`eligible` dari [current-package contract](CORE_LEARNING_FRONTEND_CONTRACT.md#tryout-and-penilaian--generic-lifecycle-implemented) untuk availability dan aksi start/resume/result. Pretest dan leaderboard kelas tetap mengikuti eligibility masing-masing.
+
 **ENGINEERING DECISION:** layout siswa melakukan gate role dan menyediakan satu QueryClient per ID siswa. Logout/perubahan akun membuang cache; token tidak menjadi bagian query key. Gabung kelas menginvalidasi query dan memperbarui identitas. Alur Drill tetap memakai save/clear/resume/submit serta hasil asesmen umum yang sudah tersedia.
 
 ## PvP REST
