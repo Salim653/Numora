@@ -21,6 +21,20 @@ const levelTwoId = uuid(103);
 const competencyId = uuid(104);
 
 // DEMO fixtures only. Curriculum must review every stem, key, and explanation before a school trial.
+//
+// The two levels deliberately differ. Previously only level 1 had packages, so level 2 was
+// created and then unreachable: the 80% unlock moved the student forward into an empty level.
+// Both levels are seeded, each with two variants, because drill requires a different equivalent
+// variant on every retry after the first attempt.
+const levelsForDemo = [
+  { id: levelOneId, levelNumber: 1, tag: 'L1' },
+  { id: levelTwoId, levelNumber: 2, tag: 'L2' },
+] as const;
+
+// Offsets keep every level's question, variant, version, package, and package-item UUID distinct.
+const levelOffsets = { L1: 0, L2: 1000 } as const;
+
+// DEMO fixtures only. Curriculum must review every stem, key, and explanation before a school trial.
 export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['db'], 'insert' | 'select'> = getDatabase().db) {
   await db
     .insert(chapters)
@@ -83,78 +97,86 @@ export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['
     .limit(1);
   if (!policy) throw new Error('Demo Drill scoring policy is missing.');
 
-  for (let i = 1; i <= 10; i++) {
-    const questionId = uuid(200 + i);
-    await db
-      .insert(questions)
-      .values({
-        id: questionId,
-        primaryCompetencyId: competencyId,
-        sourceRef: `DEMO-L1-${String(i).padStart(2, '0')}`,
-        status: 'READY',
-      })
-      .onConflictDoNothing();
-    for (let set = 1; set <= 2; set++) {
-      const left = i + set;
-      const right = set + 2;
-      const answer = left + right;
-      const optionValues = [answer - 2, answer, answer + 1, answer + 2];
-      const variantId = uuid(400 + (i - 1) * 2 + set);
-      await db
-        .insert(questionVariants)
-        .values({
-          id: variantId,
-          questionId,
-          originalVariantId: set === 1 ? null : uuid(400 + (i - 1) * 2 + 1),
-          variantCode: `DEMO-L1-${i}-V${set}`,
-          kind: set === 1 ? 'ORIGINAL' : 'VARIANT',
-          origin: 'DEMO',
-        })
-        .onConflictDoNothing();
-      await db.insert(questionVersions).values({
-        id: uuid(300 + (i - 1) * 2 + set),
-        variantId,
-        versionNumber: 1,
-        questionType: 'SINGLE_CHOICE',
-        stem: { text: `Berapakah hasil $${left}+${right}$?` },
-        optionsOrStatements: optionValues.map((value, index) => ({ id: 'ABCD'[index]!, content: { text: String(value) } })),
-        answerKey: { optionId: 'B' },
-        explanation: { text: `$${left}+${right}=${answer}$, sehingga jawaban yang benar adalah B.` },
-        difficulty: 'EASY',
-      }).onConflictDoNothing();
-    }
-  }
-
-  for (let set = 1; set <= 2; set++) {
-    const packageId = uuid(500 + set);
-    await db
-      .insert(assessmentPackages)
-      .values({
-        id: packageId,
-        familyCode: `DEMO-DRILL-L1-V${set}`,
-        packageVersion: 1,
-        name: `Drill Level 1 Demo - Varian ${set}`,
-        assessmentType: 'DRILL',
-        chapterId,
-        levelId: levelOneId,
-        variantIndex: set,
-        isDemo: true,
-        scoringPolicyVersionId: policy.id,
-        releaseAt: new Date(),
-        status: 'PUBLISHED',
-      })
-      .onConflictDoNothing();
+  for (const level of levelsForDemo) {
+    const offset = levelOffsets[level.tag];
     for (let i = 1; i <= 10; i++) {
+      const left = i + 1;
+      const right = 3;
+      const answer = left + right;
+      // Rotate the correct option across A-D. Pinning every key to B made the correct
+      // answer guessable from the option layout alone.
+      const correctKey = 'ABCD'[(i - 1) % 4]!;
+      const distractorValues = [answer - 2, answer - 1, answer + 1, answer + 2];
+      const optionValues = ['A', 'B', 'C', 'D'].map((key) =>
+        key === correctKey ? answer : distractorValues.shift()!);
+      const questionId = uuid(200 + offset + i);
       await db
-        .insert(packageItems)
+        .insert(questions)
         .values({
-          id: uuid(600 + set * 20 + i),
-          packageId,
-          questionVersionId: uuid(300 + (i - 1) * 2 + set),
-          displayOrder: i,
-          maxPoints: '1',
+          id: questionId,
+          primaryCompetencyId: competencyId,
+          sourceRef: `DEMO-${level.tag}-${String(i).padStart(2, '0')}`,
+          status: 'READY',
         })
         .onConflictDoNothing();
+      for (let set = 1; set <= 2; set++) {
+        const variantId = uuid(400 + offset + (i - 1) * 2 + set);
+        await db
+          .insert(questionVariants)
+          .values({
+            id: variantId,
+            questionId,
+            originalVariantId: set === 1 ? null : uuid(400 + offset + (i - 1) * 2 + 1),
+            variantCode: `DEMO-${level.tag}-${i}-V${set}`,
+            kind: set === 1 ? 'ORIGINAL' : 'VARIANT',
+            origin: 'DEMO',
+          })
+          .onConflictDoNothing();
+        await db.insert(questionVersions).values({
+          id: uuid(300 + offset + (i - 1) * 2 + set),
+          variantId,
+          versionNumber: 1,
+          questionType: 'SINGLE_CHOICE',
+          stem: { text: `Berapakah hasil $${left}+${right}$?` },
+          optionsOrStatements: optionValues.map((value, index) => ({ id: 'ABCD'[index]!, content: { text: String(value) } })),
+          answerKey: { optionId: correctKey },
+          explanation: { text: `$${left}+${right}=${answer}$, sehingga jawaban yang benar adalah ${correctKey}.` },
+          difficulty: 'EASY',
+        }).onConflictDoNothing();
+      }
+    }
+
+    for (let set = 1; set <= 2; set++) {
+      const packageId = uuid(500 + offset + set);
+      await db
+        .insert(assessmentPackages)
+        .values({
+          id: packageId,
+          familyCode: `DEMO-DRILL-${level.tag}-V${set}`,
+          packageVersion: 1,
+          name: `Drill Level ${level.levelNumber} Demo - Varian ${set}`,
+          assessmentType: 'DRILL',
+          chapterId,
+          levelId: level.id,
+          variantIndex: set,
+          isDemo: true,
+          scoringPolicyVersionId: policy.id,
+          releaseAt: new Date(),
+          status: 'PUBLISHED',
+        })
+        .onConflictDoNothing();
+      for (let i = 1; i <= 10; i++) {
+        await db
+          .insert(packageItems)
+          .values({
+            id: uuid(600 + offset + set * 20 + i),
+            packageId,
+            questionVersionId: uuid(300 + offset + (i - 1) * 2 + set),
+            displayOrder: i,
+            maxPoints: '1',
+          })
+          .onConflictDoNothing();
+      }
     }
   }
 

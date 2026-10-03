@@ -131,6 +131,15 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     expect(await tryout.current('student')).toMatchObject({
       id: selectedPackage!.id, state: 'open', eligible: true, questionCount: 2,
     });
+    // With no package running, `eligible` must still report access readiness so the
+    // web tryout screen can tell "not published yet" apart from "no access yet".
+    await db.update(assessmentPackages).set({ status: 'CLOSED' })
+      .where(eq(assessmentPackages.id, selectedPackage!.id));
+    expect(await tryout.current('student')).toEqual({ state: 'unavailable', eligible: true });
+    expect(await tryout.current('independent')).toEqual({ state: 'unavailable', eligible: false });
+    await db.update(assessmentPackages).set({ status: 'PUBLISHED' })
+      .where(eq(assessmentPackages.id, selectedPackage!.id));
+    expect(await tryout.current('student')).toMatchObject({ state: 'open', eligible: true });
     const [a, b] = await Promise.all([
       tryout.start('student', selectedPackage!.id),
       tryout.start('student', selectedPackage!.id),

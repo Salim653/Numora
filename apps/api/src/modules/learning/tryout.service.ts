@@ -61,14 +61,19 @@ export class TryoutService {
 
   async current(authorization?: string) {
     const studentId = await this.student(authorization);
-    const current = await this.currentPackage();
-    if (!current) return { state: 'unavailable' as const };
     const { db } = getDatabase();
     const [membership] = await db
       .select({ id: classMemberships.id })
       .from(classMemberships)
       .where(and(eq(classMemberships.studentUserId, studentId), isNull(classMemberships.leftAt)))
       .limit(1);
+    const current = await this.currentPackage();
+    // `eligible` reports whether this student could start the released package at
+    // all, so it stays meaningful even while no package is running. The web
+    // tryout screen branches on it to pick between "not published yet" and
+    // "no access yet"; dropping the field on the unavailable path left both
+    // screens showing the same copy and broke the qa:smoke assertion.
+    if (!current) return { state: 'unavailable' as const, eligible: Boolean(membership) };
     const [attempt] = await db
       .select({ id: assessmentAttempts.id, status: assessmentAttempts.status })
       .from(assessmentAttempts)

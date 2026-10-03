@@ -75,4 +75,36 @@ describe('Drill API boundary', () => {
     await learningApi.assessmentHistory('private-token', 'page/2+next');
     expect(history.mock.calls[0]?.[0]).toContain('cursor=page%2F2%2Bnext');
   });
+
+  // Regression: a >=500 problem response used to be replaced with generic copy, so
+  // every DRILL_* 503 read as an unexplained crash while the same codes below 500
+  // still surfaced their own message.
+  it('keeps the server problem detail on 5xx responses', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({ code: 'DRILL_CONTENT_NOT_READY', detail: 'Konten belum siap.' }),
+          { status: 503 },
+        ),
+      ),
+    );
+    await expect(learningApi.currentTryout('private-token')).rejects.toMatchObject({
+      status: 503,
+      code: 'DRILL_CONTENT_NOT_READY',
+      message: 'Konten belum siap.',
+    });
+  });
+
+  it('falls back to generic copy for 5xx without a problem body', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(null, { status: 500 })),
+    );
+    await expect(learningApi.progress('private-token')).rejects.toMatchObject({
+      status: 500,
+      code: null,
+      message: 'Layanan sedang bermasalah. Coba lagi nanti.',
+    });
+  });
 });

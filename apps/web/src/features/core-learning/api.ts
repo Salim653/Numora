@@ -51,10 +51,15 @@ export async function request<T>(token: string, path: string, init?: RequestInit
       title?: string;
       code?: string;
     } | null;
+    // Prefer the server's own problem detail on every status. Only fall back to
+    // generic copy when the body has none. Swallowing detail on >=500 made all
+    // DRILL_* 503s look like an unexplained crash, while the same codes below
+    // 500 still reached the screen.
+    const detail = problem?.detail ?? problem?.title;
     throw new LearningApiError(
-      response.status >= 500
+      detail ?? (response.status >= 500
         ? 'Layanan sedang bermasalah. Coba lagi nanti.'
-        : (problem?.detail ?? problem?.title ?? 'Permintaan belum berhasil. Coba lagi.'),
+        : 'Permintaan belum berhasil. Coba lagi.'),
       response.status,
       problem?.code ?? null,
     );
