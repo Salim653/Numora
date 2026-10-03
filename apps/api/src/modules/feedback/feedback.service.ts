@@ -147,17 +147,15 @@ export class FeedbackService {
       .limit(page.limit + 1)
       .offset(page.offset);
     return {
-      items: rows
-        .slice(0, page.limit)
-        .map(({ feedback: f, teacherName }): FeedbackDto => ({
-          id: f.id,
-          classId: f.classIdAtSend,
-          studentId: f.studentId,
-          teacherName,
-          body: f.body,
-          sentAt: f.sentAt.toISOString(),
-          readAt: f.readAt?.toISOString() ?? null,
-        })),
+      items: rows.slice(0, page.limit).map(({ feedback: f, teacherName }): FeedbackDto => ({
+        id: f.id,
+        classId: f.classIdAtSend,
+        studentId: f.studentId,
+        teacherName,
+        body: f.body,
+        sentAt: f.sentAt.toISOString(),
+        readAt: f.readAt?.toISOString() ?? null,
+      })),
       nextOffset: rows.length > page.limit ? page.offset + page.limit : null,
     };
   }
@@ -219,6 +217,6 @@ export class FeedbackService {
   ) {
     const teacherId = await this.actor(auth, 'TEACHER');
     await this.ownedStudent(getDatabase().db, teacherId, classId, studentId);
-    return this.history.listForStudent(studentId, cursor, classId);
+    return this.history.listForStudent(studentId, { cursor, classId });
   }
 }

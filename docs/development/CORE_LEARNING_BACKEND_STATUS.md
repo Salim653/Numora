@@ -63,6 +63,16 @@ Tahap ini belum menyelesaikan JOB-07 penuh: 35 soal/PGK, listing/detail/Past dan
 
 **Browser JOB-07:** satu skenario Chromium `Mandiri Tryout starts and resumes without a class, then waits for released results` lulus (start/resume/waiting/result-ready). Auth/API browser memakai fixture; backend riil dibuktikan terpisah lewat PostgreSQL/HTTP di atas. Verifikasi Windows memakai konfigurasi lokal sementara dengan startup 360 detik, per-test 180 detik dan assertion 60 detik, kemudian dihapus; konfigurasi pengujian tim tetap utuh. Percobaan regresi browser lintas fitur belum lulus karena timeout saat loading/kompilasi TryOut/PvP dan batas global suite; hasil tersebut tidak dihitung lulus dan perlu diulang di CI/staging. Cluster PostgreSQL uji dihentikan setelah verifikasi; worker/Redis cloud tidak dijalankan untuk fase ini.
 
+## Penilaian dan history - JOB-12
+
+**ENGINEERING DECISION - permintaan Aini, 2 Oktober 2026:** implementasi history dikerjakan pada branch `feat/job-12-assessment-history` dari baseline `origin/main` SHA `33410fb`, terpisah dari PR JOB-07 dan commit worker/Redis lokal. Endpoint history existing ditambah filter UUID `levelId` opsional; cursor harus berasal dari pengguna dan result set/filter yang sama. Boundary timestamp memakai presisi PostgreSQL, sehingga selesai pada waktu sama maupun selisih mikrodetik tidak terlewat. Tidak ada endpoint atau migrasi baru.
+
+Record menampilkan ID bab/level snapshot serta label taxonomy saat ini, subbab/level dan status `xpState`/`starsState` pending/notApplicable. Label taxonomy bukan snapshot nama historis. Skor tersimpan tidak dihitung ulang; completed history tetap terbaca setelah archive. UI minimum menggunakan generated types, mempertahankan score 0, konteks level dan pesan reward belum tersedia. Waiting TryOut tidak mendapat link hasil; Pretest tidak mendapat link ke route yang belum ada. Existing level/progress tetap menjadi sumber latest/best; retry lebih rendah tidak mengganti best atau menghapus history.
+
+**Bukti lokal - 2 Oktober 2026:** suite learning berjalan pada PostgreSQL terisolasi localhost dengan fixture DEMO/TEST: 7 file, 17 tes lulus tanpa skipped. Tes UI/API: 19 lulus; Chromium E2E history mobile 390 px: 1 lulus, mencakup score 0, waiting tanpa link, pagination error/retry dan tanpa overflow. Lint, typecheck, build, repository checks, validasi kontrak dan generated-type freshness lulus. Bukti ini tidak menggantikan review atau acceptance login Google nyata.
+
+**Batas:** review/QA staging masih diperlukan. Rumus reward/threshold bintang/retensi, Pretest lifecycle, dan final model/release TryOut tetap OPEN; gate IRT existing tidak diganti. Kontrak dan query semantics: [Core Learning Frontend Contract](../api/CORE_LEARNING_FRONTEND_CONTRACT.md#job-12-history-additions---2-october-2026).
+
 ## Pretest
 
 - [x] Schema asesmen umum mendukung PRETEST, pin versi soal/kebijakan, dan constraint maksimal satu attempt SUBMITTED/GRADED per siswa/bab. Riwayat mendukung record Pretest.
@@ -119,3 +129,11 @@ Sumber: [rekonsiliasi Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPD
 Review dan CI pada head terbaru masih menjadi gate merge. PR #46 menyediakan connected chain/perbaikan offline; approval reviewer GitHub tetap diperlukan. Bukti gabungan harus diulang pada satu SHA yang memuat #46/#41/#45; bukti JOB-06 sebelumnya tidak diganti. Ini bukan acceptance Google/trial atau penyelesaian seluruh JOB-07.
 
 **Bukti rekonsiliasi lokal:** 12 tes Learning PostgreSQL tanpa skip dan 64 tes web lulus; lint, workspace typecheck dan generated-type freshness lulus. CI terbaru melengkapi build/migration/browser gates sebelum merge.
+
+## Rekonsiliasi JOB-12 history - 3 Oktober 2026
+
+**ENGINEERING DECISION - instruksi Aini:** PR #45 mempertahankan snapshot kelas history Guru dari #43 serta filter level, presisi mikrodetik cursor dan konteks/pending reward JOB-12. Service internal memakai objek `{ cursor?, classId?, levelId? }`; filter class/level berlaku bersama pada baris dan cursor, sehingga argumen class Guru tidak tertukar sebagai level. Endpoint Student tidak membuka query classId; kepemilikan kelas tetap diperiksa service Guru.
+
+Tes PostgreSQL menambahkan pagination dan penolakan cursor beda kelas/level, Mandiri dan record non-visible. OpenAPI/shared types digenerasikan dari DTO akhir; tidak ada endpoint/migrasi baru. Review/CI terbaru dan satu SHA connected gabungan #46/#41/#45 masih gate; Google/trial, konten reviewed, XP/star/IRT/retention final tetap belum acceptance.
+
+**Bukti rekonsiliasi lokal:** 23 tes Learning/Feedback PostgreSQL tanpa skip dan 65 tes web lulus; lint, workspace typecheck dan generated-type freshness lulus. CI terbaru melengkapi build/migration/browser gates sebelum merge.

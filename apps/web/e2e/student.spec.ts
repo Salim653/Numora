@@ -416,6 +416,102 @@ test('Mandiri Tryout starts and resumes without a class, then waits for released
   await expect(page.getByText('Fixture explanation', { exact: true })).toBeVisible();
 });
 
+test('history keeps zero/context, hides pending links and retries pagination without losing records', async ({
+  page,
+}) => {
+  await fixtures(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('http://localhost:3301/api/v1/students/me/progress', (route) =>
+    route.fulfill({
+      json: { completedLevels: 0, totalLevels: 2, latestScore: 0 },
+    }),
+  );
+  let failNextPage = true;
+  const historyRecord = {
+    attemptId,
+    activity: 'drill',
+    title: 'History zero fixture',
+    isDemo: true,
+    submittedAt: '2026-10-01T12:00:00Z',
+    resultState: 'ready',
+    score: 0,
+    chapterTitle: 'Bilangan fixture',
+    subchapterTitle: 'Pecahan fixture',
+    levelTitle: 'Level 1',
+    xpState: 'pending',
+    starsState: 'pending',
+  };
+  await page.route('http://localhost:3301/api/v1/students/me/assessment-results*', (route) => {
+    if (new URL(route.request().url()).searchParams.has('cursor')) {
+      expect(new URL(route.request().url()).searchParams.get('cursor')).toBe(levelId);
+      if (failNextPage) {
+        return route.fulfill({ status: 503, json: { detail: 'Fixture temporary error' } });
+      }
+      return route.fulfill({
+        json: {
+          records: [
+            { ...historyRecord, attemptId: levelId, title: 'History second fixture', score: 70 },
+          ],
+          nextCursor: null,
+        },
+      });
+    }
+    return route.fulfill({
+      json: {
+        records: [
+          historyRecord,
+          {
+            ...historyRecord,
+            attemptId: chapterId,
+            activity: 'tryout',
+            title: 'History waiting fixture',
+            resultState: 'waitingIrt',
+            score: null,
+            starsState: 'notApplicable',
+          },
+          {
+            ...historyRecord,
+            attemptId: subchapterId,
+            activity: 'pretest',
+            title: 'History Pretest fixture',
+            xpState: 'notApplicable',
+            starsState: 'notApplicable',
+          },
+        ],
+        nextCursor: levelId,
+      },
+    });
+  });
+  await page.goto('/student/assessment');
+  const zero = page.getByRole('link', { name: /History zero fixture/ });
+  await expect(zero.getByText('0', { exact: true })).toBeVisible();
+  await expect(zero.getByText('Bilangan fixture · Pecahan fixture · Level 1')).toBeVisible();
+  await expect(zero.getByText('XP dan bintang belum tersedia')).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: /History waiting fixture|History Pretest fixture/ }),
+  ).toHaveCount(0);
+  expect(
+    await page
+      .getByText('Menunggu hasil', { exact: true })
+      .evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+  await page.getByRole('button', { name: 'Muat hasil lain' }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Halaman berikutnya belum dapat dimuat' }),
+  ).toBeVisible();
+  await expect(zero).toHaveCount(1);
+  failNextPage = false;
+  await page.getByRole('button', { name: 'Muat hasil lain' }).click();
+  await expect(page.getByRole('link', { name: /History second fixture/ })).toBeVisible();
+  await expect(zero).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Muat hasil lain' })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.getByRole('heading', { name: 'Riwayat aktivitas' }).click();
+  await page.screenshot({ path: test.info().outputPath('history-390.png'), fullPage: true });
+});
+
 for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
   test(`join class ${joinCode} refreshes eligibility, and removed demo routes return 404`, async ({
     page,

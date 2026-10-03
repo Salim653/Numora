@@ -453,11 +453,23 @@
         "parameters": [
           {
             "name": "cursor",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Last record from the previous page of this Student and level filter."
+          },
+          {
+            "name": "levelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Optional pinned level ID; use the same filter on every page."
           }
         ],
         "responses": {
@@ -3900,6 +3912,52 @@
           },
           "isDemo": {
             "type": "boolean"
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Chapter ID pinned at attempt start."
+          },
+          "chapterTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Current taxonomy label; not a historical content snapshot."
+          },
+          "subchapterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "subchapterTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Level ID pinned at attempt start; absent for non-level assessments."
+          },
+          "levelTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "xpState": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "notApplicable"
+            ],
+            "description": "Numeric XP policy/posting is pending JOB-11; Pretest never awards XP."
+          },
+          "starsState": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "notApplicable"
+            ],
+            "description": "Drill star thresholds are OPEN; other assessment types do not award Drill stars."
           },
           "submittedAt": {
             "type": "string",

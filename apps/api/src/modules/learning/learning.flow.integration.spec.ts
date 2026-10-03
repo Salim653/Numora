@@ -196,6 +196,10 @@ integration('Drill lifecycle against PostgreSQL', () => {
     expect(failedRetry.recommendations).toMatchObject([{ id: video!.id }]);
     const [progress] = await db.select().from(levelProgress).where(eq(levelProgress.levelId, firstLevel!.id));
     expect(progress).toMatchObject({ latestScore: 70, bestScore: 80, bestStars: 2 });
+    const retryHistory = await history.list('student', undefined, firstLevel!.id);
+    expect(retryHistory.records).toHaveLength(2);
+    expect(retryHistory.records.find((record) => record.attemptId === attempt.id)).toMatchObject({ score: 80, levelId: firstLevel!.id });
+    expect(retryHistory.records.find((record) => record.attemptId === retry.id)).toMatchObject({ score: 70, levelId: firstLevel!.id });
     expect((await catalog.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('open');
     await expect(learning.saveAnswer('student', retry.id, retry.questions[0]!.questionInstanceId, 'B'))
       .rejects.toMatchObject({ status: 409 });
@@ -204,6 +208,7 @@ integration('Drill lifecycle against PostgreSQL', () => {
       .where(eq(questionVersions.variantId, (await db.select().from(questionVariants)
         .where(eq(questionVariants.variantCode, `ORIG-${suffix}-1`)))[0]!.id));
     expect(await learning.result('student', attempt.id)).toMatchObject({ score: 80, questions: resultA.questions });
+    expect(await history.list('student', undefined, firstLevel!.id)).toEqual(retryHistory);
     await expect(learning.start('student', firstLevel!.id)).rejects.toMatchObject({
       status: 503, response: { code: 'DRILL_CONTENT_NOT_READY' },
     });
