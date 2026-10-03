@@ -13,7 +13,11 @@ export class DashboardDrillDto {
 }
 export class StudentFeaturesDto {
   @ApiProperty() drill!: boolean;
-  @ApiProperty() tryout!: boolean;
+  @ApiProperty({
+    description:
+      'Tryout feature access for every active Student, including Mandiri. Independent of current package availability or an existing attempt.',
+  })
+  tryout!: boolean;
   @ApiProperty() pretest!: boolean;
   @ApiProperty() pvp!: boolean;
   @ApiProperty() classLeaderboard!: boolean;

@@ -31,8 +31,9 @@ export function TryoutScreen() {
         </p>
         <h2 className="mt-2 text-2xl font-extrabold">Uji pemahamanmu dengan paket bersama.</h2>
         <p className="mt-3 max-w-2xl leading-7 text-slate-700">
-          TryOut gratis untuk siswa mandiri dan sekolah. Paket final terdiri dari 35 soal; setiap
-          paket hanya dapat dikerjakan sekali. Hasil dan pembahasan tersedia setelah dirilis.
+          Paket baru dirilis Senin 00.00 WIB. TryOut gratis untuk seluruh siswa, baik Mandiri maupun
+          Sekolah, dengan satu kesempatan per paket. Paket final terdiri dari 35 soal. Hasil dan
+          pembahasan tersedia setelah pemrosesan IRT selesai.
         </p>
       </Panel>
       <StudentGate>{(token) => <CurrentTryout token={token} />}</StudentGate>
@@ -66,11 +67,9 @@ function CurrentTryout({ token }: { token: string }) {
   const current = query.data;
   if (current.state === 'unavailable' || !current.id || !current.releaseAt)
     return (
-      <Status title="Paket TryOut belum tersedia">
+      <Status title="Paket belum tersedia">
         <p>
-          {current.eligible
-            ? 'Paket Tryout yang dapat dikerjakan belum diterbitkan. Paket tersedia akan muncul di sini.'
-            : 'Paket atau kesiapan akses belum tersedia dari server. TryOut MVP gratis untuk semua siswa.'}
+          Paket Tryout yang dapat dikerjakan belum diterbitkan. Paket tersedia akan muncul di sini.
         </p>
         <Link className="button-link" href="/student/learn">
           Latihan dulu
@@ -108,12 +107,6 @@ function CurrentTryout({ token }: { token: string }) {
       {current.durationSeconds != null && (
         <p className="mt-1 text-sm text-slate-700">
           Durasi paket: {Math.ceil(current.durationSeconds / 60)} menit
-        </p>
-      )}
-      {!current.eligible && (
-        <p className="mt-4 rounded-xl bg-amber-100 p-3 text-sm font-semibold text-amber-950">
-          Paket ini belum dapat dimulai berdasarkan kesiapan server. Coba lagi setelah paket
-          tersedia.
         </p>
       )}
       {current.eligible && current.state === 'open' && (

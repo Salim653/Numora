@@ -38,12 +38,22 @@ Catatan baseline 1 Oktober 2026 dengan pembaruan integrasi 3 Oktober 2026. Setia
 
 ## Tryout dan IRT
 
-- [x] Infrastruktur PG untuk paket terbit: eligibility kelas, rilis Senin 00:00 WIB, satu attempt/paket, resume, save/clear, deadline dari paket, submit idempotent, dan outbox. Migrasi 0006 mencegah dua paket TRYOUT berstatus PUBLISHED pada waktu rilis yang sama.
+- [x] Infrastruktur PG untuk paket terbit: akses seluruh Student aktif, rilis Senin 00:00 WIB, satu attempt/paket, resume, save/clear, deadline dari paket, submit idempotent, dan outbox. Migrasi 0006 mencegah dua paket TRYOUT berstatus PUBLISHED pada waktu rilis yang sama.
 - [x] Result dan riwayat menyembunyikan skor/kunci hingga batch SUCCEEDED yang dirilis mencakup seluruh versi soal dengan minimal 30 respons dan status SUFFICIENT.
 - [x] Tes PostgreSQL memakai paket dan model berlabel fixture; tes batas waktu rilis memakai `Asia/Jakarta`.
 - [ ] Publikasi paket resmi, finalisasi otomatis saat deadline, batch IRT harian, skor/model final, pesan data belum cukup, dan kebijakan keterlambatan/kegagalan batch.
 
-**OPEN-05/OPEN-12/OPEN-18:** konfigurasi paket resmi, model statistik, dan perilaku rilis final menunggu keputusan pemilik produk/Data. Admin tetap menolak publikasi Tryout dengan `TRYOUT_POLICY_OPEN`. Penskoran MCMA/Category belum diaktifkan; rubrik **OPEN-04** perlu dikunci, tetapi kedua format sudah wajib MVP TryOut v1.1. PG-only dan eligibility kelas merupakan gap implementasi, bukan scope final.
+**OPEN-05/OPEN-12/OPEN-18:** konfigurasi paket resmi, model statistik, dan perilaku rilis final menunggu keputusan pemilik produk/Data. Admin tetap menolak publikasi Tryout dengan `TRYOUT_POLICY_OPEN`. Penskoran MCMA/Category belum diaktifkan; rubrik **OPEN-04** perlu dikunci, tetapi kedua format sudah wajib MVP TryOut v1.1. PG-only merupakan gap implementasi, bukan scope final.
+
+**ENGINEERING DECISION — JOB-07 tahap pertama, permintaan Aini 2 Oktober 2026:** Mandiri dan Sekolah mendapat akses TryOut yang sama. Start merekam kelas aktif atau `null`; repeated/concurrent start mengembalikan attempt yang sama tanpa mengubah snapshot setelah siswa bergabung kelas. Dashboard `features.tryout` menyatakan akses fitur dan selalu true untuk Student aktif; current-package `eligible` hanya menyatakan boleh start attempt baru. Paket kosong mengembalikan `{ state: 'unavailable' }`. UI TryOut dan ringkasan dashboard menghapus syarat kelas, menampilkan latihan saat paket kosong dan aksi sesuai state attempt. Schema/constraint existing cukup, tanpa migrasi baru. Kontrak: [Core Learning](../api/CORE_LEARNING_FRONTEND_CONTRACT.md) dan [Student Area](../api/STUDENT_AREA_CONTRACT.md).
+
+Tahap ini belum menyelesaikan JOB-07 penuh: 35 soal/PGK, listing/detail/Past dan eligibility Past masih tersisa. Auto-finalization (JOB-09), pipeline/skala/release IRT (JOB-10/11), serta publikasi resmi tetap mengikuti gate/keputusan owner; Redis worker tidak diperlukan untuk akses ini.
+
+**PROPOSED - knowledge 2 Oktober 2026:** [rancangan varian soal dan IRT](../data/QUESTION_VARIANT_IRT_KNOWLEDGE_2026-10-02.md) merangkum PDF 25 halaman dari pengguna. Sumber memberi arah partial credit/GPCM, snapshot jawaban, quality gate dan fallback batch; membantu fondasi tiga format JOB-07 serta terutama JOB-10. Rubrik numerik, durasi/komposisi/skala, Past eligibility, batch end/cutoff dan approval policy tetap terbuka. Knowledge ini tidak mengubah runtime, kontrak, atau status acceptance; rujukan lama 90 hari dan placement Pretest dibedakan dari latest PRD.
+
+**Bukti lokal JOB-07 tahap pertama:** migrasi existing diterapkan ke cluster PostgreSQL baru di localhost port 55437/database `numora_test_job07`, lalu fixture learning berlabel demo dimuat. `NODE_ENV=test TEST_DATABASE_URL=<database lokal> pnpm --filter @tka/api test src/modules/learning --no-file-parallelism --maxWorkers=1` lulus 12 tes dalam enam file, tanpa skipped, termasuk flow TryOut dan dashboard. Tes membuktikan snapshot Mandiri/Sekolah, concurrent/repeated start dan satu outbox start, snapshot setelah join, paket kosong/future/expired, HTTP 401/403/foreign 404 serta privacy hasil sampai release. Boundary identitas memakai fixture; ini bukan bukti Google OAuth nyata. `pnpm --filter @tka/web test src/features/core-learning/redesign.test.tsx --pool=threads --maxWorkers=1 --testTimeout=15000` lulus 14 tes, termasuk empty/start Mandiri/resume/waiting/result-ready/network retry. `pnpm lint`, `pnpm typecheck`, `pnpm build -- --concurrency=2`, contract validation/types check serta regenerasi ulang OpenAPI dengan hash identik lulus. Review tim dan QA staging masih diperlukan; perubahan Redis sebelumnya dipertahankan sebagai pekerjaan terpisah.
+
+**Browser JOB-07:** satu skenario Chromium `Mandiri Tryout starts and resumes without a class, then waits for released results` lulus (start/resume/waiting/result-ready). Auth/API browser memakai fixture; backend riil dibuktikan terpisah lewat PostgreSQL/HTTP di atas. Verifikasi Windows memakai konfigurasi lokal sementara dengan startup 360 detik, per-test 180 detik dan assertion 60 detik, kemudian dihapus; konfigurasi pengujian tim tetap utuh. Percobaan regresi browser lintas fitur belum lulus karena timeout saat loading/kompilasi TryOut/PvP dan batas global suite; hasil tersebut tidak dihitung lulus dan perlu diulang di CI/staging. Cluster PostgreSQL uji dihentikan setelah verifikasi; worker/Redis cloud tidak dijalankan untuk fase ini.
 
 ## Penilaian dan history - JOB-12
 
@@ -92,9 +102,9 @@ Bukti pengujian dan instruksi menjalankan migrasi: [Student Area Implementation]
 
 ## Gap terhadap PRD fitur terbaru — 2 Oktober 2026
 
-Sumber: [rekonsiliasi Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). Checklist tercentang di atas adalah bukti implementasi sebelumnya, bukan acceptance baru. Tidak ada kode/migrasi/kontrak yang diubah dalam pembaruan konteks ini.
+Sumber: [rekonsiliasi Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). Rekonsiliasi konteks awal tidak mengubah kode/migrasi/kontrak. Pembaruan JOB-07 tahap pertama di atas kemudian menutup gap akses; checklist lain tetap mencatat bukti implementasi sebelumnya, bukan acceptance MVP penuh.
 
-- [ ] Hapus class-required sebagai policy MVP TryOut; gratis Mandiri dan Sekolah tanpa checkout.
+- [x] Hapus class-required sebagai policy MVP TryOut; gratis Mandiri dan Sekolah tanpa checkout (JOB-07 tahap pertama; review/QA staging masih diperlukan).
 - [ ] Paket 35 soal; PG/PGK MCMA/Category beserta kontrak jawaban dan rubrik terverifikasi.
 - [ ] Listing Ongoing/Past, detail/tutorial/rules dan eligibility paket lampau sesuai keputusan Product.
 - [ ] Auto-finalization saat countdown 0 tanpa request browser dan race manual/auto-submit idempotent.
@@ -111,3 +121,11 @@ Sumber: [rekonsiliasi Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPD
 Tes PostgreSQL menambahkan pagination dan penolakan cursor beda kelas/level, Mandiri dan record non-visible. OpenAPI/shared types digenerasikan dari DTO akhir; tidak ada endpoint/migrasi baru. Review/CI terbaru dan satu SHA connected gabungan #46/#41/#45 masih gate; Google/trial, konten reviewed, XP/star/IRT/retention final tetap belum acceptance.
 
 **Bukti rekonsiliasi lokal:** 23 tes Learning/Feedback PostgreSQL tanpa skip dan 65 tes web lulus; lint, workspace typecheck dan generated-type freshness lulus. CI terbaru melengkapi build/migration/browser gates sebelum merge.
+
+## Rekonsiliasi JOB-07 akses - 3 Oktober 2026
+
+**ENGINEERING DECISION - instruksi Aini:** PR #41 tetap terpisah dari JOB-12 dan perubahan worker/Redis lokal. Rekonsiliasi terhadap main mempertahankan akses TryOut gratis Mandiri/Sekolah, snapshot kelas historis nullable, serverTime/deadline, detail/konfirmasi aturan dan recovery terbaru. Tes UI/E2E mengikuti acknowledgement aturan sebelum start; existing attempt tidak disalahartikan sebagai penolakan akses karena eligible=false.
+
+Review dan CI pada head terbaru masih menjadi gate merge. PR #46 menyediakan connected chain/perbaikan offline; approval reviewer GitHub tetap diperlukan. Bukti gabungan harus diulang pada satu SHA yang memuat #46/#41/#45; bukti JOB-06 sebelumnya tidak diganti. Ini bukan acceptance Google/trial atau penyelesaian seluruh JOB-07.
+
+**Bukti rekonsiliasi lokal:** 12 tes Learning PostgreSQL tanpa skip dan 64 tes web lulus; lint, workspace typecheck dan generated-type freshness lulus. CI terbaru melengkapi build/migration/browser gates sebelum merge.
