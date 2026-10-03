@@ -7,6 +7,7 @@ import { AppShell } from '@/components/shell';
 import { learningApi } from './api';
 import { DataState, StudentGate } from './ui';
 import { ActivityRow, ChapterCard, ProgressSummary } from './cards';
+import { FeedbackOverview } from './feedback-overview';
 
 export function NewStudentDashboard() {
   return (
@@ -83,6 +84,7 @@ function DashboardContent({ token }: { token: string }) {
             <span className="hero-star">✦</span>
           </div>
         </section>
+        <FeedbackOverview token={token} />
         <section className="quick-section" aria-label="Akses cepat">
           <Link href="/student/learn">
             <span className="icon-tile accent-0">

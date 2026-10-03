@@ -8,7 +8,10 @@ import { ProfileScreen } from './profile';
 import { TryoutScreen } from './tryout';
 import { SubchapterScreen } from './catalog';
 import { TeacherDashboardScreen } from '@/features/monitoring/teacher-screens';
-import { learningApi } from './api';
+import { TeacherProfileScreen } from '@/features/onboarding/teacher-profile';
+import { learningApi, request } from './api';
+import { FeedbackOverview } from './feedback-overview';
+import { LeaderboardsScreen } from './leaderboards';
 import { getTeacherClasses, joinClass } from '@/lib/api';
 import { destination } from '@/features/onboarding/destination';
 
@@ -32,6 +35,7 @@ vi.mock('@/features/onboarding/auth', () => ({
 }));
 vi.mock('./api', async (original) => ({
   ...(await original<object>()),
+  request: vi.fn(),
   learningApi: {
     dashboard: vi.fn(),
     progress: vi.fn(),
@@ -88,12 +92,63 @@ beforeEach(() => {
   vi.mocked(learningApi.catalog).mockResolvedValue({ chapters: [] });
   vi.mocked(learningApi.assessmentHistory).mockResolvedValue({ records: [], nextCursor: null });
   vi.mocked(learningApi.currentTryout).mockResolvedValue({ state: 'unavailable' });
+  vi.mocked(request).mockResolvedValue({ unreadCount: 0, latest: [] });
 });
 afterEach(cleanup);
 function renderStudent(children: React.ReactNode) {
   return render(<StudentAccess>{children}</StudentAccess>);
 }
 describe('responsive learning composition', () => {
+  it('shows persisted feedback previews and leaves the inbox read state unchanged', async () => {
+    vi.mocked(request).mockResolvedValue({
+      unreadCount: 1,
+      latest: [
+        {
+          id: 'feedback-test',
+          teacherName: 'Guru Test',
+          body: '<script>Pesan Guru</script>',
+          sentAt: '2026-10-01T00:00:00Z',
+          readAt: null,
+        },
+      ],
+    });
+    renderStudent(<FeedbackOverview token="test-token" />);
+    expect(await screen.findByText('1 catatan belum dibaca.')).toBeTruthy();
+    expect(screen.getByText('<script>Pesan Guru</script>')).toBeTruthy();
+    expect(document.querySelector('script')).toBeNull();
+    expect(request).toHaveBeenCalledOnce();
+    expect(request).toHaveBeenCalledWith('test-token', '/students/me/feedback/summary');
+  });
+  it('keeps ranks hidden when policy is pending, even if provisional rows are returned', async () => {
+    vi.mocked(request).mockResolvedValue({
+      policyPending: true,
+      entries: [
+        { studentId: 'rank-test', displayName: 'Provisional student', rank: 1, points: 999 },
+      ],
+      ownEntry: { rank: 37, points: 500 },
+      unit: 'points',
+      period: { startsAt: '2026-10-01T00:00:00Z', endsAt: '2026-10-08T00:00:00Z' },
+      updatedAt: null,
+    });
+    renderStudent(<LeaderboardsScreen />);
+    await screen.findByText('Peringkat belum tersedia');
+    expect(screen.queryByText('Provisional student')).toBeNull();
+    expect(screen.queryByText('#37')).toBeNull();
+  });
+  it('renders top/self positions from the server without calculating ties or excluding a self rank outside the top twenty', async () => {
+    vi.mocked(request).mockResolvedValue({
+      policyPending: false,
+      entries: [{ studentId: 'rank-test', displayName: 'Server student', rank: 2, points: 100 }],
+      ownEntry: { rank: 37, points: 50 },
+      unit: 'points',
+      period: { startsAt: '2026-10-01T00:00:00Z', endsAt: '2026-10-08T00:00:00Z' },
+      updatedAt: '2026-10-02T01:00:00Z',
+    });
+    renderStudent(<LeaderboardsScreen />);
+    await screen.findByText('Server student');
+    expect(screen.getByText('#37')).toBeTruthy();
+    expect(screen.getByText('2', { selector: 'td' })).toBeTruthy();
+  });
   it('mounts Home with its query provider and truthful empty states, including a zero score', async () => {
     renderStudent(<NewStudentDashboard />);
     await screen.findByText('0 / 100');
@@ -166,7 +221,9 @@ describe('responsive learning composition', () => {
       questions: [],
     });
     renderStudent(<TryoutScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Mulai TryOut' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Detail dan aturan paket' }));
+    fireEvent.click(screen.getByLabelText('Saya memahami aturan pengerjaan.'));
+    fireEvent.click(screen.getByRole('button', { name: 'Mulai TryOut' }));
     await waitFor(() =>
       expect(learningApi.startTryout).toHaveBeenCalledWith('test-token', 'package-test'),
     );
@@ -229,6 +286,55 @@ describe('responsive learning composition', () => {
     render(<TeacherDashboardScreen />);
     await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/student'));
     expect(getTeacherClasses).not.toHaveBeenCalled();
+  });
+  it('shows a verified Teacher account and signs out from Profile', async () => {
+    context.pathname = '/teacher/profile';
+    context.state = {
+      status: 'ready',
+      profile: { ...profile, role: 'TEACHER', teacherVerified: true },
+      session: { access_token: 'teacher-test' },
+    };
+    render(<TeacherProfileScreen />);
+    expect(screen.getByRole('heading', { name: 'Profil & akun' })).toBeTruthy();
+    expect(screen.getAllByText('test@example.invalid')).toHaveLength(2);
+    expect(screen.getByText('Terverifikasi')).toBeTruthy();
+    expect(
+      screen
+        .getAllByRole('link', { name: /Kelas saya/ })
+        .at(-1)
+        ?.getAttribute('href'),
+    ).toBe('/teacher');
+    expect(screen.queryByRole('button', { name: /^Keluar$/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Keluar dari akun' }));
+    await waitFor(() => expect(context.logout).toHaveBeenCalledOnce());
+    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/'));
+  });
+  it('keeps Teacher Profile guarded and Admin logout in the shell', async () => {
+    context.pathname = '/teacher/profile';
+    render(<TeacherProfileScreen />);
+    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/student'));
+    expect(screen.queryByText('test@example.invalid')).toBeNull();
+    cleanup();
+    context.state = {
+      status: 'ready',
+      profile: { ...profile, role: 'TEACHER', teacherVerified: false },
+      session: { access_token: 'teacher-test' },
+    };
+    render(<TeacherProfileScreen />);
+    await waitFor(() =>
+      expect(context.replace).toHaveBeenCalledWith('/teacher/verification-required'),
+    );
+    expect(screen.queryByText('test@example.invalid')).toBeNull();
+    cleanup();
+    context.pathname = '/admin/schools';
+    context.state = {
+      status: 'ready',
+      profile: { ...profile, role: 'ADMIN' },
+      session: { access_token: 'admin-test' },
+    };
+    render(<AppShell area="admin">Admin</AppShell>);
+    expect(screen.getByRole('button', { name: 'Keluar' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Buka profil' })).toBeNull();
   });
   it('keeps an empty progress range finite and accessible', () => {
     render(<ProgressBar value={0} max={0} label="Level selesai" />);

@@ -31,6 +31,7 @@ export class CurrentTryoutDto {
 }
 
 export class TryoutAttemptDto {
+  @ApiProperty({ type: String, format: 'date-time', required: false }) serverTime?: string;
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) packageId!: string;
   @ApiProperty() packageTitle!: string;

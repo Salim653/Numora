@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsUUID, Matches, MaxLength, MinLength, ValidateIf } from 'class-validator';
+import { IsIn, IsString, IsUUID, Matches, MaxLength, MinLength, ValidateIf } from 'class-validator';
 
 export class StudentVideoDto {
   @ApiProperty() mappingId!: string;
@@ -23,9 +23,47 @@ export class ReportDetailsDto {
   details?: string;
 }
 export class StudentQuestionReportDto extends ReportDetailsDto {
+  @ApiProperty({ enum: ['QUESTION', 'OPTION', 'ANSWER_KEY', 'EXPLANATION'] })
+  @IsIn(['QUESTION', 'OPTION', 'ANSWER_KEY', 'EXPLANATION'])
+  declare category: string;
   @ApiProperty({ format: 'uuid' }) @IsUUID() attemptItemId!: string;
 }
 export class StudentVideoReportDto extends ReportDetailsDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() attemptId!: string;
   @ApiProperty({ format: 'uuid' }) @IsUUID() mappingId!: string;
+}
+
+// PROPOSED payload mapping, inactive until Data review. All context is verified server-side.
+export class LearningInteractionDto {
+  @ApiProperty({ format: 'uuid' }) @IsUUID() clientRequestId!: string;
+  @ApiProperty({
+    enum: [
+      'tryout_opened',
+      'tryout_detail_viewed',
+      'explanation_viewed',
+      'video_clicked',
+    ],
+  })
+  @IsIn([
+    'tryout_opened',
+    'tryout_detail_viewed',
+    'explanation_viewed',
+    'video_clicked',
+  ])
+  eventName!: string;
+  @ApiPropertyOptional({ format: 'uuid' })
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsUUID()
+  attemptId?: string;
+  @ApiPropertyOptional({ format: 'uuid' })
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsUUID()
+  mappingId?: string;
+  @ApiPropertyOptional({ format: 'uuid' })
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsUUID()
+  packageId?: string;
+}
+export class LearningInteractionReceiptDto {
+  @ApiProperty({ enum: ['recorded', 'policyPending'] }) state!: string;
 }

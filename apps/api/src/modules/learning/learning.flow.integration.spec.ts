@@ -184,7 +184,7 @@ integration('Drill lifecycle against PostgreSQL', () => {
     for (const item of retry.questions.slice(0, 7))
       await learning.saveAnswer('student', retry.id, item.questionInstanceId, 'A');
     const [video] = await db.insert(learningVideos).values({
-      title: 'Ulang materi', url: 'https://example.test/lesson', source: 'TEST',
+      title: 'Ulang materi', url: 'https://www.youtube.com/watch?v=TESTVIDEO00', source: 'TEST',
       curationStatus: 'READY',
     }).returning({ id: learningVideos.id });
     await db.insert(videoSubchapterMappings).values({

@@ -5,6 +5,14 @@ export type ContentOptionDto = { "id": string; "text": string; };
 
 export type AdminTaxonDto = { "id": string; "kind": "CHAPTER" | "SUBCHAPTER" | "COMPETENCY" | "LEVEL"; "parentId": string | null; "code": string; "name": string; "displayOrder": number; "status": "DRAFT" | "READY" | "ARCHIVED"; };
 
+export type AdminUserDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; };
+
+export type AdminUserListDto = { "items": (AdminUserDto)[]; "nextOffset": number | null; };
+
+export type AdminClassDto = { "id": string; "name": string; "schoolId": string; "schoolName": string; "teacherId": string; "teacherName": string; "studentCount": number; "createdAt": string; "archivedAt": string | null; };
+
+export type AdminClassListDto = { "items": (AdminClassDto)[]; "nextOffset": number | null; };
+
 export type AdminCurriculumDto = { "items": (AdminTaxonDto)[]; };
 
 export type AdminVersionDto = { "id": string; "questionId": string; "primaryCompetencyId": string; "variantId": string; "variantCode": string; "variantKind": "ORIGINAL" | "VARIANT"; "originalVariantId": string | null; "versionNumber": number; "questionType": string; "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string | null; "explanation": string; "difficulty": string; "contentStatus": "DRAFT" | "READY" | "ARCHIVED"; "questionStatus": "DRAFT" | "READY" | "ARCHIVED"; "reviewedByUserId": string | null; "reviewedAt": string | null; };

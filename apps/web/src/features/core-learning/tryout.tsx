@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { Badge, Icon } from '@tka/ui';
 import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { learningApi, LearningApiError } from './api';
 import type { TryoutAttempt } from './types';
 import { AssessmentSession } from './assessment-session';
+import { useLearningView } from './learning-interactions';
 import {
   DataState,
   LearningFrame,
@@ -30,8 +32,8 @@ export function TryoutScreen() {
         <h2 className="mt-2 text-2xl font-extrabold">Uji pemahamanmu dengan paket bersama.</h2>
         <p className="mt-3 max-w-2xl leading-7 text-slate-700">
           Paket baru dirilis Senin 00.00 WIB. TryOut gratis untuk seluruh siswa, baik Mandiri maupun
-          Sekolah, dengan satu kesempatan per paket. Hasil dan pembahasan tersedia setelah
-          pemrosesan IRT selesai.
+          Sekolah, dengan satu kesempatan per paket. Paket final terdiri dari 35 soal. Hasil dan
+          pembahasan tersedia setelah pemrosesan IRT selesai.
         </p>
       </Panel>
       <StudentGate>{(token) => <CurrentTryout token={token} />}</StudentGate>
@@ -41,6 +43,9 @@ export function TryoutScreen() {
 
 function CurrentTryout({ token }: { token: string }) {
   const router = useRouter();
+  const [details, setDetails] = useState(false);
+  const [rulesAccepted, setRulesAccepted] = useState(false);
+  useLearningView(token, 'tryout_opened');
   const query = useQuery({
     queryKey: ['current-tryout'],
     queryFn: () => learningApi.currentTryout(token),
@@ -49,6 +54,12 @@ function CurrentTryout({ token }: { token: string }) {
     mutationFn: (packageId: string) => learningApi.startTryout(token, packageId),
     onSuccess: (attempt) => router.push(`/student/tryout/${attempt.id}`),
   });
+  useLearningView(
+    token,
+    'tryout_detail_viewed',
+    { packageId: query.data?.id },
+    details && !!query.data?.id,
+  );
   if (query.isPending || query.isError)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
@@ -99,9 +110,45 @@ function CurrentTryout({ token }: { token: string }) {
         </p>
       )}
       {current.eligible && current.state === 'open' && (
-        <PrimaryButton disabled={start.isPending} onClick={() => start.mutate(packageId)}>
-          {start.isPending ? 'Memulai…' : 'Mulai TryOut'}
-        </PrimaryButton>
+        <div className="mt-4 space-y-3">
+          <button
+            className="min-h-11 font-semibold underline"
+            onClick={() => setDetails(!details)}
+            aria-expanded={details}
+          >
+            Detail dan aturan paket
+          </button>
+          {details && (
+            <section aria-label="Aturan TryOut" className="space-y-3">
+              <p>
+                Gunakan navigator untuk berpindah soal. Jawaban dapat diubah sebelum pengiriman
+                akhir. Perhatikan status penyimpanan.
+              </p>
+              <p>
+                Waktu tidak dapat dijeda. Saat waktu habis, halaman ini meminta pengiriman jawaban
+                yang diterima server tanpa konfirmasi. Pengiriman manual memerlukan konfirmasi.
+              </p>
+              <p>
+                Setelah submit, nilai dan pembahasan menunggu rilis hasil simulasi. Tidak ada
+                pembayaran atau percobaan ulang paket yang sama.
+              </p>
+              <label className="flex min-h-11 items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={rulesAccepted}
+                  onChange={(e) => setRulesAccepted(e.target.checked)}
+                />
+                Saya memahami aturan pengerjaan.
+              </label>
+            </section>
+          )}
+          <PrimaryButton
+            disabled={start.isPending || !rulesAccepted}
+            onClick={() => start.mutate(packageId)}
+          >
+            {start.isPending ? 'Memulai…' : 'Mulai TryOut'}
+          </PrimaryButton>
+        </div>
       )}
       {current.state === 'inProgress' && current.attemptId && (
         <Link
@@ -149,8 +196,9 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
   const query = useQuery({
     queryKey: ['tryout-attempt', attemptId],
     queryFn: () => learningApi.tryoutAttempt(token, attemptId),
+    refetchInterval: (query) => (query.state.data?.status === 'submitted' ? false : 15_000),
   });
-  if (query.isPending || query.isError)
+  if (!query.data)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
@@ -164,10 +212,35 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
         .
       </Status>
     );
-  return <TryoutForm key={attemptId} attempt={query.data} token={token} />;
+  return (
+    <>
+      {query.isError && (
+        <Status title="Status server belum dapat diperbarui">
+          Jawaban lokal tetap ditampilkan. Periksa koneksi dan status pengiriman sebelum keluar.
+          <button className="min-h-11 font-semibold underline" onClick={() => void query.refetch()}>
+            Periksa status sesi
+          </button>
+        </Status>
+      )}
+      <TryoutForm
+        key={attemptId}
+        attempt={query.data}
+        token={token}
+        check={() => void query.refetch()}
+      />
+    </>
+  );
 }
 
-function TryoutForm({ attempt, token }: { attempt: TryoutAttempt; token: string }) {
+function TryoutForm({
+  attempt,
+  token,
+  check,
+}: {
+  attempt: TryoutAttempt;
+  token: string;
+  check: () => void;
+}) {
   const router = useRouter();
   const client = useQueryClient();
   const deadline = attempt.deadlineAt
@@ -182,6 +255,9 @@ function TryoutForm({ attempt, token }: { attempt: TryoutAttempt; token: string 
       title={attempt.packageTitle}
       questions={attempt.questions}
       headerExtra={deadline ? <span>Batas waktu server: {deadline} WIB</span> : null}
+      deadlineAt={attempt.deadlineAt}
+      serverTime={attempt.serverTime}
+      onFinalizationCheck={check}
       submitLabel="Kirim TryOut"
       confirmMessage={(emptyCount) =>
         `${emptyCount} soal belum dijawab. Kirim jawaban TryOut? Hasil baru tersedia setelah IRT.`
@@ -193,7 +269,7 @@ function TryoutForm({ attempt, token }: { attempt: TryoutAttempt; token: string 
       onSubmitted={() => {
         for (const key of ['current-tryout', 'student-dashboard', 'assessment-history'])
           void client.invalidateQueries({ queryKey: [key] });
-        router.push('/student/tryout');
+        router.push(`/student/tryout/${attempt.id}/result`);
       }}
     />
   );
@@ -214,6 +290,11 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
   const query = useQuery({
     queryKey: ['tryout-result', attemptId],
     queryFn: () => learningApi.tryoutResult(token, attemptId),
+    refetchInterval: (query) =>
+      query.state.error instanceof LearningApiError &&
+      query.state.error.code === 'TRYOUT_RESULT_PENDING'
+        ? 15_000
+        : false,
   });
   if (
     query.isError &&
@@ -222,7 +303,17 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
   )
     return (
       <Status title="Menunggu hasil IRT">
-        Nilai dan pembahasan TryOut belum dapat dibuka sampai batch IRT selesai.
+        <p>
+          Jawaban sudah terkirim. Nilai dan pembahasan tersedia setelah hasil dirilis. Proses IRT
+          selesai belum berarti hasil telah dirilis.
+        </p>
+        <button
+          className="min-h-11 font-semibold underline"
+          disabled={query.isFetching}
+          onClick={() => void query.refetch()}
+        >
+          Periksa status hasil
+        </button>
       </Status>
     );
   if (query.isPending || query.isError)
