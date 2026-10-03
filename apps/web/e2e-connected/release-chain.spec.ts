@@ -576,7 +576,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
       (r) => r.request().method() === 'POST' && r.url().endsWith('/tryout/attempts'),
     );
     await mandiri.getByRole('button', { name: 'Mulai TryOut', exact: true }).click();
-    const independent = (await (await started).json()) as TryoutAttemptDto;
+    const startResponse = await started;
+    expect(startResponse.status()).toBe(201);
+    const independent = (await startResponse.json()) as TryoutAttemptDto;
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}$`));
     expect(independent.serverTime).toBeTruthy();
     expect(independent.deadlineAt).toBeTruthy();

@@ -28,6 +28,9 @@ const {
   packageItems,
   irtBatches,
   irtItemResults,
+  questions,
+  questionVariants,
+  questionVersions,
 } = await import('@tka/database');
 const { seedDemoLearning } = await import('../../../packages/database/dist/demo-learning.js');
 const { db, client } = getDatabase();
@@ -81,9 +84,42 @@ await db.insert(assessmentPackages).values({
   durationSeconds: 3600,
   status: 'DRAFT',
 });
-const tryoutVersions = [301, 303].map(
-  (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`,
-);
+// Dedicated READY test versions; do not mutate the existing DRAFT demo versions or historical pins.
+const tryoutVersions = [];
+for (let i = 0; i < 2; i++) {
+  const questionId = randomUUID();
+  const variantId = randomUUID();
+  const versionId = randomUUID();
+  await db.insert(questions).values({
+    id: questionId,
+    primaryCompetencyId: '00000000-0000-4000-8000-000000000104',
+    sourceRef: `JOB06-TRYOUT-TEST-${versionId}`,
+    status: 'READY',
+  });
+  await db.insert(questionVariants).values({
+    id: variantId,
+    questionId,
+    variantCode: `JOB06-TRYOUT-TEST-${versionId}`,
+    kind: 'ORIGINAL',
+    origin: 'DEMO',
+  });
+  await db.insert(questionVersions).values({
+    id: versionId,
+    variantId,
+    versionNumber: 1,
+    questionType: 'SINGLE_CHOICE',
+    stem: { text: `TEST ONLY: ${i + 2} + 3 = ?` },
+    optionsOrStatements: [i + 4, i + 5, i + 6, i + 7].map((n, index) => ({
+      id: 'ABCD'[index],
+      content: { text: String(n) },
+    })),
+    answerKey: { optionId: 'B' },
+    explanation: { text: `TEST ONLY: ${i + 2} + 3 = ${i + 5}.` },
+    difficulty: 'EASY',
+    contentStatus: 'READY',
+  });
+  tryoutVersions.push(versionId);
+}
 await db.insert(packageItems).values(
   tryoutVersions.map((questionVersionId, i) => ({
     packageId: tryoutId,

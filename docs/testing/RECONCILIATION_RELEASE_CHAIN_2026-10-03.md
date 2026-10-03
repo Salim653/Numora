@@ -19,3 +19,5 @@ Fixture TryOut hanya dua soal PG DEMO, durasi test 3600 detik, dan synthetic IRT
 ## Acceptance boundaries
 
 Google nyata, konten reviewed Curriculum, staging/trial dan QA independen tetap NOT RUN/PENDING. Bukti JOB-06 sebelumnya dipertahankan; engineering PASS baru hanya berlaku bagi SHA yang tertulis di artifact. Tidak menutup PGK/Past/IRT/XP/retention OPEN dan tidak menyatakan JOB-06 atau JOB-07 keseluruhan DONE.
+
+**Fixture correction:** initial connected run rejected start with TRYOUT_CONTENT_NOT_READY because shared Drill demo versions are DRAFT. The guarded harness creates dedicated READY test versions with explicit TEST ONLY text; it never promotes or edits existing demo/historical versions. This is test setup, not Curriculum approval. Initial failed evidence is not counted PASS.
