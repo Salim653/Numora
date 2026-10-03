@@ -902,6 +902,174 @@ test('Teacher stays on verification while refreshed identity is pending', async 
   await expect(page).toHaveURL(/\/teacher$/);
 });
 
+for (const width of [390, 1440]) {
+  test(`Admin PR40 package lifecycle, report resolution and IRT release state at ${width}px`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 });
+    await fixtures(page, 'ADMIN');
+    const policyId = '77777777-7777-4777-8777-777777777777';
+    const packageId = '99999999-9999-4999-8999-999999999999';
+    const ids = Array.from(
+      { length: 10 },
+      (_, index) => `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`,
+    );
+    let pack: Record<string, unknown> | null = null;
+    const report = {
+      id: questionId,
+      kind: 'QUESTION',
+      referenceId: attemptId,
+      category: 'Kunci',
+      details: 'Laporan fixture',
+      status: 'OPEN',
+      followUp: null as string | null,
+      reportedAt: '2026-10-03T00:00:00Z',
+    };
+    const mutations: string[] = [];
+    await page.route('http://localhost:3301/api/v1/admin/**', async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname.replace('/api/v1/', '');
+      if (request.method() !== 'GET') {
+        mutations.push(`${request.method()} ${path}`);
+        const body = request.postDataJSON() as Record<string, unknown>;
+        if (path === 'admin/content/drill-packages') {
+          expect(body.questionVersionIds).toEqual(ids);
+          expect(body.levelId).toBe(levelId);
+          pack = { ...body, id: packageId, status: 'DRAFT', releaseAt: null };
+        } else if (path === `admin/content/drill-packages/${packageId}`) {
+          expect(body.questionVersionIds).toEqual(ids);
+          pack = { ...pack, ...body };
+        } else if (path.endsWith('/publish')) pack = { ...pack, status: 'PUBLISHED' };
+        else if (path.endsWith('/archive')) pack = { ...pack, status: 'ARCHIVED' };
+        else if (path === `admin/reports/QUESTION/${questionId}`) {
+          expect(body.status).toBe('RESOLVED');
+          expect(body.followUp).toBe('Tindak lanjut fixture');
+          report.status = 'RESOLVED';
+          report.followUp = String(body.followUp);
+        } else return route.fulfill({ status: 404, json: { code: 'NOT_FOUND' } });
+        return route.fulfill({ json: { id: path.includes('/reports/') ? questionId : packageId } });
+      }
+      const responses: Record<string, unknown> = {
+        'admin/content/curriculum': {
+          items: [
+            {
+              id: levelId,
+              kind: 'LEVEL',
+              parentId: subchapterId,
+              code: 'DEMO-L1',
+              name: 'Level fixture',
+              displayOrder: 1,
+              status: 'READY',
+            },
+          ],
+        },
+        'admin/content/versions': {
+          items: [
+            {
+              id: ids[0],
+              questionId,
+              primaryCompetencyId: subchapterId,
+              variantId: questionId,
+              variantCode: 'DEMO-01',
+              variantKind: 'ORIGINAL',
+              originalVariantId: null,
+              versionNumber: 1,
+              questionType: 'SINGLE_CHOICE',
+              stem: 'Soal fixture',
+              options: [],
+              answerOptionId: 'A',
+              explanation: 'Demo',
+              difficulty: 'DEMO',
+              contentStatus: 'READY',
+              questionStatus: 'READY',
+              reviewedByUserId: studentId,
+              reviewedAt: '2026-10-01T00:00:00Z',
+            },
+          ],
+        },
+        'admin/content/videos': { items: [] },
+        'admin/reports': { items: [report] },
+        'admin/irt': { items: [] },
+        'admin/irt/batches': {
+          items: [
+            {
+              id: attemptId,
+              packageId,
+              batchKind: 'TRYOUT',
+              modelVersion: 'TEST-ONLY',
+              status: 'SUCCEEDED',
+              startedAt: '2026-10-01T00:00:00Z',
+              finishedAt: '2026-10-01T01:00:00Z',
+              resultReleasedAt: null,
+              failureCode: null,
+            },
+          ],
+        },
+        'admin/audit-logs': { items: [] },
+        'admin/dashboard': {
+          schools: 1,
+          chapters: 1,
+          questions: 1,
+          readyVersions: 1,
+          openReports: report.status === 'OPEN' ? 1 : 0,
+        },
+        'admin/content/tryout-packages': { items: [] },
+        'admin/content/drill-packages': { items: pack ? [pack] : [] },
+      };
+      return route.fulfill({ json: responses[path] ?? { items: [] } });
+    });
+    await page.goto('/admin/content');
+    await page.getByRole('button', { name: 'Paket Drill', exact: true }).click();
+    await page.getByLabel('Kode keluarga', { exact: true }).fill('DEMO-E2E');
+    await page.getByLabel('Versi paket', { exact: true }).fill('1');
+    await page.getByRole('combobox', { name: 'Level', exact: true }).selectOption(levelId);
+    await page.getByLabel('Indeks varian', { exact: true }).fill('1');
+    await page.getByLabel('Nama paket', { exact: true }).fill('Paket fixture baru');
+    await page.getByLabel('ID versi kebijakan penilaian', { exact: true }).fill(policyId);
+    await page
+      .getByLabel('ID versi soal (pisahkan dengan baris baru atau koma)', { exact: true })
+      .fill(ids.join('\n'));
+    await page.getByRole('button', { name: 'Simpan draf paket', exact: true }).click();
+    await expect(page.getByText('Paket fixture baru', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Edit draf', exact: true }).click();
+    await page.getByLabel('Nama paket', { exact: true }).fill('Paket fixture direvisi');
+    await page.getByRole('button', { name: 'Simpan draf paket', exact: true }).click();
+    await expect(page.getByText('Paket fixture direvisi', { exact: true })).toBeVisible();
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: 'Publikasikan paket', exact: true }).click();
+    await expect(page.getByText(/DEMO-E2E.*PUBLISHED/)).toBeVisible();
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: 'Arsipkan paket', exact: true }).click();
+    await expect(page.getByText(/DEMO-E2E.*ARCHIVED/)).toBeVisible();
+    await page.getByRole('button', { name: 'Laporan', exact: true }).click();
+    await page
+      .getByRole('combobox', { name: 'Status tindak lanjut', exact: true })
+      .selectOption('RESOLVED');
+    await page.getByLabel('Catatan tindak lanjut', { exact: true }).fill('Tindak lanjut fixture');
+    await page
+      .getByRole('button', { name: 'Simpan status dan tindak lanjut', exact: true })
+      .click();
+    await expect(page.getByText('Tindak lanjut tersimpan:', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'IRT', exact: true }).click();
+    await expect(page.getByText('TRYOUT · SUCCEEDED', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Rilis belum tercatat/)).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    expect(mutations).toEqual([
+      'POST admin/content/drill-packages',
+      `PATCH admin/content/drill-packages/${packageId}`,
+      `POST admin/content/drill-packages/${packageId}/publish`,
+      `POST admin/content/drill-packages/${packageId}/archive`,
+      `PATCH admin/reports/QUESTION/${questionId}`,
+    ]);
+    await page.screenshot({
+      path: testInfo.outputPath(`admin-content-${width}.png`),
+      fullPage: true,
+    });
+  });
+}
+
 for (const { role, verified, path, destination } of [
   { role: 'STUDENT', verified: true, path: '/teacher', destination: '/student' },
   { role: 'TEACHER', verified: true, path: '/student', destination: '/teacher' },

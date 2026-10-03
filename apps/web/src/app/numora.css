@@ -1301,7 +1301,7 @@ a.settings-row:hover {
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
 }
-.admin-content-nav [aria-current] {
+.admin-content-nav .secondary-button[aria-current] {
   background: var(--color-primary-light);
   color: var(--color-primary);
   border-color: var(--numora-purple-200);
