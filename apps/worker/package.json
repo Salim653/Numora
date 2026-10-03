@@ -9,7 +9,8 @@
     "worker:probe": "tsx src/probe.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "tryout:recover": "tsx src/run-tryout-recovery.ts"
+    "tryout:recover": "tsx src/run-tryout-recovery.ts",
+    "outbox:status": "tsx src/outbox-status.ts"
   },
   "dependencies": {
     "@tka/database": "workspace:*",

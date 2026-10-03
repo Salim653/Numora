@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { and, eq, sql } from 'drizzle-orm';
 import {
   analyticsOutbox, assessmentAttempts, assessmentPackages, attemptAnswers, attemptItems,
@@ -12,7 +12,7 @@ import { recoverOverdueTryouts } from './tryout-recovery.js';
 const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 
 integration('TryOut recovery on real PostgreSQL without browser or Redis', () => {
-  afterAll(closeDatabaseConnection);
+  afterAll(async () => { vi.unstubAllEnvs(); await closeDatabaseConnection(); });
 
   let chapterOrder = 0;
   async function fixture() {
@@ -67,6 +67,7 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
 
   it('recovers due attempts, races manual/auto safely, keeps raw answers and never expires Drill', async () => {
     const { db, attempt, level, policy } = await fixture();
+    vi.stubEnv('DOMAIN_ANALYTICS_ENABLED', 'true');
     const due = await attempt(new Date(Date.now() - 1_000));
     const future = await attempt(new Date(Date.now() + 60_000));
     const noDeadline = await attempt(null);
@@ -88,6 +89,15 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
     const events = await db.select().from(analyticsOutbox).where(and(eq(analyticsOutbox.entityId, due.row.id),
       eq(analyticsOutbox.eventName, 'tryout_completed')));
     expect(events).toHaveLength(1);
+    const submitted = await db.select().from(analyticsOutbox).where(and(eq(analyticsOutbox.entityId, due.row.id),
+      eq(analyticsOutbox.eventName, 'tryout_submitted')));
+    expect(submitted).toHaveLength(1);
+    expect(submitted[0]).toMatchObject({ actorUserId: due.row.studentId, correlationId: due.row.id });
+    expect(submitted[0]!.payload).toMatchObject({ assessmentType: 'TRYOUT', packageId: due.row.packageId,
+      scoringPolicyVersionId: due.row.scoringPolicyVersionId, packageVersion: 1,
+      submissionType: 'deadline', questionCount: 2, answeredCount: 1 });
+    for (const key of ['score', 'answer', 'answerKey', 'email']) expect(submitted[0]!.payload).not.toHaveProperty(key);
+
     await recoverOverdueTryouts(); // New process/runner state is not needed for replay protection.
     expect((await db.select().from(assessmentAttempts).where(eq(assessmentAttempts.id, due.row.id)))[0])
       .toEqual(stored);
@@ -101,6 +111,7 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
   });
 
   it('isolates invalid attempts and reports their overdue backlog without partially grading', async () => {
+    vi.stubEnv('DOMAIN_ANALYTICS_ENABLED', 'false');
     const { db, attempt } = await fixture();
     const broken = await attempt(new Date(Date.now() - 10_000), true);
     const valid = await attempt(new Date(Date.now() - 1_000));
@@ -119,6 +130,7 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
   });
 
   it('rolls grading back when transactional outbox insertion fails, then retries once', async () => {
+    vi.stubEnv('DOMAIN_ANALYTICS_ENABLED', 'false');
     const { db, attempt } = await fixture();
     const due = await attempt(new Date(Date.now() - 1_000));
     const name = `test_finalizer_${randomUUID().replaceAll('-', '')}`;

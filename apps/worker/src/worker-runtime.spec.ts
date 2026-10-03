@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   checkDatabase: vi.fn(),
   closeDatabase: vi.fn(),
   outbox: vi.fn(),
+  status: vi.fn(),
   recover: vi.fn(),
   project: vi.fn(),
   workerHandlers: new Map<string, (...args: unknown[]) => void>(),
@@ -30,7 +31,7 @@ vi.mock('@tka/database', () => ({
   closeDatabaseConnection: mocks.closeDatabase,
 }));
 vi.mock('./tryout-recovery.js', () => ({ recoverOverdueTryouts: mocks.recover }));
-vi.mock('./outbox.js', () => ({ drainOutboxBatch: mocks.outbox }));
+vi.mock('./outbox.js', () => ({ drainOutboxBatch: mocks.outbox, outboxStatus: mocks.status }));
 vi.mock('./class-leaderboard.js', () => ({ projectClassLeaderboard: mocks.project }));
 import { runWorker } from './worker-runtime.js';
 
@@ -53,6 +54,7 @@ describe('worker Redis outage lifecycle', () => {
     mocks.worker.close.mockResolvedValue(undefined);
     mocks.checkDatabase.mockResolvedValue(undefined);
     mocks.closeDatabase.mockResolvedValue(undefined);
+    mocks.status.mockResolvedValue({ pending: 0, failed: 0, retryReady: 0, coolingDown: 0 });
     mocks.outbox.mockResolvedValue({ processed: 0, failed: 0 });
     mocks.project.mockResolvedValue({});
     mocks.recover.mockResolvedValue({ finalized: 0, failed: 0, backlog: 0 });
