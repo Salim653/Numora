@@ -1,6 +1,6 @@
 # Rekonsiliasi PR #39 — recovery akun QA
 
-**ENGINEERING DECISION — implementasi yang diminta pengguna 3 Oktober 2026:** branch PR #39 direkonsiliasi dengan main `ff927aa`. Root package.json mempertahankan seluruh checks/release-chain main dan menambah alias rotasi; test:checks memasukkan regression script QA tanpa credential/environment nyata. Public Google login dan kebijakan produk tidak berubah.
+**ENGINEERING DECISION — implementasi yang diminta pengguna 3 Oktober 2026:** branch PR #39 direkonsiliasi dengan main `cc23428`, termasuk QA monitoring #38 dan ownership #37. Root package.json mempertahankan seluruh checks/release-chain main dan menambah alias rotasi; test:checks memasukkan regression script QA tanpa credential/environment nyata. Public Google login dan kebijakan produk tidak berubah.
 
 ## Perilaku
 
@@ -15,3 +15,5 @@ Default provisioning tetap idempotent dan tidak merotasi password. Existing QA A
 Regression memakai directory sementara dan Admin API mock: preflight/identity/project/corrupt/read failure, kegagalan akun tengah, ambiguous success, kegagalan atomic vault/journal/manifest, concurrent/stale lock, provisioning/rerun/recovery/missing vault, mode conflict dan arg/alias. CI menjalankannya di Validate contracts melalui test:checks. Gate lokal/CI terbaru dicatat pada PR; dokumen ini tidak mengklaim rotasi Supabase nyata, reviewer approval, Google/staging atau merge.
 
 Lokal: `pnpm test:checks` 33/33 (22 recovery QA, 11 checks existing), lint, typecheck, contracts:validate, contracts:types:check dan build seluruh workspace lulus. JSON `null` pada vault maupun pending juga ditolak sebelum provider lookup.
+
+CI [37101245019](https://github.com/ayiinee/Numora/actions/runs/37101245019) pada `ba9ec05` lulus seluruh gate termasuk PostgreSQL/Redis, browser, upgrade/bridge, connected release chain, build dan OpenAPI. Regression node:test dipindahkan ke `scripts/qa-accounts.test.mjs` agar tidak ditemukan ulang oleh Vitest. Setelah #40 merged, branch diselaraskan lagi dengan main `36b0f25`; gate gabungan wajib lulus sebelum merge #39.
