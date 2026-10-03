@@ -2,17 +2,25 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { getDatabase, classMemberships, schools, teacherSchoolMemberships, users } from '@tka/database';
+import {
+  getDatabase,
+  classMemberships,
+  schools,
+  teacherSchoolMemberships,
+  users,
+} from '@tka/database';
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { IdentityProfileDto, RegisterProfileDto } from './identity.dto';
 
 @Injectable()
 export class IdentityService {
+  private readonly logger = new Logger(IdentityService.name);
   private supabase?: SupabaseClient;
 
   private authClient() {
@@ -93,55 +101,36 @@ export class IdentityService {
   }
 
   async registerProfile(
-  authorization: string | undefined,
-  input: RegisterProfileDto,
-): Promise<IdentityProfileDto> {
-  console.log('[IDENTITY REGISTER] START', {
-    hasAuthorization: Boolean(authorization),
-    authorizationLength: authorization?.length ?? 0,
-    role: input.role,
-  });
+    authorization: string | undefined,
+    input: RegisterProfileDto,
+  ): Promise<IdentityProfileDto> {
+    this.logger.debug('Profile registration started');
 
-  const authUser = await this.authenticate(authorization);
+    const authUser = await this.authenticate(authorization);
 
-  console.log('[IDENTITY REGISTER] AUTH OK', {
-    userId: authUser.id,
-    email: authUser.email,
-    provider: authUser.app_metadata.provider,
-  });
+    this.logger.debug('Profile registration authentication succeeded');
 
-  const googleProvider =
-    authUser.app_metadata.provider === 'google' ||
-    authUser.app_metadata.providers?.includes('google');
+    const googleProvider =
+      authUser.app_metadata.provider === 'google' ||
+      authUser.app_metadata.providers?.includes('google');
 
-  if (!googleProvider || !authUser.email) {
-    throw new ForbiddenException(
-      'Student and Teacher registration requires Google sign-in.',
-    );
-  }
+    if (!googleProvider || !authUser.email) {
+      throw new ForbiddenException('Student and Teacher registration requires Google sign-in.');
+    }
 
-  const name =
-    authUser.user_metadata.full_name ??
-    authUser.user_metadata.name;
+    const name = authUser.user_metadata.full_name ?? authUser.user_metadata.name;
 
-  const displayName =
-    typeof name === 'string' && name.trim()
-      ? name.trim().slice(0, 120)
-      : (authUser.email.split('@')[0] ?? authUser.email);
-
-  console.log('[IDENTITY REGISTER] PROFILE DATA', {
-    authUserId: authUser.id,
-    role: input.role,
-    displayName,
-    email: authUser.email,
-  });
+    const displayName =
+      typeof name === 'string' && name.trim()
+        ? name.trim().slice(0, 120)
+        : (authUser.email.split('@')[0] ?? authUser.email);
 
     const { db } = getDatabase();
 
-    console.log('[IDENTITY REGISTER] DATABASE OK');
+    this.logger.debug('Profile registration database available');
 
     try {
-      console.log('[IDENTITY REGISTER] INSERT USERS');
+      this.logger.debug('Profile registration inserting profile');
 
       const inserted = await db
         .insert(users)
@@ -158,18 +147,14 @@ export class IdentityService {
           id: users.id,
         });
 
-      console.log('[IDENTITY REGISTER] INSERT RESULT', {
-        insertedCount: inserted.length,
-        inserted,
-      });
+      this.logger.debug(`Profile registration inserted ${inserted.length} profile(s)`);
 
       if (inserted.length === 0) {
         throw new ConflictException('Profile already exists.');
       }
     } catch (error) {
-      console.error('[IDENTITY REGISTER] INSERT ERROR', error);
-
       if (error instanceof ConflictException) {
+        this.logger.warn('Profile registration rejected: profile already exists');
         throw error;
       }
 
@@ -179,15 +164,14 @@ export class IdentityService {
         'code' in error &&
         error.code === '23505'
       ) {
-        throw new ConflictException(
-          'Profile email is already in use.',
-        );
+        this.logger.warn('Profile registration rejected: email already in use');
+        throw new ConflictException('Profile email is already in use.');
       }
-
+      this.logger.error('Profile registration insert failed');
       throw error;
     }
 
-    console.log('[IDENTITY REGISTER] GET PROFILE');
+    this.logger.debug('Profile registration loading profile');
 
     return this.getProfile(authorization);
   }

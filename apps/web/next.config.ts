@@ -2,7 +2,7 @@ import path from 'node:path';
 import { loadEnvConfig } from '@next/env';
 import type { NextConfig } from 'next';
 
-loadEnvConfig(path.resolve(process.cwd(), '../..'));
+loadEnvConfig(path.resolve(process.cwd(), '../..'), process.env.NODE_ENV === 'development');
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
