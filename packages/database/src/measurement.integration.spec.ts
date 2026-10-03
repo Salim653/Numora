@@ -33,18 +33,21 @@ describe.skipIf(!testUrl)('variant/IRT persistence and role boundaries', { timeo
     url.pathname = `/${databaseName}`;
     owner = postgres(url.toString(), { max: 1, onnotice: () => {} });
     await migrateIntegratedDatabase(owner, resolve('drizzle'));
+    const mainPassword = randomUUID();
+    const computePassword = randomUUID();
     await admin.unsafe(
-      `CREATE ROLE "${mainLogin}" LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`,
+      `CREATE ROLE "${mainLogin}" LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '${mainPassword}'`,
     );
     await admin.unsafe(
-      `CREATE ROLE "${computeLogin}" LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`,
+      `CREATE ROLE "${computeLogin}" LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '${computePassword}'`,
     );
     await admin.unsafe(`GRANT numora_main_runtime TO "${mainLogin}"`);
     await admin.unsafe(`GRANT numora_irt_runtime TO "${computeLogin}"`);
     url.username = mainLogin;
-    url.password = '';
+    url.password = mainPassword;
     main = postgres(url.toString(), { max: 1, onnotice: () => {} });
     url.username = computeLogin;
+    url.password = computePassword;
     compute = postgres(url.toString(), { max: 1, onnotice: () => {} });
   });
   afterAll(async () => {
