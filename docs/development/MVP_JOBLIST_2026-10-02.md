@@ -210,6 +210,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Output:** manual/auto/save semantics, scheduled recovery, idempotent result/outbox dan observability. Tidak menambahkan timeout pada Drill.
 - **Bukti selesai:** browser ditutup/jaringan putus saat expiry tetap final; manual dan auto bersamaan menghasilkan satu submission; save sesudah deadline ditolak; raw saved answers dipertahankan; timer tidak di-reset oleh refresh/re-auth.
 
+- **Status engineering - 3 October 2026:** shared manual/auto finalizer, late-save guard using database time, lazy resume and scheduled PostgreSQL recovery implemented; historical pins/answers preserved, one legacy completion event. Bounded scan/partial index and Redis-independent CLI documented in [runbook](TRYOUT_RECOVERY_RUNBOOK.md). Actual PostgreSQL tests passed; feature PR/clean-SHA CI and independent QA are separate gates. Official duration and package-close relationship remain TBC-06 OPEN; no Drill timeout or official TryOut publication unlocked.
+
 ### JOB-10 — Jalankan IRT dan initial weighted result/release TryOut
 
 - **Owner:** Aini orchestration/worker/release; Ferdi snapshot/output integration; Data model/calibration; Curriculum/PO scale/policy; Avicenna Admin state; Salim QA. **Asal:** LAMA-09,08.
