@@ -172,6 +172,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-06 — Buktikan trial chain nyata dan otorisasi lintas peran
 
+**Update engineering, 3 Oktober 2026 — instruksi Aini:** tiga kasus connected pada satu production-build SHA lulus dengan API/PostgreSQL/Redis sebenarnya dan identitas email fixture. Defect offline save diperbaiki; runner dan artifact per SHA ditambahkan ke CI. [Evidence dan gate tersisa](../testing/JOB06_RELEASE_CHAIN.md). **Belum DONE/acceptance trial:** login Google nyata, environment trial yang disetujui, konten reviewed dan acceptance Salim belum tersedia. Farel tetap DRI frontend; perubahan ini adalah pekerjaan integrasi/defect yang diotorisasi, bukan pengalihan seluruh ownership.
+
 - **Owner:** Farel DRI integrasi browser, regression dan fixing frontend dalam sembilan task aktifnya; Salim acceptance akhir setelah handoff; Avicenna Admin/content, Ferdi Drill/content, Aini domain backend hanya untuk bagian fitur/defect yang diserahkan. **Asal:** LAMA-01,02,05 dan pekerjaan aktif Farel pada gambar.
 - **Kerjakan:** pada satu release SHA, Admin sekolah/token → Guru Google login/verifikasi/create class → Student Google login/join/save/resume/submit Drill → Guru latest/best/progres siswa sendiri. Uji token 72 jam/single-use/revoke/reissue/race, satu kelas, foreign Teacher/Student denial, refresh/re-auth/double-submit; sertakan Level 2 continuation sebagai gate kelanjutan belajar.
 - **Output:** testcase/evidence per environment/role/commit, daftar defect, konten reviewed dan scope trial yang disetujui. Reuse Playwright; fixture CI bukan bukti seluruh rantai ini.
@@ -184,10 +186,15 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-07 — Perbaiki TryOut backend: free access, 35 item dan kontrak tiga format
 
+- **Status tahap pertama — 2 Oktober 2026:** akses/availability backend dan UI minimum diimplementasikan lokal, menunggu review/QA. Mandiri/Sekolah gratis; snapshot kelas nullable dan immutable; dashboard feature access dipisahkan dari current-package availability/new-attempt eligibility. Tanpa endpoint/migrasi baru. OpenAPI/generated types mengikuti DTO; bukti verifikasi ada pada [status backend](CORE_LEARNING_BACKEND_STATUS.md#tryout-dan-irt). Perubahan mode development/Redis sebelumnya tetap pekerjaan terpisah.
+- **Rekonsiliasi 3 Oktober 2026:** #41 mempertahankan serverTime/countdown, detail/ack aturan dan recovery main; akses gratis tetap scope tahap pertama. CI terbaru dan connected chain gabungan #46/#41/#45 menjadi gate; admin bypass merge diizinkan Aini pada 3 Oktober, tanpa mengklaim reviewer approval; belum acceptance trial.
+- **Sisa JOB-07:** validator/delivery 35 soal, answer union PGK dan rubrik, listing/detail/Past. Konfirmasi Research/Curriculum + Product untuk rubrik/komposisi/durasi/skala; Product untuk Past never-attempted; Product + Data + Curriculum untuk batch end/periode vs deadline sebelum integrasi JOB-09/10. Tidak ada OPEN yang menghambat tahap akses; JOB-07 keseluruhan belum selesai.
 - **Owner:** Aini backend; Ferdi consumer frontend; Data/Curriculum rubric/content; Salim contract tests. **Asal:** LAMA-08.
 - **Kerjakan:** hapus class prerequisite pada API/dashboard/availability; simpan class snapshot nullable untuk Mandiri. Bedakan paket unavailable dari user ineligible. Validator/package delivery wajib 35 PG/MCMA/Category, answer union yang tervalidasi, pinned item/policy, shared package per batch dan satu attempt/user/package. Sediakan listing/detail/current/Past sesuai approved package policy.
 - **Output:** controller/DTO/domain/schema migration bila perlu, OpenAPI/generated types dan tests. Numeric duration/composition/rubric/scale tidak ditebak; final publikasi menggunakan konten approved dari Curriculum.
 - **Bukti selesai:** Mandiri/Sekolah sama-sama eligible tanpa checkout; count salah/answer type salah ditolak; repeated/concurrent start menghasilkan satu attempt; direct access unauthorized ditolak; unavailable/expired tidak bisa start. Persetujuan PGK scoring tetap dependency JOB-01.
+
+- **Bukti connected rekonsiliasi - 3 Oktober 2026:** empat kasus pada satu production-build SHA `bd3fb4c` lulus tanpa skip, mencakup akses TryOut dan scope history Guru/level Student. [Bukti dan batas acceptance](../testing/RECONCILIATION_RELEASE_CHAIN_2026-10-03.md#verified-local-candidate); admin bypass merge diizinkan Aini, bukan bukti reviewer approval; SHA main final wajib diuji ulang dan hasil/artifact dicatat pada PR #47. Gate Google/trial/QA independen tetap diperlukan.
 
 ### JOB-08 — Lengkapi TryOut frontend sesuai alur terbaru
 
@@ -219,10 +226,16 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-12 — Lengkapi Penilaian/history dan acceptance hasil tersimpan
 
+- **Status implementasi - 2 Oktober 2026:** backend history dan UI minimum dikerjakan dalam branch terpisah dari JOB-07. Query `levelId` opsional, cursor dibatasi pada result set pengguna/filter, dan timestamp PostgreSQL tetap presisi; record mendapat konteks bab/subbab/level serta status reward pending/notApplicable. Skor 0 dan retry terpisah tetap tersimpan; waiting TryOut/Pretest tanpa route tidak menampilkan tautan hasil. Bukti dan batas acceptance ada pada [status backend](CORE_LEARNING_BACKEND_STATUS.md#penilaian-dan-history---job-12). Review/QA staging dan integrasi numeric rewards/Pretest/final IRT masih tersisa; JOB-12 tidak menutup keputusan OPEN.
+
 - **Owner:** Avicenna frontend; Aini query/contract; Ferdi result coordination; Salim ownership/history tests. **Asal:** LAMA-04,15.
 - **Kerjakan:** reuse history API/pagination; tampilkan latest/best dan seluruh attempt, konteks level/jenis aktivitas, pending XP/star, TryOut waiting/released serta Pretest result route hanya ketika API tersedia. Akses pembahasan mengikuti approved retention; preserved result tidak hilang karena explanation policy berubah.
 - **Output:** per-level history/context dan UI loading/empty/page-error/access states; contract additions minimal bila diperlukan.
 - **Bukti selesai:** Student hanya history sendiri, score 0 benar, lower-score retry tidak overwrite best/history; no premature TryOut score; cursor tidak menggandakan/melewatkan record pada testcase; content correction tidak mengubah hasil lama.
+
+- **Rekonsiliasi 3 Oktober 2026:** #45 menyatukan class snapshot Guru dan level filter Student dengan objek filter internal; cursor memakai scope yang sama dan presisi PostgreSQL. CI head terbaru dan connected chain satu SHA tetap wajib; admin bypass diizinkan Aini, tanpa mengklaim reviewer approval; tidak menutup kebijakan OPEN atau acceptance JOB-06.
+
+- **Bukti connected rekonsiliasi - 3 Oktober 2026:** empat kasus pada satu production-build SHA `bd3fb4c` lulus tanpa skip, mencakup akses TryOut dan scope history Guru/level Student. [Bukti dan batas acceptance](../testing/RECONCILIATION_RELEASE_CHAIN_2026-10-03.md#verified-local-candidate); admin bypass merge diizinkan Aini, bukan bukti reviewer approval; SHA main final wajib diuji ulang dan hasil/artifact dicatat pada PR #47. Gate Google/trial/QA independen tetap diperlukan.
 
 ### JOB-13 — Implementasikan lifecycle Pretest dan Skip
 
@@ -240,7 +253,7 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-15 — Feedback satu arah dan monitoring Guru lengkap
 
-- **Owner:** Ferdi backend **sementara, PROPOSED pengganti kapasitas Andi**; aliwafa frontend feedback/inbox baru; Farel handoff baseline monitoring existing dan reviewer integrasi; Salim acceptance independen; Aini backend reviewer. **Asal:** LAMA-10.
+- **Owner:** Ferdi backend **sementara, ENGINEERING DECISION disetujui pengguna pada 2 Oktober**; aliwafa frontend feedback/inbox baru; Ferdi ringkasan dashboard; Farel handoff baseline monitoring existing dan reviewer integrasi; Salim acceptance independen; Aini backend reviewer. **Asal:** LAMA-10.
 - **Kerjakan:** owned-class feedback create/list/read,1–1.000 karakter, Student inbox/readAt idempotent dan akses history asesmen Guru untuk siswa kelas miliknya. Complete loading/empty/error dan latest/best 0 states. Tidak membangun chat dua arah.
 - **Output:** module/service/DTO/OpenAPI, ownership tests, Teacher send dan Student read UI. Scope backend tambahan ini antre setelah core-critical tasks Ferdi, bukan otomatis dibebankan ke frontend aliwafa.
 - **Bukti selesai:** Guru tidak mengirim/membaca siswa kelas lain; Student tidak membaca feedback Student lain; mark-read tidak menggandakan state; batas karakter server-side. Tidak menyimpulkan Andi hadir dari tabel ownership historis.
@@ -310,6 +323,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 **PROPOSED sisa kapasitas:** aliwafa menangani fitur feedback/inbox dan share link/QR baru, dengan integrasi setelah handoff baseline Farel. Ferdi tetap mengambil backend feedback/operasional secara sementara; Aini menangani backend identity/class hanya untuk kebutuhan/defect yang diserahkan. Farel tetap PM, sehingga antrean PM dan sembilan task aktif disusun sesuai kapasitas. Andi/Tangguh/Nafi tidak diasumsikan tersedia; Model/Data/Curriculum/DevOps tetap dependency eksternal.
 
 ### Ferdi
+
+**ENGINEERING DECISION — 2 Oktober:** pengguna menyetujui rencana Ferdi termasuk JOB-15 backend feedback/riwayat Guru dan JOB-18 backend operasional Admin, kapasitas paruh waktu, satu pekerjaan besar aktif dan checkpoint 12 Oktober berbasis gate. Persetujuan assignment tidak menutup OPEN policy atau handoff Farel. Status implementasi/tes dan dependency dicatat terpisah dalam [FERDI_IMPLEMENTATION_2026-10-02](FERDI_IMPLEMENTATION_2026-10-02.md); snapshot audit lama tetap historis.
 
 - **Fokus pertama:** JOB-03 konten/support publisher dan JOB-05 Drill session/result; perbaikan Level 2 hanya setelah diagnosis dan handoff Farel
 - **Antrean berikut sesuai dependency:** JOB-08/09 UI TryOut; JOB-10 IRT boundary; JOB-11 result; JOB-14 support; JOB-15 backend sementara; JOB-16/17 UI; JOB-18/19/20/22 bagian terkait

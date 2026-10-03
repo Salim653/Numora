@@ -23,7 +23,7 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
         await request(
           'students/me/question-reports',
           'POST',
-          { attemptItemId: itemId, category: 'TEST', reporterStudentId: other },
+          { attemptItemId: itemId, category: 'QUESTION', reporterStudentId: other },
           'student',
         )
       ).status,
@@ -70,12 +70,34 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
   it('returns only curated recommendations, caps three, and scopes reports to actual owned items', async () => {
     const { request, subchapter, attemptId, itemId, student } = fixture;
     const { db } = getDatabase();
+    for (const url of [
+      'https://youtube.com.example.test/watch?v=TESTVIDEO00',
+      'https://example.test/lesson',
+    ]) {
+      const [unsafe] = await db
+        .insert(learningVideos)
+        .values({
+          title: 'TEST spoofed imported URL',
+          url,
+          source: 'TEST',
+          curationStatus: 'READY',
+        })
+        .returning();
+      await db
+        .insert(videoSubchapterMappings)
+        .values({
+          videoId: unsafe!.id,
+          subchapterId: subchapter,
+          recommendationOrder: 1,
+          status: 'READY',
+        });
+    }
     for (let i = 0; i < 5; i++) {
       const [video] = await db
         .insert(learningVideos)
         .values({
           title: `TEST video ${i}`,
-          url: `https://example.test/${i}`,
+          url: `https://www.youtube.com/watch?v=TESTVIDEO0${i}`,
           source: 'TEST',
           curationStatus: i === 0 ? 'DRAFT' : 'READY',
         })
@@ -104,7 +126,7 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
         await request(
           'students/me/question-reports',
           'POST',
-          { attemptItemId: itemId, category: 'TEST' },
+          { attemptItemId: itemId, category: 'QUESTION' },
           'other',
         )
       ).status,
@@ -112,7 +134,7 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
     const report = await request(
       'students/me/question-reports',
       'POST',
-      { attemptItemId: itemId, category: 'TEST', details: 'TEST issue' },
+      { attemptItemId: itemId, category: 'QUESTION', details: 'TEST issue' },
       'student',
     );
     expect(report.status).toBe(201);
@@ -124,7 +146,7 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
         await request(
           'students/me/video-reports',
           'POST',
-          { attemptId, mappingId: randomUUID(), category: 'TEST' },
+          { attemptId, mappingId: randomUUID(), category: 'QUESTION' },
           'student',
         )
       ).status,
@@ -132,7 +154,7 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
     const vr = await request(
       'students/me/video-reports',
       'POST',
-      { attemptId, mappingId: videos.items[0]!.mappingId, category: 'TEST' },
+      { attemptId, mappingId: videos.items[0]!.mappingId, category: 'QUESTION' },
       'student',
     );
     expect(vr.status).toBe(201);
@@ -157,7 +179,7 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
     const questionBody = {
       clientRequestId: randomUUID(),
       attemptItemId: fixture.itemId,
-      category: 'TEST retry',
+      category: 'QUESTION',
       details: 'Same issue',
     };
     const responses = await Promise.all(
@@ -208,6 +230,33 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
         ),
       );
       expect(sent.map((r) => r.status)).toEqual([201, 201]);
+      const [stored] = await db
+        .select()
+        .from(videoReports)
+        .where(eq(videoReports.id, videoBody.clientRequestId));
+      expect(stored!.attemptContext).toMatchObject({
+        attemptId: fixture.attemptId,
+        levelId: fixture.level,
+        subchapterId: fixture.subchapter,
+      });
+      const [original] = await db
+        .select()
+        .from(assessmentAttempts)
+        .where(eq(assessmentAttempts.id, fixture.attemptId));
+      const [different] = await db
+        .insert(assessmentAttempts)
+        .values({ ...original!, id: randomUUID() })
+        .returning();
+      expect(
+        (
+          await fixture.request(
+            'students/me/video-reports',
+            'POST',
+            { ...videoBody, attemptId: different!.id },
+            'student',
+          )
+        ).status,
+      ).toBe(409);
       expect(
         await db.select().from(videoReports).where(eq(videoReports.id, videoBody.clientRequestId)),
       ).toHaveLength(1);

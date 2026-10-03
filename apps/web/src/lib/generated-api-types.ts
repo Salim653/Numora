@@ -52,3 +52,13 @@ export type TokenSummaryDto = { "id": string; "expiresAt": string; "usedAt": str
 export type TokenListDto = { "items": (TokenSummaryDto)[]; };
 
 export type RevokedDto = { "revoked": boolean; };
+
+export type CreateFeedbackDto = { "clientRequestId": string; "body": string; };
+
+export type FeedbackDto = { "id": string; "classId": string; "studentId": string; "teacherName": string; "body": string; "sentAt": string; "readAt": string | null; };
+
+export type FeedbackListDto = { "items": (FeedbackDto)[]; "nextOffset": number | null; };
+
+export type FeedbackSummaryDto = { "unreadCount": number; "latest": (FeedbackDto)[]; };
+
+export type ReadFeedbackDto = { "id": string; "readAt": string; };

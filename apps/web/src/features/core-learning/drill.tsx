@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { Icon } from '@tka/ui';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useLearningView } from './learning-interactions';
 import { learningApi } from './api';
 import type { DrillAttempt, DrillResult } from './types';
 import { AssessmentSession } from './assessment-session';
@@ -17,7 +18,7 @@ import {
   Status,
   StudentGate,
 } from './ui';
-import { RecommendedVideos, ReportForm } from './support';
+import { QUESTION_REPORT_CATEGORIES, RecommendedVideos, ReportForm } from './support';
 
 export function DrillScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -133,6 +134,12 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
     queryKey: ['result', attemptId],
     queryFn: () => learningApi.result(token, attemptId),
   });
+  useLearningView(
+    token,
+    'explanation_viewed',
+    { attemptId },
+    query.data?.explanationState === 'available',
+  );
   if (query.isPending || query.isError)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
@@ -146,12 +153,14 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
         </p>
       )}
       <ResultSummary result={result} />
+      <StartDrill token={token} levelId={result.levelId} retry />
       {result.unlockedLevelId && <ContinueDrill token={token} levelId={result.unlockedLevelId} />}
       <RecommendedVideos token={token} attemptId={attemptId} />
       <h2 className="text-xl font-bold">Pembahasan</h2>
       {result.explanationState === 'expired' ? (
         <Status title="Pembahasan tidak tersedia">
-          Masa akses pembahasan 90 hari telah berakhir. Nilai dan riwayat hasil tetap tersimpan.
+          Akses pembahasan tidak tersedia untuk attempt ini sesuai kebijakan tersimpan di server.
+          Nilai dan riwayat hasil tetap tersimpan.
         </Status>
       ) : (
         result.questions.map((q, index) => (
@@ -182,6 +191,7 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
               <MathText value={q.explanation} />
             </p>
             <ReportForm
+              categories={QUESTION_REPORT_CATEGORIES}
               label={`Laporkan soal ${index + 1}`}
               submit={(category, details, clientRequestId) =>
                 learningApi.reportQuestion(token, {
@@ -200,11 +210,25 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
 }
 
 function ContinueDrill({ token, levelId }: { token: string; levelId: string }) {
+  return <StartDrill token={token} levelId={levelId} />;
+}
+
+function StartDrill({
+  token,
+  levelId,
+  retry = false,
+}: {
+  token: string;
+  levelId: string;
+  retry?: boolean;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const sending = useRef(false);
   async function start() {
-    if (busy) return;
+    if (sending.current) return;
+    sending.current = true;
     setBusy(true);
     setError('');
     try {
@@ -213,17 +237,20 @@ function ContinueDrill({ token, levelId }: { token: string; levelId: string }) {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Level berikutnya belum dapat dimulai.');
     } finally {
+      sending.current = false;
       setBusy(false);
     }
   }
   return (
     <Panel>
-      <h2 className="font-bold">Lanjutkan level berikutnya</h2>
+      <h2 className="font-bold">{retry ? 'Latih lagi level ini' : 'Lanjutkan level berikutnya'}</h2>
       <p className="my-3 text-sm text-slate-700">
-        Level berikutnya sudah terbuka. Mulai latihan saat paket soal tersedia.
+        {retry
+          ? 'Attempt baru menyimpan hasil terpisah. Nilai terbaik dan level yang sudah terbuka tetap dipertahankan.'
+          : 'Level berikutnya sudah terbuka. Mulai latihan saat paket soal tersedia.'}
       </p>
       <PrimaryButton disabled={busy} onClick={() => void start()}>
-        {busy ? 'Menyiapkan Drill…' : 'Mulai level berikutnya'}
+        {busy ? 'Menyiapkan Drill…' : retry ? 'Ulangi level ini' : 'Mulai level berikutnya'}
       </PrimaryButton>
       {error && (
         <p role="alert" className="mt-3 text-sm text-red-700">
@@ -263,6 +290,12 @@ export function ResultSummary({ result }: { result: DrillResult }) {
       {result.unlockedLevelId && (
         <p className="mt-2 font-semibold text-[var(--numora-purple)]">Level berikutnya terbuka.</p>
       )}
+      {result.stars === null && (
+        <p className="mt-2">Bintang belum tersedia; kebijakan penilaian menunggu persetujuan.</p>
+      )}
+      <p className="mt-2 text-sm text-slate-700">
+        XP belum tersedia. Nilai akademik dan XP dicatat terpisah.
+      </p>
       <Link className="button-link mt-5" href="/student/learn">
         Kembali ke materi
       </Link>

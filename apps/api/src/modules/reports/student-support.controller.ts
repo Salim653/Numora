@@ -5,6 +5,8 @@ import {
   StudentQuestionReportDto,
   StudentVideoReportDto,
   StudentVideosDto,
+  LearningInteractionDto,
+  LearningInteractionReceiptDto,
 } from './student-support.dto';
 import { StudentSupportService } from './student-support.service';
 
@@ -13,6 +15,14 @@ import { StudentSupportService } from './student-support.service';
 @Controller('students/me')
 export class StudentSupportController {
   constructor(@Inject(StudentSupportService) private readonly support: StudentSupportService) {}
+  @Post('learning-interactions')
+  @ApiCreatedResponse({ type: LearningInteractionReceiptDto })
+  interaction(
+    @Headers('authorization') auth: string | undefined,
+    @Body() body: LearningInteractionDto,
+  ) {
+    return this.support.interaction(auth, body);
+  }
   @Get('drill-attempts/:attemptId/videos')
   @ApiOkResponse({ type: StudentVideosDto })
   videos(

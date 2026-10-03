@@ -7,6 +7,6 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     maxWorkers: 2,
-    exclude: ['**/node_modules/**', '**/e2e/**', '**/.next*/**'],
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/e2e-connected/**', '**/.next*/**'],
   },
 });
