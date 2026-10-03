@@ -187,12 +187,14 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 ### JOB-07 — Perbaiki TryOut backend: free access, 35 item dan kontrak tiga format
 
 - **Status tahap pertama — 2 Oktober 2026:** akses/availability backend dan UI minimum diimplementasikan lokal, menunggu review/QA. Mandiri/Sekolah gratis; snapshot kelas nullable dan immutable; dashboard feature access dipisahkan dari current-package availability/new-attempt eligibility. Tanpa endpoint/migrasi baru. OpenAPI/generated types mengikuti DTO; bukti verifikasi ada pada [status backend](CORE_LEARNING_BACKEND_STATUS.md#tryout-dan-irt). Perubahan mode development/Redis sebelumnya tetap pekerjaan terpisah.
-- **Rekonsiliasi 3 Oktober 2026:** #41 mempertahankan serverTime/countdown, detail/ack aturan dan recovery main; akses gratis tetap scope tahap pertama. Review/CI terbaru dan connected chain gabungan #46/#41/#45 menjadi gate; belum acceptance trial.
+- **Rekonsiliasi 3 Oktober 2026:** #41 mempertahankan serverTime/countdown, detail/ack aturan dan recovery main; akses gratis tetap scope tahap pertama. CI terbaru dan connected chain gabungan #46/#41/#45 menjadi gate; admin bypass merge diizinkan Aini pada 3 Oktober, tanpa mengklaim reviewer approval; belum acceptance trial.
 - **Sisa JOB-07:** validator/delivery 35 soal, answer union PGK dan rubrik, listing/detail/Past. Konfirmasi Research/Curriculum + Product untuk rubrik/komposisi/durasi/skala; Product untuk Past never-attempted; Product + Data + Curriculum untuk batch end/periode vs deadline sebelum integrasi JOB-09/10. Tidak ada OPEN yang menghambat tahap akses; JOB-07 keseluruhan belum selesai.
 - **Owner:** Aini backend; Ferdi consumer frontend; Data/Curriculum rubric/content; Salim contract tests. **Asal:** LAMA-08.
 - **Kerjakan:** hapus class prerequisite pada API/dashboard/availability; simpan class snapshot nullable untuk Mandiri. Bedakan paket unavailable dari user ineligible. Validator/package delivery wajib 35 PG/MCMA/Category, answer union yang tervalidasi, pinned item/policy, shared package per batch dan satu attempt/user/package. Sediakan listing/detail/current/Past sesuai approved package policy.
 - **Output:** controller/DTO/domain/schema migration bila perlu, OpenAPI/generated types dan tests. Numeric duration/composition/rubric/scale tidak ditebak; final publikasi menggunakan konten approved dari Curriculum.
 - **Bukti selesai:** Mandiri/Sekolah sama-sama eligible tanpa checkout; count salah/answer type salah ditolak; repeated/concurrent start menghasilkan satu attempt; direct access unauthorized ditolak; unavailable/expired tidak bisa start. Persetujuan PGK scoring tetap dependency JOB-01.
+
+- **Bukti connected rekonsiliasi - 3 Oktober 2026:** empat kasus pada satu production-build SHA `bd3fb4c` lulus tanpa skip, mencakup akses TryOut dan scope history Guru/level Student. [Bukti dan batas acceptance](../testing/RECONCILIATION_RELEASE_CHAIN_2026-10-03.md#verified-local-candidate); admin bypass merge diizinkan Aini, bukan bukti reviewer approval; SHA main final wajib diuji ulang dan hasil/artifact dicatat pada PR #47. Gate Google/trial/QA independen tetap diperlukan.
 
 ### JOB-08 — Lengkapi TryOut frontend sesuai alur terbaru
 
@@ -231,7 +233,9 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Output:** per-level history/context dan UI loading/empty/page-error/access states; contract additions minimal bila diperlukan.
 - **Bukti selesai:** Student hanya history sendiri, score 0 benar, lower-score retry tidak overwrite best/history; no premature TryOut score; cursor tidak menggandakan/melewatkan record pada testcase; content correction tidak mengubah hasil lama.
 
-- **Rekonsiliasi 3 Oktober 2026:** #45 menyatukan class snapshot Guru dan level filter Student dengan objek filter internal; cursor memakai scope yang sama dan presisi PostgreSQL. Review/CI head terbaru dan connected chain satu SHA tetap wajib; tidak menutup kebijakan OPEN atau acceptance JOB-06.
+- **Rekonsiliasi 3 Oktober 2026:** #45 menyatukan class snapshot Guru dan level filter Student dengan objek filter internal; cursor memakai scope yang sama dan presisi PostgreSQL. CI head terbaru dan connected chain satu SHA tetap wajib; admin bypass diizinkan Aini, tanpa mengklaim reviewer approval; tidak menutup kebijakan OPEN atau acceptance JOB-06.
+
+- **Bukti connected rekonsiliasi - 3 Oktober 2026:** empat kasus pada satu production-build SHA `bd3fb4c` lulus tanpa skip, mencakup akses TryOut dan scope history Guru/level Student. [Bukti dan batas acceptance](../testing/RECONCILIATION_RELEASE_CHAIN_2026-10-03.md#verified-local-candidate); admin bypass merge diizinkan Aini, bukan bukti reviewer approval; SHA main final wajib diuji ulang dan hasil/artifact dicatat pada PR #47. Gate Google/trial/QA independen tetap diperlukan.
 
 ### JOB-13 — Implementasikan lifecycle Pretest dan Skip
 

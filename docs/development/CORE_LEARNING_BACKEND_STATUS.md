@@ -12,7 +12,7 @@ Catatan baseline 1 Oktober 2026 dengan pembaruan integrasi 3 Oktober 2026. Setia
 
 **Bukti gabungan lokal:** 59 tes web dan 27 Chromium E2E fixture lulus; workspace typecheck/build dan generated-type checks lulus. Validator meluluskan 40 soal kandidat, tanpa menyatakan approval Curriculum. CI PostgreSQL/Redis, migration/upgrade rehearsal, browser, build dan freshness wajib hijau pada head terbaru sebelum tiap merge; bukti run dicatat pada PR terkait. Migrasi 0010/0011 menambah kolom nullable `irt_batches.output_snapshot` dan `video_reports.attempt_context`; tidak mengubah skor historis atau otomatis merilis hasil.
 
-**Batas integrasi:** JOB-07 akses Student [#41](https://github.com/ayiinee/Numora/pull/41) dan JOB-12 history [#45](https://github.com/ayiinee/Numora/pull/45) tetap PR terpisah. Rekonsiliasi berikutnya harus mempertahankan filter snapshot kelas untuk history Guru dari #43 dan filter level/presisi cursor dari #45. Konten belum dipublikasikan, analytics PROPOSED tetap default off, dan keputusan Curriculum/Data/PO tetap OPEN. JOB-06 masih memerlukan satu release SHA, login Google nyata, bukti lintas peran dan persistence di environment trial yang disetujui; fixture CI tidak menggantikannya.
+**Batas integrasi:** JOB-07 akses Student [#41](https://github.com/ayiinee/Numora/pull/41) dan JOB-12 history [#45](https://github.com/ayiinee/Numora/pull/45) tetap PR terpisah. Rekonsiliasi 3 Oktober mempertahankan filter snapshot kelas history Guru dari #43 serta level/presisi cursor #45; #45 telah diubah base ke main sesudah merge #41. Konten belum dipublikasikan, analytics PROPOSED tetap default off, dan keputusan Curriculum/Data/PO tetap OPEN. JOB-06 masih memerlukan satu release SHA, login Google nyata, bukti lintas peran dan persistence di environment trial yang disetujui; fixture CI tidak menggantikannya.
 
 ## JOB-06 — bukti connected release chain, 3 Oktober 2026
 
@@ -122,18 +122,26 @@ Sumber: [rekonsiliasi Drill v1.2 / TryOut v1.1](../product/CORE_LEARNING_PRD_UPD
 - [ ] Drill <15min eligibility, warning refresh/exit, Save failed tidak Saved, YouTube/report contexts, retry fallback, best score monotonic/history seluruh attempt diverifikasi terhadap DRL-AC.
 - [ ] Seluruh 49 AC ditinjau FE/BE/Data/Curriculum/QA; keputusan OPEN ditutup oleh owner terkait, bukan otomatis oleh docs.
 
-## Rekonsiliasi JOB-12 history - 3 Oktober 2026
-
-**ENGINEERING DECISION - instruksi Aini:** PR #45 mempertahankan snapshot kelas history Guru dari #43 serta filter level, presisi mikrodetik cursor dan konteks/pending reward JOB-12. Service internal memakai objek `{ cursor?, classId?, levelId? }`; filter class/level berlaku bersama pada baris dan cursor, sehingga argumen class Guru tidak tertukar sebagai level. Endpoint Student tidak membuka query classId; kepemilikan kelas tetap diperiksa service Guru.
-
-Tes PostgreSQL menambahkan pagination dan penolakan cursor beda kelas/level, Mandiri dan record non-visible. OpenAPI/shared types digenerasikan dari DTO akhir; tidak ada endpoint/migrasi baru. Review/CI terbaru dan satu SHA connected gabungan #46/#41/#45 masih gate; Google/trial, konten reviewed, XP/star/IRT/retention final tetap belum acceptance.
-
-**Bukti rekonsiliasi lokal:** 23 tes Learning/Feedback PostgreSQL tanpa skip dan 65 tes web lulus; lint, workspace typecheck dan generated-type freshness lulus. CI terbaru melengkapi build/migration/browser gates sebelum merge.
-
 ## Rekonsiliasi JOB-07 akses - 3 Oktober 2026
 
 **ENGINEERING DECISION - instruksi Aini:** PR #41 tetap terpisah dari JOB-12 dan perubahan worker/Redis lokal. Rekonsiliasi terhadap main mempertahankan akses TryOut gratis Mandiri/Sekolah, snapshot kelas historis nullable, serverTime/deadline, detail/konfirmasi aturan dan recovery terbaru. Tes UI/E2E mengikuti acknowledgement aturan sebelum start; existing attempt tidak disalahartikan sebagai penolakan akses karena eligible=false.
 
-Review dan CI pada head terbaru masih menjadi gate merge. PR #46 menyediakan connected chain/perbaikan offline; approval reviewer GitHub tetap diperlukan. Bukti gabungan harus diulang pada satu SHA yang memuat #46/#41/#45; bukti JOB-06 sebelumnya tidak diganti. Ini bukan acceptance Google/trial atau penyelesaian seluruh JOB-07.
+PR #46 menyediakan connected chain/perbaikan offline. **ENGINEERING DECISION - instruksi Aini, 3 Oktober 2026:** pemilik mengizinkan admin bypass untuk merge rangkaian ini setelah CI head terbaru lulus. Bypass tidak dihitung sebagai approval reviewer atau QA independen. Bukti gabungan harus diulang pada satu SHA yang memuat #46/#41/#45; bukti JOB-06 sebelumnya tidak diganti. Ini bukan acceptance Google/trial atau penyelesaian seluruh JOB-07.
 
 **Bukti rekonsiliasi lokal:** 12 tes Learning PostgreSQL tanpa skip dan 64 tes web lulus; lint, workspace typecheck dan generated-type freshness lulus. CI terbaru melengkapi build/migration/browser gates sebelum merge.
+
+## Rekonsiliasi JOB-12 history - 3 Oktober 2026
+
+**ENGINEERING DECISION - instruksi Aini:** PR #45 mempertahankan snapshot kelas history Guru dari #43 serta filter level, presisi mikrodetik cursor dan konteks/pending reward JOB-12. Service internal memakai objek `{ cursor?, classId?, levelId? }`; filter class/level berlaku bersama pada baris dan cursor, sehingga argumen class Guru tidak tertukar sebagai level. Endpoint Student tidak membuka query classId; kepemilikan kelas tetap diperiksa service Guru.
+
+Tes PostgreSQL menambahkan pagination dan penolakan cursor beda kelas/level, Mandiri dan record non-visible. OpenAPI/shared types digenerasikan dari DTO akhir; tidak ada endpoint/migrasi baru. CI head terbaru dan satu SHA connected gabungan #46/#41/#45 tetap wajib; admin bypass diizinkan Aini, tanpa mengklaim approval reviewer; Google/trial, konten reviewed, XP/star/IRT/retention final tetap belum acceptance.
+
+**Bukti rekonsiliasi lokal:** 23 tes Learning/Feedback PostgreSQL tanpa skip dan 65 tes web lulus; lint, workspace typecheck dan generated-type freshness lulus. CI terbaru melengkapi build/migration/browser gates sebelum merge.
+
+## Kandidat rekonsiliasi gabungan - 3 Oktober 2026
+
+**ENGINEERING DECISION - instruksi Aini:** #41/#45 direkonsiliasi dan dipush terpisah. Aini mengizinkan admin bypass untuk rangkaian #46 -> #41 -> #45 -> #47, dengan CI terbaru wajib hijau sebelum setiap merge. #46, #41 dan #45 sudah masuk main setelah CI head masing-masing lulus; #47 telah retarget main dan disinkronkan dengan ketiga hasil merge. Kandidat menggabungkan ketiga head untuk empat kasus connected pada satu SHA; workflow push main akan menguji ulang SHA merge final. Rincian, fixture release sintetis dan batas acceptance ada pada [reconciliation release chain](../testing/RECONCILIATION_RELEASE_CHAIN_2026-10-03.md). Bukti/acceptance JOB-06 sebelumnya tetap berlaku sesuai SHA dan batasnya.
+
+**Engineering PASS kandidat gabungan:** empat kasus connected production-build pada SHA `bd3fb4c7ad806612d0cdf0eff52c6aaac511c1b0` lulus tanpa skip: rantai JOB-06 existing ditambah TryOut Mandiri/Sekolah, snapshot kelas immutable setelah join, repeated/concurrent start/submit dan satu event, save/resume, waiting/release gate, Student level history dan Teacher class privacy. [Bukti lokal yang disanitasi](../testing/evidence/RECONCILIATION_LOCAL_2026-10-03.json) memakai PostgreSQL 16/Redis 6 lokal, email fixture dan synthetic release; CI #47 memakai Redis 7 dan mencatat checkout SHA sendiri. Bukti kandidat dipertahankan sesuai SHA-nya. Admin bypass bukan approval reviewer. Hasil push CI main pada SHA merge final akan dicatat di PR #47 beserta artifact; Google/trial, konten reviewed dan QA independen tetap belum selesai.
+
+**Merge evidence - 3 Oktober 2026:** #46 `433008c`, #41 `db47aa7` dan #45 `c9987fc` merged ke main. CI pre-merge #41 [37094368305](https://github.com/ayiinee/Numora/actions/runs/37094368305) dan #45 [37094679920](https://github.com/ayiinee/Numora/actions/runs/37094679920) lulus termasuk PostgreSQL tanpa skip, migration, browser, connected chain, build dan contract freshness. #47 hanya enam file harness/tests/evidence/docs; hasil push main final beserta SHA/artifact dicatat pada [PR #47](https://github.com/ayiinee/Numora/pull/47).
