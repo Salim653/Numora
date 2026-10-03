@@ -1,6 +1,6 @@
 {
-  "id": "4821332c-3b6d-4d86-b430-a951fdb0d148",
-  "prevId": "b243da9d-f39b-409e-9b6d-500eeb79dde0",
+  "id": "a3df3b7b-cbad-446f-8564-00a898fa9f9c",
+  "prevId": "36edc671-09d5-4525-a475-dda01c3e1349",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2266,6 +2266,28 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "assessment_attempts_tryout_recovery_idx": {
+          "name": "assessment_attempts_tryout_recovery_idx",
+          "columns": [
+            {
+              "expression": "deadline_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"assessment_attempts\".\"assessment_type\" = 'TRYOUT' and \"assessment_attempts\".\"status\" = 'IN_PROGRESS' and \"assessment_attempts\".\"deadline_at\" is not null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -6698,6 +6720,12 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "correlation_id": {
+          "name": "correlation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -8537,18 +8565,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "baseline_id": {
-          "name": "baseline_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reference_set_id": {
-          "name": "reference_set_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "configuration_pins": {
           "name": "configuration_pins",
           "type": "jsonb",
@@ -8658,32 +8674,6 @@
           "tableTo": "assessment_packages",
           "columnsFrom": [
             "package_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        },
-        "analysis_requests_baseline_id_calibration_baselines_id_fk": {
-          "name": "analysis_requests_baseline_id_calibration_baselines_id_fk",
-          "tableFrom": "analysis_requests",
-          "tableTo": "calibration_baselines",
-          "columnsFrom": [
-            "baseline_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        },
-        "analysis_requests_reference_set_id_reference_sets_id_fk": {
-          "name": "analysis_requests_reference_set_id_reference_sets_id_fk",
-          "tableFrom": "analysis_requests",
-          "tableTo": "reference_sets",
-          "columnsFrom": [
-            "reference_set_id"
           ],
           "columnsTo": [
             "id"

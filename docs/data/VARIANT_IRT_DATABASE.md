@@ -76,9 +76,10 @@ write public requests/canonical content. Main runtime cannot mutate compute arti
 
 ## Implementation and migration procedure
 
-Migrations `0012`–`0015` extend the existing `0000`–`0011` history. `0012` moves the
+Migrations `0014`–`0017` extend the existing `0000`–`0013` history. Main migrations
+`0012_square_gargoyle` and `0013_chemical_wallflower` are preserved unchanged. `0014` moves the
 three generation tables with their IDs intact; compatibility views remain read-only.
-`0013` adds structural tables/columns and `0014`/`0015` add integrity rules, role
+`0015` adds structural tables/columns and `0016`/`0017` add integrity rules, role
 grants, input views and pinned baseline/reference fields. Existing historical migration
 files are unchanged. Drizzle generation currently reports no structural drift.
 

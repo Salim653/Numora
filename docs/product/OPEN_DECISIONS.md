@@ -118,6 +118,9 @@ When a joint decision is reached, record its owner/date and update the PRD or mo
 
 **ENGINEERING DECISION:** desain pratinjau dipindahkan ke area siswa terautentikasi dengan dashboard NestJS, engine PvP teruji fixture, serta endpoint/proyeksi leaderboard. Ini tidak menutup **OPEN-07** atau **OPEN-11**: akun nyata tidak dapat memulai PvP, kebijakan fixture tidak tersedia melalui konfigurasi runtime, dan tidak ada XP Drill/Tryout otomatis. **PROPOSED:** peringkat seri 1,1,3 tetap menunggu review produk sebelum rilis. Lihat [kontrak area siswa](../api/STUDENT_AREA_CONTRACT.md).
 
+## DRL-OPEN-08 engineering preparation - 3 October 2026
+
+**PROPOSED:** Aini prepared default-off domain producers and a payload/trigger/dedup schema, plus durable consumer correlation and backlog status. [Inventory](../development/JOB20_ANALYTICS_INVENTORY.md) is the Data review/handoff reference. Exact mapping, activation and other-owner producers remain OPEN; no reward/model policy is resolved.
 
 ## Variant / IRT persistence ? 3 October 2026
 

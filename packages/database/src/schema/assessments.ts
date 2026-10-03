@@ -210,6 +210,11 @@ export const assessmentAttempts = pgTable(
     uniqueIndex('assessment_attempts_trial_assignment_uq').on(table.trialAssignmentId),
     uniqueIndex('assessment_attempts_id_package_uq').on(table.id, table.packageId),
     uniqueIndex('assessment_attempts_id_student_uq').on(table.id, table.studentId),
+    index('assessment_attempts_tryout_recovery_idx')
+      .on(table.deadlineAt, table.id)
+      .where(
+        sql`${table.assessmentType} = 'TRYOUT' and ${table.status} = 'IN_PROGRESS' and ${table.deadlineAt} is not null`,
+      ),
     index('assessment_attempts_student_time_idx').on(table.studentId, table.startedAt),
     index('assessment_attempts_package_idx').on(table.packageId),
     foreignKey({
