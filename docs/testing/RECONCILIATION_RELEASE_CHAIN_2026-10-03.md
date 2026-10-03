@@ -4,7 +4,7 @@
 
 ## Merge and verification order
 
-Urutan merge #46 -> #41 -> #45 -> #47. #46 dan #41 sudah masuk main. #45 telah diubah base ke main dan disinkronkan dengan hasil merge sebelumnya. Validation PR #47 kemudian retarget ke main dan disinkronkan sebelum CI dan merge. Tidak force-push atau ikut mendorong commit worker/Redis dari branch JOB-07 lokal.
+Urutan merge #46 -> #41 -> #45 -> #47. #46, #41 dan #45 sudah masuk main setelah CI head terbaru masing-masing lulus. #45 diubah base ke main dan disinkronkan sebelum merge. Validation PR #47 telah retarget ke main dan disinkronkan dengan ketiga hasil merge; diff hanya harness/tests/evidence/docs. Tidak force-push atau ikut mendorong commit worker/Redis dari branch JOB-07 lokal.
 
 Hasil CI kandidat dipertahankan sebagai bukti untuk SHA masing-masing. Setelah #47 masuk main, workflow push main harus menjalankan semua gate dan empat kasus connected tanpa skip pada satu SHA merge final. Status merged, SHA main, run CI dan artifact yang sesuai SHA dicatat pada [PR #47](https://github.com/ayiinee/Numora/pull/47), agar bukti tidak keliru menggunakan synthetic merge SHA PR atau mengklaim hasil run yang belum terjadi.
 
