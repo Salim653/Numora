@@ -374,13 +374,16 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, mandiri.id));
     expect(afterJoin?.classIdAtStart).toBeNull();
+    const [beforeClockSkew] = await db.select().from(assessmentAttempts)
+      .where(eq(assessmentAttempts.id, a.id));
     const wallTime = Date.now();
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2000-01-01T00:00:00Z'));
     try {
       const resumed = await tryout.attempt('student', a.id);
       expect(Math.abs(new Date(resumed.serverTime).getTime() - wallTime)).toBeLessThan(10_000);
-      expect(resumed.startedAt).toBe(a.startedAt);
+      expect((await db.select().from(assessmentAttempts)
+        .where(eq(assessmentAttempts.id, a.id)))[0]?.startedAt).toEqual(beforeClockSkew!.startedAt);
       expect(resumed.deadlineAt).toBe(a.deadlineAt);
       expect(await tryout.current('student')).toMatchObject({ state: 'inProgress' });
     } finally { vi.useRealTimers(); }
