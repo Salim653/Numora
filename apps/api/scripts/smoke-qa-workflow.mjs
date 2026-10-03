@@ -46,7 +46,11 @@ assert.ok(Array.isArray(history.value.records));
 assert.equal((await api('studentB', '/students/me/assessment-results?cursor=bad')).status, 400);
 const tryout = await api('studentB', '/tryout/packages/current');
 assert.equal(tryout.status, 200);
-assert.deepEqual(tryout.value, { state: 'unavailable', eligible: false });
+// TryOut is open to Mandiri and School students alike (PR #41), so both report the same
+// eligibility. What matters here is that `eligible` is always present, even while no
+// package is running: omitting it left the web TryOut screen unable to tell "not
+// published yet" apart from "no access yet".
+assert.deepEqual(tryout.value, { state: 'unavailable', eligible: true });
 assert.deepEqual((await api('studentA', '/tryout/packages/current')).value,
   { state: 'unavailable', eligible: true });
 assert.equal((await api('studentB', '/classes')).status, 403);
