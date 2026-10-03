@@ -23,3 +23,9 @@ Google nyata, konten reviewed Curriculum, staging/trial dan QA independen tetap 
 **Fixture correction:** initial connected run rejected start with TRYOUT_CONTENT_NOT_READY because shared Drill demo versions are DRAFT. The guarded harness creates dedicated READY test versions with explicit TEST ONLY text; it never promotes or edits existing demo/historical versions. This is test setup, not Curriculum approval. Initial failed evidence is not counted PASS.
 
 Dedicated test versions include synthetic review metadata owned by the harness Admin fixture to satisfy the unchanged database review constraint. This metadata is explicitly test-only and does not represent real Curriculum review.
+
+## Verified local candidate
+
+**Engineering PASS:** production-build SHA `bd3fb4c7ad806612d0cdf0eff52c6aaac511c1b0` ran all four connected cases without skip (3 October 2026, 10:18 WIB). [Sanitized local evidence](evidence/RECONCILIATION_LOCAL_2026-10-03.json) records the SHA, checks and explicit acceptance limits. PostgreSQL 16 and Redis 6.0.16 were isolated locally; Redis 7 and the complete workspace/migration/browser/build/contract gates run in CI. Local PASS is not a claim that the separate PvP/BullMQ suite works on Redis 6.
+
+PR #41 CI `37091048108` and stacked #45 CI `37091262143` passed on their reconciled heads. Combined candidate CI/artifact belongs to draft [#47](https://github.com/ayiinee/Numora/pull/47); use the actual checkout/synthetic merge SHA in its artifact, not the feature heads or local evidence SHA. Documentation commits after the local evidence do not change which SHA that local run validated. Final merge/deployment still requires a fresh run on its one SHA.

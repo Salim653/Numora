@@ -194,6 +194,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Output:** controller/DTO/domain/schema migration bila perlu, OpenAPI/generated types dan tests. Numeric duration/composition/rubric/scale tidak ditebak; final publikasi menggunakan konten approved dari Curriculum.
 - **Bukti selesai:** Mandiri/Sekolah sama-sama eligible tanpa checkout; count salah/answer type salah ditolak; repeated/concurrent start menghasilkan satu attempt; direct access unauthorized ditolak; unavailable/expired tidak bisa start. Persetujuan PGK scoring tetap dependency JOB-01.
 
+- **Bukti connected rekonsiliasi - 3 Oktober 2026:** empat kasus pada satu production-build SHA `bd3fb4c` lulus tanpa skip, mencakup akses TryOut dan scope history Guru/level Student. [Bukti dan batas acceptance](../testing/RECONCILIATION_RELEASE_CHAIN_2026-10-03.md#verified-local-candidate); reviewer approval dan gate Google/trial/QA independen tetap diperlukan.
+
 ### JOB-08 — Lengkapi TryOut frontend sesuai alur terbaru
 
 - **Owner:** Ferdi; Avicenna Penilaian/history; Salim browser QA. **Asal:** LAMA-08,04.
@@ -232,6 +234,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Bukti selesai:** Student hanya history sendiri, score 0 benar, lower-score retry tidak overwrite best/history; no premature TryOut score; cursor tidak menggandakan/melewatkan record pada testcase; content correction tidak mengubah hasil lama.
 
 - **Rekonsiliasi 3 Oktober 2026:** #45 menyatukan class snapshot Guru dan level filter Student dengan objek filter internal; cursor memakai scope yang sama dan presisi PostgreSQL. Review/CI head terbaru dan connected chain satu SHA tetap wajib; tidak menutup kebijakan OPEN atau acceptance JOB-06.
+
+- **Bukti connected rekonsiliasi - 3 Oktober 2026:** empat kasus pada satu production-build SHA `bd3fb4c` lulus tanpa skip, mencakup akses TryOut dan scope history Guru/level Student. [Bukti dan batas acceptance](../testing/RECONCILIATION_RELEASE_CHAIN_2026-10-03.md#verified-local-candidate); reviewer approval dan gate Google/trial/QA independen tetap diperlukan.
 
 ### JOB-13 — Implementasikan lifecycle Pretest dan Skip
 
