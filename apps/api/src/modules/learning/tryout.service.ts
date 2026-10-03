@@ -74,12 +74,11 @@ export class TryoutService {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
     const current = await this.currentPackage();
-    // `eligible` reports whether this student could start the released package at
-    // all, so it stays meaningful even while no package is running. The web
-    // tryout screen branches on it to pick between "not published yet" and
-    // "no access yet"; dropping the field on the unavailable path left both
-    // screens showing the same copy and broke the qa:smoke assertion.
-    if (!current) return { state: 'unavailable' as const, eligible: true };
+    // The TryOut contract (OpenAPI CurrentTryoutDto) is explicit: `unavailable`
+    // returns only `state`; `eligible` is meaningful only once a package exists,
+    // so it is omitted here. Do not re-add it — the shared qa-smoke contract
+    // (`scripts/qa-smoke-contract.mjs`) asserts exactly one key on this path.
+    if (!current) return { state: 'unavailable' as const };
     let [attempt] = await db
       .select({ id: assessmentAttempts.id, status: assessmentAttempts.status })
       .from(assessmentAttempts)

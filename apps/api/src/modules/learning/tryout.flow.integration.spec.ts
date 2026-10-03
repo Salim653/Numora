@@ -275,12 +275,12 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       eligible: true,
       questionCount: 2,
     });
-    // With no package running, `eligible` must still report access readiness so the
-    // web tryout screen can tell "not published yet" apart from "no access yet".
+    // The TryOut contract: with no package running, `current` reports only
+    // `state: 'unavailable'`; `eligible` is meaningful only for a live package.
     await db.update(assessmentPackages).set({ status: 'CLOSED' })
       .where(eq(assessmentPackages.id, selectedPackage!.id));
-    expect(await tryout.current('student')).toEqual({ state: 'unavailable', eligible: true });
-    expect(await tryout.current('independent')).toEqual({ state: 'unavailable', eligible: true });
+    expect(await tryout.current('student')).toEqual({ state: 'unavailable' });
+    expect(await tryout.current('independent')).toEqual({ state: 'unavailable' });
     await db.update(assessmentPackages).set({ status: 'PUBLISHED' })
       .where(eq(assessmentPackages.id, selectedPackage!.id));
     expect(await tryout.current('student')).toMatchObject({ state: 'open', eligible: true });
