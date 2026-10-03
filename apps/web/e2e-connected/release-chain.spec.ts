@@ -639,6 +639,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     );
     expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt' }));
+    await mandiri.getByRole('button', { name: /^Soal 2,/ }).click();
     mandiri.once('dialog', (dialog) => dialog.accept());
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
