@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { ForbiddenException, UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -374,6 +374,16 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, mandiri.id));
     expect(afterJoin?.classIdAtStart).toBeNull();
+    const wallTime = Date.now();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2000-01-01T00:00:00Z'));
+    try {
+      const resumed = await tryout.attempt('student', a.id);
+      expect(Math.abs(new Date(resumed.serverTime).getTime() - wallTime)).toBeLessThan(10_000);
+      expect(resumed.startedAt).toBe(a.startedAt);
+      expect(resumed.deadlineAt).toBe(a.deadlineAt);
+      expect(await tryout.current('student')).toMatchObject({ state: 'inProgress' });
+    } finally { vi.useRealTimers(); }
     expect(a.questions).toHaveLength(2);
     expect(a.questions[0]).not.toHaveProperty('correctOptionId');
     await tryout.saveAnswer('student', a.id, a.questions[0]!.questionInstanceId, 'A');

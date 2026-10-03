@@ -45,6 +45,7 @@ export class TryoutService {
 
   private async currentPackage() {
     const { db } = getDatabase();
+    const now = await databaseTime(db);
     const [row] = await db
       .select()
       .from(assessmentPackages)
@@ -52,7 +53,7 @@ export class TryoutService {
         and(
           eq(assessmentPackages.assessmentType, 'TRYOUT'),
           eq(assessmentPackages.status, 'PUBLISHED'),
-          lte(assessmentPackages.releaseAt, new Date()),
+          lte(assessmentPackages.releaseAt, now),
         ),
       )
       .orderBy(desc(assessmentPackages.releaseAt), desc(assessmentPackages.id))
@@ -61,7 +62,7 @@ export class TryoutService {
       !row ||
       !row.releaseAt ||
       !isJakartaMondayMidnight(row.releaseAt) ||
-      (row.closeAt && row.closeAt <= new Date())
+      (row.closeAt && row.closeAt <= now)
     )
       return null;
     return row;
@@ -168,7 +169,7 @@ export class TryoutService {
       packageTitle: attempt.title,
       status: attempt.status === 'IN_PROGRESS' ? ('inProgress' as const) : ('submitted' as const),
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
-      serverTime: new Date().toISOString(),
+      serverTime: (await databaseTime(getDatabase().db)).toISOString(),
       questions: rows.map((row) => {
         const content = decodeSingleChoice(row);
         return {
@@ -242,7 +243,7 @@ export class TryoutService {
           problem('TRYOUT_CONTENT_NOT_READY', 'Konten Tryout belum siap.'),
         );
       items.forEach(decodeSingleChoice);
-      const now = new Date();
+      const now = await databaseTime(tx);
       const [attempt] = await tx
         .insert(assessmentAttempts)
         .values({
