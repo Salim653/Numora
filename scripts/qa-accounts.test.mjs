@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve, basename } from 'node:path';
-import { accountNames, projectRef, runQaAccounts } from './qa-accounts.mjs';
+import { accountNames, projectRef, runQaAccounts } from '../apps/api/scripts/qa-accounts.mjs';
 
 // Entirely fictional identities and local temporary files; no environment secrets or network.
 const env = {
@@ -321,10 +321,10 @@ test('environment and unknown/duplicate flags are rejected; root/app aliases kee
   await assert.rejects(f.run({ env: { ...env, NODE_ENV: 'production' } }), /exact Development/);
   await assert.rejects(f.run({ args: ['--unsafe'] }), /optional/);
   await assert.rejects(f.run({ args: ['--rotate-passwords', '--rotate-passwords'] }), /optional/);
-  const root = JSON.parse(
-    await fs.readFile(new URL('../../../package.json', import.meta.url), 'utf8'),
+  const root = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  const app = JSON.parse(
+    await fs.readFile(new URL('../apps/api/package.json', import.meta.url), 'utf8'),
   );
-  const app = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'));
   assert.equal(
     root.scripts['qa:accounts:rotate'],
     'dotenv -e .env -- pnpm --filter @tka/api qa:accounts:rotate',
