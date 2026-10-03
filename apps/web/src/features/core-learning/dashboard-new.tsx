@@ -7,6 +7,7 @@ import { AppShell } from '@/components/shell';
 import { learningApi } from './api';
 import { DataState, StudentGate } from './ui';
 import { ActivityRow, ChapterCard, ProgressSummary } from './cards';
+import { FeedbackOverview } from './feedback-overview';
 
 export function NewStudentDashboard() {
   return (
@@ -83,6 +84,7 @@ function DashboardContent({ token }: { token: string }) {
             <span className="hero-star">✦</span>
           </div>
         </section>
+        <FeedbackOverview token={token} />
         <section className="quick-section" aria-label="Akses cepat">
           <Link href="/student/learn">
             <span className="icon-tile accent-0">
@@ -254,24 +256,20 @@ function HomeTryout({ token }: { token: string }) {
       ) : (
         <>
           <Badge variant={query.data.state === 'unavailable' ? 'default' : 'primary'}>
-            {!query.data.eligible
-              ? 'Memerlukan kelas'
-              : query.data.state === 'unavailable'
-                ? 'Belum tersedia'
-                : query.data.state === 'waitingIrt'
-                  ? 'Menunggu hasil'
-                  : query.data.state === 'resultReady'
-                    ? 'Hasil tersedia'
-                    : query.data.state === 'inProgress'
-                      ? 'Sedang dikerjakan'
-                      : 'Tersedia'}
+            {query.data.state === 'unavailable'
+              ? 'Belum tersedia'
+              : query.data.state === 'waitingIrt'
+                ? 'Menunggu hasil'
+                : query.data.state === 'resultReady'
+                  ? 'Hasil tersedia'
+                  : query.data.state === 'inProgress'
+                    ? 'Sedang dikerjakan'
+                    : 'Tersedia'}
           </Badge>
           <p>
-            {!query.data.eligible
-              ? 'Tryout tersedia untuk siswa yang bergabung dengan kelas.'
-              : query.data.state === 'unavailable'
-                ? 'Paket yang sudah diterbitkan akan muncul di sini.'
-                : 'Lihat status paket dan aktivitas Tryout kamu.'}
+            {query.data.state === 'unavailable'
+              ? 'Paket yang sudah diterbitkan akan muncul di sini.'
+              : 'Lihat status paket dan aktivitas Tryout kamu.'}
           </p>
           <Link className="section-link" href="/student/tryout">
             Lihat Tryout <Icon name="arrow" width={18} height={18} />

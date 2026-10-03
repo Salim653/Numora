@@ -15,7 +15,6 @@ import {
   chapters,
   classMemberships,
   getDatabase,
-  learningVideos,
   levelProgress,
   levels,
   packageItems,
@@ -24,10 +23,11 @@ import {
   questionVersions,
   scoringPolicyVersions,
   subchapters,
-  videoSubchapterMappings,
 } from '@tka/database';
 import { and, asc, desc, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
+import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
+import { recordSupportEvent } from '../reports/support-events';
 import {
   decodeSingleChoiceVersion,
   DRILL_POLICY_CODE,
@@ -63,6 +63,7 @@ export class DrillAssessmentService {
           id: levels.id,
           levelNumber: levels.levelNumber,
           chapterId: subchapters.chapterId,
+          subchapterId: subchapters.id,
         })
         .from(levels)
         .innerJoin(subchapters, eq(subchapters.id, levels.subchapterId))
@@ -128,7 +129,7 @@ export class DrillAssessmentService {
           problem('DRILL_PACKAGE_UNAVAILABLE', 'Paket Drill belum tersedia.'),
         );
       const [last] = await tx
-        .select({ packageId: assessmentAttempts.packageId })
+        .select({ id: assessmentAttempts.id, packageId: assessmentAttempts.packageId })
         .from(assessmentAttempts)
         .where(and(
           eq(assessmentAttempts.studentId, studentId),
@@ -207,6 +208,12 @@ export class DrillAssessmentService {
         displayOrder: item.displayOrder,
         maxPoints: item.maxPoints,
       })));
+      // PROPOSED Data mapping, gated off by default; retry creation and event are atomic.
+      if (last) await recordSupportEvent(tx, {
+        id: attempt.id, actorUserId: studentId, eventName: 'level_retry',
+        entityType: 'assessment_attempt', entityId: attempt.id, correlationId: attempt.id,
+        payload: { assessmentType: 'DRILL', packageId: selected.id, levelId, subchapterId: level.subchapterId, chapterId: level.chapterId, previousAttemptId: last.id },
+      });
       return attempt.id;
     });
     return this.attemptForStudent(studentId, attemptId);
@@ -528,22 +535,7 @@ export class DrillAssessmentService {
     const score = Number(attempt.score);
     const rawPoints = Number(attempt.rawPoints ?? counts?.correctCount ?? 0);
     const recommendations = score < 80
-      ? await db
-          .select({
-            id: learningVideos.id,
-            title: learningVideos.title,
-            url: learningVideos.url,
-            source: learningVideos.source,
-          })
-          .from(videoSubchapterMappings)
-          .innerJoin(learningVideos, eq(learningVideos.id, videoSubchapterMappings.videoId))
-          .where(and(
-            eq(videoSubchapterMappings.subchapterId, attempt.subchapterId),
-            eq(videoSubchapterMappings.status, 'READY'),
-            eq(learningVideos.curationStatus, 'READY'),
-          ))
-          .orderBy(asc(videoSubchapterMappings.recommendationOrder), asc(learningVideos.id))
-          .limit(3)
+      ? await curatedVideoRecommendations(db, attempt.subchapterId)
       : [];
     return {
       attemptId: attempt.id,

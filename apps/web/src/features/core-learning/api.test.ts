@@ -68,11 +68,17 @@ describe('Drill API boundary', () => {
 
     const history = vi
       .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ records: [], nextCursor: null }), { status: 200 }),
+      .mockImplementation(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ records: [], nextCursor: null }), { status: 200 }),
+        ),
       );
     vi.stubGlobal('fetch', history);
     await learningApi.assessmentHistory('private-token', 'page/2+next');
     expect(history.mock.calls[0]?.[0]).toContain('cursor=page%2F2%2Bnext');
+    await learningApi.assessmentHistory('private-token', 'next', 'level/1');
+    expect(history.mock.calls[1]?.[0]).toContain('?cursor=next&levelId=level%2F1');
+    await learningApi.assessmentHistory('private-token', undefined, 'level/1');
+    expect(history.mock.calls[2]?.[0]).toContain('?levelId=level%2F1');
   });
 });

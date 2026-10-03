@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { DrillAssessmentService } from './drill-assessment.service';
 import { AssessmentHistoryService } from './assessment-history.service';
 import { LearningCatalogService } from './learning-catalog.service';
@@ -67,11 +67,14 @@ export class LearningController {
 
   @Get('students/me/assessment-results')
   @ApiOkResponse({ type: AssessmentHistoryDto })
+  @ApiQuery({ name: 'cursor', required: false, schema: { type: 'string', format: 'uuid' }, description: 'Last record from the previous page of this Student and level filter.' })
+  @ApiQuery({ name: 'levelId', required: false, schema: { type: 'string', format: 'uuid' }, description: 'Optional pinned level ID; use the same filter on every page.' })
   history(
     @Headers('authorization') authorization: string | undefined,
     @Query('cursor', new ParseUUIDPipe({ optional: true })) cursor?: string,
+    @Query('levelId', new ParseUUIDPipe({ optional: true })) levelId?: string,
   ) {
-    return this.historyService.list(authorization, cursor);
+    return this.historyService.list(authorization, cursor, levelId);
   }
 
   @Post('assessments/drill/attempts')

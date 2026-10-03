@@ -42,6 +42,8 @@ const names = [
   'StudentVideosDto',
   'StudentQuestionReportDto',
   'StudentVideoReportDto',
+  'LearningInteractionDto',
+  'LearningInteractionReceiptDto',
 ];
 const groups = [
   {
@@ -73,6 +75,11 @@ const groups = [
       'TokenSummaryDto',
       'TokenListDto',
       'RevokedDto',
+      'CreateFeedbackDto',
+      'FeedbackDto',
+      'FeedbackListDto',
+      'FeedbackSummaryDto',
+      'ReadFeedbackDto',
     ],
   },
   { target: 'apps/web/src/features/core-learning/generated-types.ts', names },
@@ -81,6 +88,10 @@ const groups = [
     names: [
       'ContentOptionDto',
       'AdminTaxonDto',
+      'AdminUserDto',
+      'AdminUserListDto',
+      'AdminClassDto',
+      'AdminClassListDto',
       'AdminCurriculumDto',
       'AdminVersionDto',
       'AdminVersionsDto',

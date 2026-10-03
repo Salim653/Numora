@@ -60,6 +60,8 @@ export const videoReports = pgTable('video_reports', {
   id: uuid('id').defaultRandom().primaryKey(),
   reporterStudentId: uuid('reporter_student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
   mappingId: uuid('mapping_id').notNull().references(() => videoSubchapterMappings.id, { onDelete: 'restrict' }),
+  // Immutable report context; older reports keep null because their original attempt is unknown.
+  attemptContext: jsonb('attempt_context').$type<{ attemptId: string; levelId: string | null; subchapterId: string; videoId: string }>(),
   category: text('category').notNull(),
   details: text('details'),
   status: reportStatus('status').notNull().default('OPEN'),
