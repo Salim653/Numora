@@ -47,45 +47,50 @@ export class TryoutService {
     const [row] = await db
       .select()
       .from(assessmentPackages)
-      .where(and(
-        eq(assessmentPackages.assessmentType, 'TRYOUT'),
-        eq(assessmentPackages.status, 'PUBLISHED'),
-        lte(assessmentPackages.releaseAt, new Date()),
-      ))
+      .where(
+        and(
+          eq(assessmentPackages.assessmentType, 'TRYOUT'),
+          eq(assessmentPackages.status, 'PUBLISHED'),
+          lte(assessmentPackages.releaseAt, new Date()),
+        ),
+      )
       .orderBy(desc(assessmentPackages.releaseAt), desc(assessmentPackages.id))
       .limit(1);
-    if (!row || !row.releaseAt || !isJakartaMondayMidnight(row.releaseAt) ||
-        (row.closeAt && row.closeAt <= new Date())) return null;
+    if (
+      !row ||
+      !row.releaseAt ||
+      !isJakartaMondayMidnight(row.releaseAt) ||
+      (row.closeAt && row.closeAt <= new Date())
+    )
+      return null;
     return row;
   }
 
   async current(authorization?: string) {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
-    const [membership] = await db
-      .select({ id: classMemberships.id })
-      .from(classMemberships)
-      .where(and(eq(classMemberships.studentUserId, studentId), isNull(classMemberships.leftAt)))
-      .limit(1);
     const current = await this.currentPackage();
     // `eligible` reports whether this student could start the released package at
     // all, so it stays meaningful even while no package is running. The web
     // tryout screen branches on it to pick between "not published yet" and
     // "no access yet"; dropping the field on the unavailable path left both
     // screens showing the same copy and broke the qa:smoke assertion.
-    if (!current) return { state: 'unavailable' as const, eligible: Boolean(membership) };
+    if (!current) return { state: 'unavailable' as const, eligible: true };
     const [attempt] = await db
       .select({ id: assessmentAttempts.id, status: assessmentAttempts.status })
       .from(assessmentAttempts)
-      .where(and(
-        eq(assessmentAttempts.studentId, studentId),
-        eq(assessmentAttempts.packageId, current.id),
-        eq(assessmentAttempts.assessmentType, 'TRYOUT'),
-      ))
+      .where(
+        and(
+          eq(assessmentAttempts.studentId, studentId),
+          eq(assessmentAttempts.packageId, current.id),
+          eq(assessmentAttempts.assessmentType, 'TRYOUT'),
+        ),
+      )
       .limit(1);
-    const released = attempt?.status === 'GRADED'
-      ? (await this.releases.releasedPackageIds([current.id])).has(current.id)
-      : false;
+    const released =
+      attempt?.status === 'GRADED'
+        ? (await this.releases.releasedPackageIds([current.id])).has(current.id)
+        : false;
     const [count] = await db
       .select({ total: sql<number>`count(*)::integer` })
       .from(packageItems)
@@ -94,10 +99,14 @@ export class TryoutService {
       id: current.id,
       title: current.name,
       releaseAt: current.releaseAt!.toISOString(),
-      state: !attempt ? ('open' as const)
-        : attempt.status === 'IN_PROGRESS' ? ('inProgress' as const)
-        : released ? ('resultReady' as const) : ('waitingIrt' as const),
-      eligible: Boolean(membership) && !attempt,
+      state: !attempt
+        ? ('open' as const)
+        : attempt.status === 'IN_PROGRESS'
+          ? ('inProgress' as const)
+          : released
+            ? ('resultReady' as const)
+            : ('waitingIrt' as const),
+      eligible: !attempt,
       attemptId: attempt?.id ?? null,
       questionCount: count?.total ?? 0,
       durationSeconds: current.durationSeconds,
@@ -172,29 +181,35 @@ export class TryoutService {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
     const attemptId = await db.transaction(async (tx) => {
-      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${studentId}), hashtext(${packageId}))`);
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${studentId}), hashtext(${packageId}))`,
+      );
       const current = await this.currentPackage();
       if (!current || current.id !== packageId)
-        throw new ConflictException(problem('TRYOUT_PACKAGE_UNAVAILABLE', 'Paket Tryout ini tidak berjalan.'));
+        throw new ConflictException(
+          problem('TRYOUT_PACKAGE_UNAVAILABLE', 'Paket Tryout ini tidak berjalan.'),
+        );
       const [membership] = await tx
         .select({ classId: classMemberships.classId })
         .from(classMemberships)
         .where(and(eq(classMemberships.studentUserId, studentId), isNull(classMemberships.leftAt)))
         .limit(1);
-      if (!membership)
-        throw new ForbiddenException(problem('CLASS_REQUIRED', 'Tryout memerlukan keanggotaan kelas.'));
       const [existing] = await tx
         .select({ id: assessmentAttempts.id })
         .from(assessmentAttempts)
-        .where(and(
-          eq(assessmentAttempts.studentId, studentId),
-          eq(assessmentAttempts.packageId, packageId),
-          eq(assessmentAttempts.assessmentType, 'TRYOUT'),
-        ))
+        .where(
+          and(
+            eq(assessmentAttempts.studentId, studentId),
+            eq(assessmentAttempts.packageId, packageId),
+            eq(assessmentAttempts.assessmentType, 'TRYOUT'),
+          ),
+        )
         .limit(1);
       if (existing) return existing.id;
       if (!current.scoringPolicyVersionId)
-        throw new ServiceUnavailableException(problem('TRYOUT_POLICY_MISSING', 'Kebijakan Tryout belum tersedia.'));
+        throw new ServiceUnavailableException(
+          problem('TRYOUT_POLICY_MISSING', 'Kebijakan Tryout belum tersedia.'),
+        );
       const items = await tx
         .select({
           id: packageItems.id,
@@ -215,9 +230,13 @@ export class TryoutService {
         .innerJoin(questions, eq(questions.id, questionVariants.questionId))
         .where(eq(packageItems.packageId, packageId))
         .orderBy(asc(packageItems.displayOrder));
-      if (!items.length || items.some((item) =>
-        item.contentStatus !== 'READY' || item.questionStatus !== 'READY'))
-        throw new ServiceUnavailableException(problem('TRYOUT_CONTENT_NOT_READY', 'Konten Tryout belum siap.'));
+      if (
+        !items.length ||
+        items.some((item) => item.contentStatus !== 'READY' || item.questionStatus !== 'READY')
+      )
+        throw new ServiceUnavailableException(
+          problem('TRYOUT_CONTENT_NOT_READY', 'Konten Tryout belum siap.'),
+        );
       items.forEach(decodeSingleChoice);
       const now = new Date();
       const [attempt] = await tx
@@ -226,7 +245,7 @@ export class TryoutService {
           studentId,
           packageId,
           assessmentType: 'TRYOUT',
-          classIdAtStart: membership.classId,
+          classIdAtStart: membership?.classId ?? null,
           scoringPolicyVersionId: current.scoringPolicyVersionId,
           startedAt: now,
           deadlineAt: current.durationSeconds
@@ -235,17 +254,21 @@ export class TryoutService {
         })
         .returning({ id: assessmentAttempts.id });
       if (!attempt) throw new Error('Tryout attempt creation failed.');
-      await tx.insert(attemptItems).values(items.map((item) => ({
-        attemptId: attempt.id,
-        packageId,
-        packageItemId: item.id,
-        questionVersionId: item.questionVersionId,
-        displayOrder: item.displayOrder,
-        maxPoints: item.maxPoints,
-      })));
+      await tx.insert(attemptItems).values(
+        items.map((item) => ({
+          attemptId: attempt.id,
+          packageId,
+          packageItemId: item.id,
+          questionVersionId: item.questionVersionId,
+          displayOrder: item.displayOrder,
+          maxPoints: item.maxPoints,
+        })),
+      );
       await tx.insert(analyticsOutbox).values({
-        eventName: 'tryout_started', actorUserId: studentId,
-        entityType: 'assessmentAttempt', entityId: attempt.id,
+        eventName: 'tryout_started',
+        actorUserId: studentId,
+        entityType: 'assessmentAttempt',
+        entityId: attempt.id,
         payload: { packageId },
       });
       return attempt.id;
@@ -291,17 +314,20 @@ export class TryoutService {
         })
         .from(attemptItems)
         .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
-        .where(and(
-          eq(attemptItems.id, questionInstanceId),
-          eq(attemptItems.attemptId, attemptId),
-        ))
+        .where(and(eq(attemptItems.id, questionInstanceId), eq(attemptItems.attemptId, attemptId)))
         .limit(1);
       if (!item)
-        throw new NotFoundException(problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Tryout ini.'));
-      if (optionId !== null && !decodeSingleChoice(item).options.some((option) => option.id === optionId))
+        throw new NotFoundException(
+          problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Tryout ini.'),
+        );
+      if (
+        optionId !== null &&
+        !decodeSingleChoice(item).options.some((option) => option.id === optionId)
+      )
         throw new ConflictException(problem('OPTION_INVALID', 'Pilihan jawaban tidak tersedia.'));
       const now = new Date();
-      await tx.insert(attemptAnswers)
+      await tx
+        .insert(attemptAnswers)
         .values({ attemptItemId: item.id, answer: { optionId }, savedAt: now })
         .onConflictDoUpdate({
           target: attemptAnswers.attemptItemId,
@@ -342,12 +368,16 @@ export class TryoutService {
         .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
         .where(eq(attemptItems.attemptId, attemptId));
       if (!rows.length)
-        throw new ServiceUnavailableException(problem('TRYOUT_PACKAGE_INVALID', 'Paket Tryout kosong.'));
+        throw new ServiceUnavailableException(
+          problem('TRYOUT_PACKAGE_INVALID', 'Paket Tryout kosong.'),
+        );
       const grades = rows.map((row) => ({
         id: row.id,
         answer: row.answer ?? { optionId: null },
-        points: selectedOptionId(row.answer) === decodeSingleChoice(row).correctOptionId
-          ? Number(row.maxPoints) : 0,
+        points:
+          selectedOptionId(row.answer) === decodeSingleChoice(row).correctOptionId
+            ? Number(row.maxPoints)
+            : 0,
         maximum: Number(row.maxPoints),
       }));
       const raw = grades.reduce((total, item) => total + item.points, 0);
@@ -355,7 +385,8 @@ export class TryoutService {
       const score = normalizedScore(raw, maximum);
       const now = new Date();
       for (const item of grades)
-        await tx.insert(attemptAnswers)
+        await tx
+          .insert(attemptAnswers)
           .values({
             attemptItemId: item.id,
             answer: item.answer,
@@ -367,15 +398,20 @@ export class TryoutService {
             target: attemptAnswers.attemptItemId,
             set: { awardedPoints: String(item.points), gradedAt: now },
           });
-      await tx.update(assessmentAttempts)
+      await tx
+        .update(assessmentAttempts)
         .set({
-          status: 'GRADED', finishedAt: now,
-          rawPoints: String(raw), score0To100: String(score),
+          status: 'GRADED',
+          finishedAt: now,
+          rawPoints: String(raw),
+          score0To100: String(score),
         })
         .where(eq(assessmentAttempts.id, attemptId));
       await tx.insert(analyticsOutbox).values({
-        eventName: 'tryout_completed', actorUserId: studentId,
-        entityType: 'assessmentAttempt', entityId: attemptId,
+        eventName: 'tryout_completed',
+        actorUserId: studentId,
+        entityType: 'assessmentAttempt',
+        entityId: attemptId,
         payload: { packageId: attempt.packageId },
       });
     });
@@ -385,9 +421,13 @@ export class TryoutService {
   async result(authorization: string | undefined, attemptId: string) {
     const studentId = await this.student(authorization);
     const attempt = await this.forStudent(studentId, attemptId);
-    if (attempt.status !== 'GRADED' ||
-        !(await this.releases.releasedPackageIds([attempt.packageId])).has(attempt.packageId))
-      throw new ConflictException(problem('TRYOUT_RESULT_PENDING', 'Hasil Tryout menunggu rilis IRT.'));
+    if (
+      attempt.status !== 'GRADED' ||
+      !(await this.releases.releasedPackageIds([attempt.packageId])).has(attempt.packageId)
+    )
+      throw new ConflictException(
+        problem('TRYOUT_RESULT_PENDING', 'Hasil Tryout menunggu rilis IRT.'),
+      );
     const { db } = getDatabase();
     const [score] = await db
       .select({ rawPoints: assessmentAttempts.rawPoints, score: assessmentAttempts.score0To100 })

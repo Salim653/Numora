@@ -3,7 +3,9 @@ import type {
   AdminAuditListDto,
   AdminCurriculumDto,
   AdminDashboardDto,
+  AdminDrillPackagesDto,
   AdminIrtDto,
+  AdminIrtBatchesDto,
   AdminReportsDto,
   AdminTryoutDraftsDto,
   AdminVersionsDto,
@@ -11,6 +13,7 @@ import type {
   ContentMutationDto,
   CreateChapterDto,
   CreateCompetencyDto,
+  CreateDrillPackageDto,
   CreateLevelDto,
   CreateQuestionDto,
   CreateSubchapterDto,
@@ -20,6 +23,7 @@ import type {
   QuestionContentDto,
   ResolveReportDto,
   UpdateTryoutDraftDto,
+  UpdateDrillPackageDto,
 } from './generated-types';
 import type { AdminTaxonDto, UpdateVideoDto } from './generated-types';
 
@@ -53,16 +57,18 @@ export async function loadAdminWorkbench(token: string, offset: number) {
       return { value: fallback, error: `${label}: ${reason(cause)}` };
     }
   };
-  const [curriculum, versions, videos, reports, irt, audit, dashboard, packages] =
+  const [curriculum, versions, videos, reports, irt, irtBatches, audit, dashboard, packages, drillPackages] =
     await Promise.all([
       load<AdminCurriculumDto>('Materi', emptyPanel, 'admin/content/curriculum'),
       load<AdminVersionsDto>('Soal', emptyPanel, `admin/content/versions${page}`),
       load<AdminVideosDto>('Video', emptyPanel, `admin/content/videos${page}`),
       load<AdminReportsDto>('Laporan', emptyPanel, `admin/reports${page}`),
       load<AdminIrtDto>('IRT', emptyPanel, `admin/irt${page}`),
+      load<AdminIrtBatchesDto>('Batch IRT', emptyPanel, `admin/irt/batches${page}`),
       load<AdminAuditListDto>('Audit', emptyPanel, `admin/audit-logs${page}`),
       load<AdminDashboardDto>('Ringkasan', EMPTY_DASHBOARD, 'admin/dashboard'),
       load<AdminTryoutDraftsDto>('Draf Tryout', emptyPanel, `admin/content/tryout-packages${page}`),
+      load<AdminDrillPackagesDto>('Paket Drill', emptyPanel, `admin/content/drill-packages${page}`),
     ]);
   return {
     data: {
@@ -71,9 +77,11 @@ export async function loadAdminWorkbench(token: string, offset: number) {
       videos: videos.value,
       reports: reports.value,
       irt: irt.value,
+      irtBatches: irtBatches.value,
       audit: audit.value,
       dashboard: dashboard.value,
       packages: packages.value,
+      drillPackages: drillPackages.value,
     },
     failures: [
       curriculum.error,
@@ -81,9 +89,11 @@ export async function loadAdminWorkbench(token: string, offset: number) {
       videos.error,
       reports.error,
       irt.error,
+      irtBatches.error,
       audit.error,
       dashboard.error,
       packages.error,
+      drillPackages.error,
     ].filter((value): value is string => value !== null),
   };
 }
@@ -122,6 +132,14 @@ export function renameTaxon(token: string, taxon: AdminTaxonDto, name: string) {
 }
 export const createTryoutDraft = (t: string, b: CreateTryoutDraftDto) =>
   mutation(t, 'admin/content/tryout-packages', b);
+export const createDrillPackage = (t: string, b: CreateDrillPackageDto) =>
+  mutation(t, 'admin/content/drill-packages', b);
+export const updateDrillPackage = (t: string, id: string, b: UpdateDrillPackageDto) =>
+  mutation(t, `admin/content/drill-packages/${encodeURIComponent(id)}`, b, 'PATCH');
+export const publishDrillPackage = (t: string, id: string) =>
+  mutation(t, `admin/content/drill-packages/${encodeURIComponent(id)}/publish`, {});
+export const archiveDrillPackage = (t: string, id: string) =>
+  mutation(t, `admin/content/drill-packages/${encodeURIComponent(id)}/archive`, {});
 export const updateTryoutDraft = (t: string, id: string, b: UpdateTryoutDraftDto) =>
   mutation(t, `admin/content/tryout-packages/${encodeURIComponent(id)}`, b, 'PATCH');
 export const resolveReport = (

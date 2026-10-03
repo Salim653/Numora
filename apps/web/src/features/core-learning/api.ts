@@ -126,10 +126,16 @@ export const learningApi = {
     }),
   tryoutResult: (token: string, attemptId: string) =>
     request<TryoutResult>(token, `/tryout/attempts/${id(attemptId)}/result`),
-  assessmentHistory: (token: string, cursor?: string) =>
+  assessmentHistory: (token: string, cursor?: string, levelId?: string) =>
     request<AssessmentHistory>(
       token,
-      `/students/me/assessment-results${cursor ? `?cursor=${id(cursor)}` : ''}`,
+      `/students/me/assessment-results${
+        cursor || levelId
+          ? `?${[cursor ? `cursor=${id(cursor)}` : '', levelId ? `levelId=${id(levelId)}` : '']
+              .filter(Boolean)
+              .join('&')}`
+          : ''
+      }`,
     ),
   videos: (token: string, attemptId: string) =>
     request<StudentVideosDto>(token, `/students/me/drill-attempts/${id(attemptId)}/videos`),

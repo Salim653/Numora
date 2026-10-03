@@ -105,7 +105,7 @@ async function fixtures(
         activeDrill: !completed ? { attemptId, title: 'Drill fixture', levelId } : null,
         features: {
           drill: true,
-          tryout: school,
+          tryout: true,
           pvp: false,
           pretest: false,
           classLeaderboard: false,
@@ -208,18 +208,7 @@ async function fixtures(
         ],
         nextCursor: null,
       };
-    else if (path === '/tryout/packages/current')
-      data = {
-        state: 'unavailable',
-        id: null,
-        eligible: school,
-        title: null,
-        releaseAt: null,
-        durationSeconds: null,
-        questionCount: null,
-        isDemo: false,
-        attemptId: null,
-      };
+    else if (path === '/tryout/packages/current') data = { state: 'unavailable' };
     else if (path === '/pvp/availability')
       data = { available: false, reasonCode: 'PVP_POLICY_OPEN', message: 'PvP belum tersedia.' };
     else if (path === '/leaderboards/class' && !school)
@@ -320,7 +309,7 @@ for (const width of [320, 360, 390, 768, 1440])
     await page.getByRole('button', { name: 'Kirim Drill' }).click();
     await expect(page.getByText('Tuntas', { exact: true })).toBeVisible();
     for (const [label, text] of [
-      ['Tryout', 'Paket TryOut belum tersedia'],
+      ['Tryout', 'Paket belum tersedia'],
       ['Progres', 'Menunggu hasil'],
       ['PvP', 'PvP belum tersedia'],
       ['Peringkat', 'Peringkat belum tersedia'],
@@ -337,6 +326,192 @@ for (const width of [320, 360, 390, 768, 1440])
     await page.keyboard.press('Tab');
     await expect(nav.getByRole('link', { name: 'Tryout', exact: true })).toBeFocused();
   });
+test('Mandiri Tryout starts and resumes without a class, then waits for released results', async ({
+  page,
+}) => {
+  await fixtures(page);
+  let state: 'open' | 'inProgress' | 'waitingIrt' | 'resultReady' = 'open';
+  const attempt = {
+    id: attemptId,
+    packageId: chapterId,
+    packageTitle: 'Tryout fixture',
+    status: 'inProgress',
+    deadlineAt: null,
+    questions: [
+      {
+        questionInstanceId: questionId,
+        order: 1,
+        stem: 'Fixture: 1 + 1?',
+        options: [
+          { id: 'A', text: '2' },
+          { id: 'B', text: '3' },
+        ],
+        selectedOptionId: null,
+      },
+    ],
+  };
+  await page.route('http://localhost:3301/api/v1/tryout/**', async (route) => {
+    const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
+    if (path === '/tryout/packages/current') {
+      return route.fulfill({
+        json: {
+          id: chapterId,
+          title: attempt.packageTitle,
+          releaseAt: '2026-09-27T17:00:00Z',
+          state,
+          eligible: state === 'open',
+          attemptId: state === 'open' ? null : attemptId,
+          questionCount: 1,
+          durationSeconds: null,
+        },
+      });
+    }
+    if (path === '/tryout/attempts') {
+      expect(route.request().postDataJSON()).toEqual({ packageId: chapterId });
+      state = 'inProgress';
+      return route.fulfill({ status: 201, json: attempt });
+    }
+    if (path === `/tryout/attempts/${attemptId}`) return route.fulfill({ json: attempt });
+    if (path === `/tryout/attempts/${attemptId}/result`)
+      return route.fulfill({
+        json: {
+          attemptId,
+          packageTitle: attempt.packageTitle,
+          score: 100,
+          correctCount: 1,
+          questionCount: 1,
+          explanation: [
+            {
+              questionInstanceId: questionId,
+              stem: 'Fixture: 1 + 1?',
+              selectedOptionId: 'A',
+              correctOptionId: 'A',
+              explanation: 'Fixture explanation',
+            },
+          ],
+        },
+      });
+    return route.fallback();
+  });
+  await page.goto('/student/tryout');
+  await expect(page.getByText(/TryOut gratis untuk seluruh siswa/)).toBeVisible();
+  await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
+  await page.getByLabel('Saya memahami aturan pengerjaan.').check();
+  await page.getByRole('button', { name: 'Mulai TryOut' }).click();
+  await expect(page).toHaveURL(`/student/tryout/${attemptId}`);
+  await expect(page.getByText('Fixture: 1 + 1?', { exact: true })).toBeVisible();
+  await page.goto('/student/tryout');
+  await expect(page.getByRole('link', { name: 'Lanjutkan TryOut' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mulai TryOut' })).toHaveCount(0);
+  state = 'waitingIrt';
+  await page.reload();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'pembahasan belum tersedia' }),
+  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Lihat hasil simulasi' })).toHaveCount(0);
+  state = 'resultReady';
+  await page.reload();
+  await page.getByRole('link', { name: 'Lihat hasil simulasi' }).click();
+  await expect(page).toHaveURL(`/student/tryout/${attemptId}/result`);
+  await expect(page.getByText('Fixture explanation', { exact: true })).toBeVisible();
+});
+
+test('history keeps zero/context, hides pending links and retries pagination without losing records', async ({
+  page,
+}) => {
+  await fixtures(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('http://localhost:3301/api/v1/students/me/progress', (route) =>
+    route.fulfill({
+      json: { completedLevels: 0, totalLevels: 2, latestScore: 0 },
+    }),
+  );
+  let failNextPage = true;
+  const historyRecord = {
+    attemptId,
+    activity: 'drill',
+    title: 'History zero fixture',
+    isDemo: true,
+    submittedAt: '2026-10-01T12:00:00Z',
+    resultState: 'ready',
+    score: 0,
+    chapterTitle: 'Bilangan fixture',
+    subchapterTitle: 'Pecahan fixture',
+    levelTitle: 'Level 1',
+    xpState: 'pending',
+    starsState: 'pending',
+  };
+  await page.route('http://localhost:3301/api/v1/students/me/assessment-results*', (route) => {
+    if (new URL(route.request().url()).searchParams.has('cursor')) {
+      expect(new URL(route.request().url()).searchParams.get('cursor')).toBe(levelId);
+      if (failNextPage) {
+        return route.fulfill({ status: 503, json: { detail: 'Fixture temporary error' } });
+      }
+      return route.fulfill({
+        json: {
+          records: [
+            { ...historyRecord, attemptId: levelId, title: 'History second fixture', score: 70 },
+          ],
+          nextCursor: null,
+        },
+      });
+    }
+    return route.fulfill({
+      json: {
+        records: [
+          historyRecord,
+          {
+            ...historyRecord,
+            attemptId: chapterId,
+            activity: 'tryout',
+            title: 'History waiting fixture',
+            resultState: 'waitingIrt',
+            score: null,
+            starsState: 'notApplicable',
+          },
+          {
+            ...historyRecord,
+            attemptId: subchapterId,
+            activity: 'pretest',
+            title: 'History Pretest fixture',
+            xpState: 'notApplicable',
+            starsState: 'notApplicable',
+          },
+        ],
+        nextCursor: levelId,
+      },
+    });
+  });
+  await page.goto('/student/assessment');
+  const zero = page.getByRole('link', { name: /History zero fixture/ });
+  await expect(zero.getByText('0', { exact: true })).toBeVisible();
+  await expect(zero.getByText('Bilangan fixture · Pecahan fixture · Level 1')).toBeVisible();
+  await expect(zero.getByText('XP dan bintang belum tersedia')).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: /History waiting fixture|History Pretest fixture/ }),
+  ).toHaveCount(0);
+  expect(
+    await page
+      .getByText('Menunggu hasil', { exact: true })
+      .evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+  await page.getByRole('button', { name: 'Muat hasil lain' }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Halaman berikutnya belum dapat dimuat' }),
+  ).toBeVisible();
+  await expect(zero).toHaveCount(1);
+  failNextPage = false;
+  await page.getByRole('button', { name: 'Muat hasil lain' }).click();
+  await expect(page.getByRole('link', { name: /History second fixture/ })).toBeVisible();
+  await expect(zero).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Muat hasil lain' })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.getByRole('heading', { name: 'Riwayat aktivitas' }).click();
+  await page.screenshot({ path: test.info().outputPath('history-390.png'), fullPage: true });
+});
+
 for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
   test(`join class ${joinCode} refreshes eligibility, and removed demo routes return 404`, async ({
     page,
@@ -473,6 +648,56 @@ test('Student cannot open Teacher profile', async ({ page }) => {
   await page.goto('/teacher/profile');
   await expect(page).toHaveURL('http://localhost:3300/student');
   await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
+});
+
+test('Teacher sees distinct latest and best Drill scores but no foreign Class progress', async ({
+  page,
+}) => {
+  await fixtures(page, 'TEACHER');
+  await page.route(
+    `http://localhost:3301/api/v1/classes/${chapterId}/students/${studentId}/progress`,
+    (route) =>
+      route.fulfill({
+        json: {
+          class: { id: chapterId, name: 'IX fixture' },
+          student: { id: studentId, displayName: 'Siswa fixture' },
+          latestDrillScore: 60,
+          levels: [
+            {
+              levelId,
+              chapterLabel: 'Aljabar',
+              subchapterLabel: 'Persamaan',
+              levelLabel: 'Level 1',
+              accessStatus: 'UNLOCKED',
+              inProgress: false,
+              latestDrillScore: 60,
+              bestDrillScore: 90,
+            },
+          ],
+        },
+      }),
+  );
+  await page.goto('/teacher');
+  await page.getByRole('link', { name: /IX fixture/ }).click();
+  await page.getByRole('link', { name: /Siswa fixture/ }).click();
+  await expect(page.getByRole('heading', { name: '60', exact: true })).toBeVisible();
+  const level = page.locator('.level-card');
+  await expect(level.getByText('60', { exact: true })).toBeVisible();
+  await expect(level.getByText('90', { exact: true })).toBeVisible();
+
+  const foreignClassId = '77777777-7777-4777-8777-777777777777';
+  await page.route(
+    `http://localhost:3301/api/v1/classes/${foreignClassId}/students/${studentId}/progress`,
+    (route) =>
+      route.fulfill({
+        status: 403,
+        contentType: 'application/problem+json',
+        json: { code: 'CLASS_FORBIDDEN', detail: 'Akses Class ditolak.' },
+      }),
+  );
+  await page.goto(`/teacher/classes/${foreignClassId}/students/${studentId}`);
+  await expect(page.getByRole('heading', { name: 'Akses ditolak' })).toBeVisible();
+  await expect(page.locator('.level-card')).toHaveCount(0);
 });
 
 test('signed-out login offers Google authentication without removed demo destinations', async ({
@@ -676,6 +901,174 @@ test('Teacher stays on verification while refreshed identity is pending', async 
   expect(teacherNavigations).toHaveLength(0);
   await expect(page).toHaveURL(/\/teacher$/);
 });
+
+for (const width of [390, 1440]) {
+  test(`Admin PR40 package lifecycle, report resolution and IRT release state at ${width}px`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 });
+    await fixtures(page, 'ADMIN');
+    const policyId = '77777777-7777-4777-8777-777777777777';
+    const packageId = '99999999-9999-4999-8999-999999999999';
+    const ids = Array.from(
+      { length: 10 },
+      (_, index) => `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`,
+    );
+    let pack: Record<string, unknown> | null = null;
+    const report = {
+      id: questionId,
+      kind: 'QUESTION',
+      referenceId: attemptId,
+      category: 'Kunci',
+      details: 'Laporan fixture',
+      status: 'OPEN',
+      followUp: null as string | null,
+      reportedAt: '2026-10-03T00:00:00Z',
+    };
+    const mutations: string[] = [];
+    await page.route('http://localhost:3301/api/v1/admin/**', async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname.replace('/api/v1/', '');
+      if (request.method() !== 'GET') {
+        mutations.push(`${request.method()} ${path}`);
+        const body = request.postDataJSON() as Record<string, unknown>;
+        if (path === 'admin/content/drill-packages') {
+          expect(body.questionVersionIds).toEqual(ids);
+          expect(body.levelId).toBe(levelId);
+          pack = { ...body, id: packageId, status: 'DRAFT', releaseAt: null };
+        } else if (path === `admin/content/drill-packages/${packageId}`) {
+          expect(body.questionVersionIds).toEqual(ids);
+          pack = { ...pack, ...body };
+        } else if (path.endsWith('/publish')) pack = { ...pack, status: 'PUBLISHED' };
+        else if (path.endsWith('/archive')) pack = { ...pack, status: 'ARCHIVED' };
+        else if (path === `admin/reports/QUESTION/${questionId}`) {
+          expect(body.status).toBe('RESOLVED');
+          expect(body.followUp).toBe('Tindak lanjut fixture');
+          report.status = 'RESOLVED';
+          report.followUp = String(body.followUp);
+        } else return route.fulfill({ status: 404, json: { code: 'NOT_FOUND' } });
+        return route.fulfill({ json: { id: path.includes('/reports/') ? questionId : packageId } });
+      }
+      const responses: Record<string, unknown> = {
+        'admin/content/curriculum': {
+          items: [
+            {
+              id: levelId,
+              kind: 'LEVEL',
+              parentId: subchapterId,
+              code: 'DEMO-L1',
+              name: 'Level fixture',
+              displayOrder: 1,
+              status: 'READY',
+            },
+          ],
+        },
+        'admin/content/versions': {
+          items: [
+            {
+              id: ids[0],
+              questionId,
+              primaryCompetencyId: subchapterId,
+              variantId: questionId,
+              variantCode: 'DEMO-01',
+              variantKind: 'ORIGINAL',
+              originalVariantId: null,
+              versionNumber: 1,
+              questionType: 'SINGLE_CHOICE',
+              stem: 'Soal fixture',
+              options: [],
+              answerOptionId: 'A',
+              explanation: 'Demo',
+              difficulty: 'DEMO',
+              contentStatus: 'READY',
+              questionStatus: 'READY',
+              reviewedByUserId: studentId,
+              reviewedAt: '2026-10-01T00:00:00Z',
+            },
+          ],
+        },
+        'admin/content/videos': { items: [] },
+        'admin/reports': { items: [report] },
+        'admin/irt': { items: [] },
+        'admin/irt/batches': {
+          items: [
+            {
+              id: attemptId,
+              packageId,
+              batchKind: 'TRYOUT',
+              modelVersion: 'TEST-ONLY',
+              status: 'SUCCEEDED',
+              startedAt: '2026-10-01T00:00:00Z',
+              finishedAt: '2026-10-01T01:00:00Z',
+              resultReleasedAt: null,
+              failureCode: null,
+            },
+          ],
+        },
+        'admin/audit-logs': { items: [] },
+        'admin/dashboard': {
+          schools: 1,
+          chapters: 1,
+          questions: 1,
+          readyVersions: 1,
+          openReports: report.status === 'OPEN' ? 1 : 0,
+        },
+        'admin/content/tryout-packages': { items: [] },
+        'admin/content/drill-packages': { items: pack ? [pack] : [] },
+      };
+      return route.fulfill({ json: responses[path] ?? { items: [] } });
+    });
+    await page.goto('/admin/content');
+    await page.getByRole('button', { name: 'Paket Drill', exact: true }).click();
+    await page.getByLabel('Kode keluarga', { exact: true }).fill('DEMO-E2E');
+    await page.getByLabel('Versi paket', { exact: true }).fill('1');
+    await page.getByRole('combobox', { name: 'Level', exact: true }).selectOption(levelId);
+    await page.getByLabel('Indeks varian', { exact: true }).fill('1');
+    await page.getByLabel('Nama paket', { exact: true }).fill('Paket fixture baru');
+    await page.getByLabel('ID versi kebijakan penilaian', { exact: true }).fill(policyId);
+    await page
+      .getByLabel('ID versi soal (pisahkan dengan baris baru atau koma)', { exact: true })
+      .fill(ids.join('\n'));
+    await page.getByRole('button', { name: 'Simpan draf paket', exact: true }).click();
+    await expect(page.getByText('Paket fixture baru', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Edit draf', exact: true }).click();
+    await page.getByLabel('Nama paket', { exact: true }).fill('Paket fixture direvisi');
+    await page.getByRole('button', { name: 'Simpan draf paket', exact: true }).click();
+    await expect(page.getByText('Paket fixture direvisi', { exact: true })).toBeVisible();
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: 'Publikasikan paket', exact: true }).click();
+    await expect(page.getByText(/DEMO-E2E.*PUBLISHED/)).toBeVisible();
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: 'Arsipkan paket', exact: true }).click();
+    await expect(page.getByText(/DEMO-E2E.*ARCHIVED/)).toBeVisible();
+    await page.getByRole('button', { name: 'Laporan', exact: true }).click();
+    await page
+      .getByRole('combobox', { name: 'Status tindak lanjut', exact: true })
+      .selectOption('RESOLVED');
+    await page.getByLabel('Catatan tindak lanjut', { exact: true }).fill('Tindak lanjut fixture');
+    await page
+      .getByRole('button', { name: 'Simpan status dan tindak lanjut', exact: true })
+      .click();
+    await expect(page.getByText('Tindak lanjut tersimpan:', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'IRT', exact: true }).click();
+    await expect(page.getByText('TRYOUT · SUCCEEDED', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Rilis belum tercatat/)).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    expect(mutations).toEqual([
+      'POST admin/content/drill-packages',
+      `PATCH admin/content/drill-packages/${packageId}`,
+      `POST admin/content/drill-packages/${packageId}/publish`,
+      `POST admin/content/drill-packages/${packageId}/archive`,
+      `PATCH admin/reports/QUESTION/${questionId}`,
+    ]);
+    await page.screenshot({
+      path: testInfo.outputPath(`admin-content-${width}.png`),
+      fullPage: true,
+    });
+  });
+}
 
 for (const { role, verified, path, destination } of [
   { role: 'STUDENT', verified: true, path: '/teacher', destination: '/student' },
