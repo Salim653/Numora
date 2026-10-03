@@ -121,7 +121,7 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
       studentId: identities.student, packageId: drillPackage!.id,
       assessmentType: 'DRILL', chapterIdAtStart: chapter!.id, levelIdAtStart: level!.id,
       scoringPolicyVersionId: policy!.id, status: 'GRADED',
-      startedAt: new Date(Date.now() - 1000), finishedAt: new Date(),
+      startedAt: new Date(Date.now() - 4000), finishedAt: new Date(Date.now() - 3000),
       rawPoints: '0', score0To100: '0',
     });
     await db.insert(levelProgress).values({
@@ -140,6 +140,24 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
     });
     expect(progress.levels.find((item) => item.levelId === lockedLevel!.id)).toMatchObject({
       accessStatus: 'LOCKED', levelLabel: 'Level 2',
+    });
+    await expect(monitoring.studentProgress(owner, otherClass.id, identities.student))
+      .rejects.toMatchObject({ status: 404, response: { code: 'STUDENT_NOT_FOUND' } });
+    await db.insert(assessmentAttempts).values([90, 60].map((score, index) => ({
+      studentId: identities.student, packageId: drillPackage!.id,
+      assessmentType: 'DRILL' as const, chapterIdAtStart: chapter!.id,
+      levelIdAtStart: level!.id, scoringPolicyVersionId: policy!.id,
+      status: 'GRADED' as const,
+      startedAt: new Date(Date.now() - (3000 - index * 1000)),
+      finishedAt: new Date(Date.now() - (2000 - index * 1000)),
+      rawPoints: String(score), score0To100: String(score),
+    })));
+    await db.update(levelProgress).set({ latestScore: 60, bestScore: 90 })
+      .where(and(eq(levelProgress.studentId, identities.student), eq(levelProgress.levelId, level!.id)));
+    const repeated = await monitoring.studentProgress(owner, firstClass.id, identities.student);
+    expect(repeated.latestDrillScore).toBe(60);
+    expect(repeated.levels.find((item) => item.levelId === level!.id)).toMatchObject({
+      latestDrillScore: 60, bestDrillScore: 90,
     });
     await expect(monitoring.studentProgress(outsider, firstClass.id, identities.student))
       .rejects.toMatchObject({ status: 403 });

@@ -71,7 +71,9 @@ export function AdminContentScreen() {
 function AdminContentScreenContent() {
   const { state, refresh } = useAuth();
   const token =
-    state.status === 'ready' && state.profile.role === 'ADMIN' ? state.session.access_token : null;
+    state.status === 'ready' && state.profile.role === 'ADMIN' && state.profile.status === 'ACTIVE'
+      ? state.session.access_token
+      : null;
   const [data, setData] = useState<Workbench | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -188,6 +190,7 @@ function AdminContentScreenContent() {
           {views.map((item) => (
             <Button
               key={item.id}
+              variant="secondary"
               className="secondary-button"
               aria-current={view === item.id ? 'page' : undefined}
               onClick={() => navigate(item.id)}
@@ -368,7 +371,9 @@ function AdminContentScreenContent() {
                       <strong>
                         {batch.batchKind} · {batch.status}
                       </strong>
-                      <small>Model {batch.modelVersion} · Batch {batch.id}</small>
+                      <small>
+                        Model {batch.modelVersion} · Batch {batch.id}
+                      </small>
                       <p>
                         Mulai {new Date(batch.startedAt).toLocaleString('id-ID')} · Selesai{' '}
                         {batch.finishedAt
@@ -481,16 +486,23 @@ function Reports({
   const [kind, setKind] = useState<Report['kind'] | 'ALL'>('ALL');
   const [status, setStatus] = useState<Report['status'] | 'ALL'>('ALL');
   const visible = data.reports.items.filter(
-    (report) => (kind === 'ALL' || report.kind === kind) && (status === 'ALL' || report.status === status),
+    (report) =>
+      (kind === 'ALL' || report.kind === kind) && (status === 'ALL' || report.status === status),
   );
   return (
     <section>
       <h2>Laporan soal dan video</h2>
-      <p>Daftar ini berisi laporan pada halaman yang dimuat. Filter tidak mengubah data di server.</p>
+      <p>
+        Daftar ini berisi laporan pada halaman yang dimuat. Filter tidak mengubah data di server.
+      </p>
       <div className="admin-content-actions">
         <label>
           Jenis laporan
-          <select aria-label="Jenis laporan" value={kind} onChange={(event) => setKind(event.target.value as typeof kind)}>
+          <select
+            aria-label="Jenis laporan"
+            value={kind}
+            onChange={(event) => setKind(event.target.value as typeof kind)}
+          >
             <option value="ALL">Semua jenis</option>
             <option value="QUESTION">Soal</option>
             <option value="VIDEO">Video</option>
@@ -498,10 +510,16 @@ function Reports({
         </label>
         <label>
           Status laporan
-          <select aria-label="Filter status laporan" value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>
+          <select
+            aria-label="Filter status laporan"
+            value={status}
+            onChange={(event) => setStatus(event.target.value as typeof status)}
+          >
             <option value="ALL">Semua status</option>
             {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((value) => (
-              <option key={value} value={value}>{reportStatusLabel(value)}</option>
+              <option key={value} value={value}>
+                {reportStatusLabel(value)}
+              </option>
             ))}
           </select>
         </label>
@@ -514,9 +532,10 @@ function Reports({
       ) : (
         <ul className="monitoring-list">
           {visible.map((report) => {
-            const video = report.kind === 'VIDEO'
-              ? data.videos.items.find((item) => item.mappingId === report.referenceId)
-              : undefined;
+            const video =
+              report.kind === 'VIDEO'
+                ? data.videos.items.find((item) => item.mappingId === report.referenceId)
+                : undefined;
             const subchapter = video
               ? data.curriculum.items.find((item) => item.id === video.subchapterId)
               : undefined;
@@ -538,10 +557,13 @@ function Reports({
                     <div>
                       <p>
                         Mapping: {video.title} · {video.source} · subbab{' '}
-                        {subchapter?.name ?? video.subchapterId} · urutan {video.recommendationOrder}
+                        {subchapter?.name ?? video.subchapterId} · urutan{' '}
+                        {video.recommendationOrder}
                       </p>
                       {video.url.startsWith('https://') ? (
-                        <a href={video.url} target="_blank" rel="noreferrer">Buka video terkait</a>
+                        <a href={video.url} target="_blank" rel="noreferrer">
+                          Buka video terkait
+                        </a>
                       ) : (
                         <p>URL mapping video belum menggunakan HTTPS.</p>
                       )}
@@ -550,10 +572,14 @@ function Reports({
                     <p>Mapping video tidak ada pada halaman metadata yang sedang dimuat.</p>
                   )
                 ) : (
-                  <p>Referensi jawaban/attempt: <code>{report.referenceId}</code></p>
+                  <p>
+                    Referensi jawaban/attempt: <code>{report.referenceId}</code>
+                  </p>
                 )}
                 {report.followUp && (
-                  <p><strong>Tindak lanjut tersimpan:</strong> {report.followUp}</p>
+                  <p>
+                    <strong>Tindak lanjut tersimpan:</strong> {report.followUp}
+                  </p>
                 )}
                 <div className="admin-content-actions">
                   <Button
@@ -570,24 +596,35 @@ function Reports({
                   onSubmit={(event) => {
                     event.preventDefault();
                     const form = new FormData(event.currentTarget);
-                    void run(() => resolveReport(token, report.kind, report.id, {
-                      status: field(form, 'status') as Report['status'],
-                      followUp: field(form, 'followUp'),
-                    }));
+                    void run(() =>
+                      resolveReport(token, report.kind, report.id, {
+                        status: field(form, 'status') as Report['status'],
+                        followUp: field(form, 'followUp'),
+                      }),
+                    );
                   }}
                 >
                   <Field label="Status tindak lanjut" name="status">
                     <select name="status" defaultValue={report.status}>
                       {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((value) => (
-                        <option key={value} value={value}>{reportStatusLabel(value)}</option>
+                        <option key={value} value={value}>
+                          {reportStatusLabel(value)}
+                        </option>
                       ))}
                     </select>
                   </Field>
                   <Field label="Catatan tindak lanjut" name="followUp">
-                    <textarea name="followUp" defaultValue={report.followUp ?? ''} required maxLength={2000} />
+                    <textarea
+                      name="followUp"
+                      defaultValue={report.followUp ?? ''}
+                      required
+                      maxLength={2000}
+                    />
                   </Field>
                   <small>{report.followUp?.length ?? 0}/2000 karakter tersimpan</small>
-                  <Button type="submit" disabled={busy}>Simpan status dan tindak lanjut</Button>
+                  <Button type="submit" disabled={busy}>
+                    Simpan status dan tindak lanjut
+                  </Button>
                 </form>
               </li>
             );
@@ -872,7 +909,9 @@ function DrillPackageEditor({
       </small>
       <Button
         type="submit"
-        disabled={busy || (!draft && !data.curriculum.items.some((taxon) => taxon.kind === 'LEVEL'))}
+        disabled={
+          busy || (!draft && !data.curriculum.items.some((taxon) => taxon.kind === 'LEVEL'))
+        }
       >
         Simpan draf paket
       </Button>
@@ -939,12 +978,7 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
         )}
         {kind !== 'LEVEL' && (
           <Field label="Kode unik" name="code">
-            <input
-              name="code"
-              required
-              maxLength={64}
-              pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*"
-            />
+            <input name="code" required maxLength={64} pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*" />
           </Field>
         )}
         <Field

@@ -4,6 +4,9 @@ import { ApiProblem } from '@/lib/api';
 import { AdminContentScreen } from './content';
 import {
   createQuestion,
+  createDrillPackage,
+  updateDrillPackage,
+  archiveDrillPackage,
   loadAdminWorkbench,
   publishDrillPackage,
   resolveReport,
@@ -22,6 +25,9 @@ vi.mock('./content-api', async (original) => ({
   ...(await original<object>()),
   loadAdminWorkbench: vi.fn(),
   createQuestion: vi.fn(),
+  createDrillPackage: vi.fn(),
+  updateDrillPackage: vi.fn(),
+  archiveDrillPackage: vi.fn(),
   publishDrillPackage: vi.fn(),
   resolveReport: vi.fn(),
   updateTryoutDraft: vi.fn(),
@@ -174,11 +180,14 @@ beforeEach(() => {
   vi.resetAllMocks();
   context.state = {
     status: 'ready',
-    profile: { id: 'admin-test', role: 'ADMIN', displayName: 'Admin test' },
+    profile: { id: 'admin-test', role: 'ADMIN', status: 'ACTIVE', displayName: 'Admin test' },
     session: { access_token: 'test-token' },
   };
   vi.mocked(loadAdminWorkbench).mockResolvedValue(data);
   vi.mocked(createQuestion).mockResolvedValue({ id: 'new-version-test' });
+  vi.mocked(createDrillPackage).mockResolvedValue({ id: 'new-drill-test' });
+  vi.mocked(updateDrillPackage).mockResolvedValue({ id: 'drill-package-test' });
+  vi.mocked(archiveDrillPackage).mockResolvedValue({ id: 'drill-package-test' });
   vi.mocked(publishDrillPackage).mockResolvedValue({ id: 'drill-package-test' });
   vi.mocked(resolveReport).mockResolvedValue({ id: 'question-report-test' });
   vi.mocked(updateTryoutDraft).mockResolvedValue({ id: 'package-test' });
@@ -188,6 +197,115 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe('Admin content UI', () => {
+  it('does not fetch administrative data for a disabled Admin', () => {
+    context.state = {
+      status: 'ready',
+      profile: {
+        id: 'disabled-admin',
+        role: 'ADMIN',
+        status: 'DISABLED',
+        displayName: 'Disabled Admin test',
+      },
+      session: { access_token: 'disabled-token' },
+    };
+    render(<AdminContentScreen />);
+    expect(screen.getByText('Halaman ini hanya tersedia untuk Admin yang aktif.')).toBeTruthy();
+    expect(loadAdminWorkbench).not.toHaveBeenCalled();
+  });
+  it('creates a Drill draft with the selected level and split pinned question version IDs', async () => {
+    vi.mocked(loadAdminWorkbench).mockResolvedValue({
+      ...data,
+      curriculum: {
+        items: [
+          ...data.curriculum.items,
+          {
+            id: 'level-test',
+            kind: 'LEVEL',
+            parentId: 'sub-test',
+            code: 'L1',
+            name: 'Level demo',
+            displayOrder: 1,
+            status: 'READY',
+          },
+        ],
+      },
+    });
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
+    fireEvent.change(screen.getByLabelText('Kode keluarga'), { target: { value: 'DEMO-L1' } });
+    fireEvent.change(screen.getByLabelText('Versi paket'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Level'), { target: { value: 'level-test' } });
+    fireEvent.change(screen.getByLabelText('Indeks varian'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Nama paket'), { target: { value: 'Draf baru' } });
+    fireEvent.change(screen.getByLabelText('ID versi kebijakan penilaian'), {
+      target: { value: 'policy-test' },
+    });
+    fireEvent.change(
+      screen.getByLabelText('ID versi soal (pisahkan dengan baris baru atau koma)'),
+      { target: { value: 'version-test, pinned-outside-page\nthird-version' } },
+    );
+    fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf paket' }).closest('form')!);
+    await waitFor(() =>
+      expect(createDrillPackage).toHaveBeenCalledWith('test-token', {
+        familyCode: 'DEMO-L1',
+        packageVersion: 2,
+        name: 'Draf baru',
+        levelId: 'level-test',
+        variantIndex: 2,
+        scoringPolicyVersionId: 'policy-test',
+        questionVersionIds: ['version-test', 'pinned-outside-page', 'third-version'],
+      }),
+    );
+  });
+  it('keeps a rejected Drill edit retryable and preserves pinned versions outside the current page', async () => {
+    const original = data.drillPackages.items[0];
+    if (!original) throw new Error('Missing Drill package fixture');
+    vi.mocked(loadAdminWorkbench).mockResolvedValue({
+      ...data,
+      drillPackages: {
+        items: [
+          {
+            ...original,
+            questionVersionIds: ['version-test', 'pinned-outside-page'],
+          },
+        ],
+      },
+    });
+    vi.mocked(updateDrillPackage).mockRejectedValueOnce(
+      new ApiProblem(400, 'INVALID_PACKAGE', 'TEST package rejection'),
+    );
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit draf' }));
+    fireEvent.change(screen.getByLabelText('Nama paket'), { target: { value: 'Revisi draf' } });
+    fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf paket' }).closest('form')!);
+    await screen.findByText('TEST package rejection');
+    expect((screen.getByLabelText('Nama paket') as HTMLInputElement).value).toBe('Revisi draf');
+    expect(screen.queryByText(/Perubahan tersimpan/)).toBeNull();
+    fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf paket' }).closest('form')!);
+    await waitFor(() => expect(updateDrillPackage).toHaveBeenCalledTimes(2));
+    expect(updateDrillPackage).toHaveBeenLastCalledWith('test-token', 'drill-package-test', {
+      name: 'Revisi draf',
+      scoringPolicyVersionId: 'policy-test',
+      questionVersionIds: ['version-test', 'pinned-outside-page'],
+    });
+    await screen.findByText('Perubahan tersimpan. ID: drill-package-test');
+  });
+  it('requires confirmation before archiving a Drill package', async () => {
+    const confirm = vi
+      .spyOn(window, 'confirm')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Arsipkan paket' }));
+    expect(archiveDrillPackage).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Arsipkan paket' }));
+    await waitFor(() =>
+      expect(archiveDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test'),
+    );
+    expect(confirm).toHaveBeenCalledTimes(2);
+  });
   it('does not fetch or render administrative data for Student', () => {
     context.state = {
       status: 'ready',
@@ -299,8 +417,9 @@ describe('Admin content UI', () => {
     fireEvent.change(await screen.findByLabelText('Jenis laporan'), { target: { value: 'VIDEO' } });
     const report = await screen.findByTestId('report-video-report-test');
     expect(within(report).getByText(/Video demo.*YouTube.*Subbab demo/)).toBeTruthy();
-    expect(within(report).getByRole('link', { name: 'Buka video terkait' }).getAttribute('href'))
-      .toBe('https://www.youtube.com/watch?v=demo');
+    expect(
+      within(report).getByRole('link', { name: 'Buka video terkait' }).getAttribute('href'),
+    ).toBe('https://www.youtube.com/watch?v=demo');
     expect(screen.queryByTestId('report-question-report-test')).toBeNull();
   });
   it('removes administrative data on logout and on an API access rejection', async () => {
@@ -311,7 +430,12 @@ describe('Admin content UI', () => {
     expect(screen.queryByLabelText('Kompetensi')).toBeNull();
     context.state = {
       status: 'ready',
-      profile: { id: 'another-admin-test', role: 'ADMIN', displayName: 'Admin lain' },
+      profile: {
+        id: 'another-admin-test',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        displayName: 'Admin lain',
+      },
       session: { access_token: 'expired-test' },
     };
     vi.mocked(loadAdminWorkbench).mockRejectedValueOnce(

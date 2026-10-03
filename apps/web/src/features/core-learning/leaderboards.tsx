@@ -84,7 +84,9 @@ export function LeaderboardsScreen() {
                 }).format(new Date(Date.parse(query.data.period.endsAt) - 1))}{' '}
                 WIB
               </p>
-              {!query.data.entries.length ? (
+              {query.data.policyPending ? (
+                <p className="py-8">Peringkat final menunggu persetujuan aturan.</p>
+              ) : !query.data.entries.length ? (
                 <p className="py-8">Belum ada rekor pada periode ini.</p>
               ) : (
                 <div className="overflow-x-auto">
@@ -118,10 +120,21 @@ export function LeaderboardsScreen() {
                   ? `Diperbarui ${new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(query.data.updatedAt))} WIB`
                   : 'Menunggu pembaruan peringkat.'}
               </p>
+              <button
+                className="min-h-11 font-semibold underline mt-2"
+                disabled={query.isFetching}
+                onClick={() => void query.refetch()}
+              >
+                {query.isFetching ? 'Memperbaruiâ€¦' : 'Perbarui peringkat'}
+              </button>
             </section>
             <aside className="student-card student-card-pad student-own-rank">
               <h2 className="student-section-title">Posisimu</h2>
-              {query.data.ownEntry ? (
+              {query.data.policyPending ? (
+                <p className="student-section-note mt-4">
+                  Posisimu tersedia setelah peringkat dibuka.
+                </p>
+              ) : query.data.ownEntry ? (
                 <>
                   <p className="student-metric-value">#{query.data.ownEntry.rank}</p>
                   <p>

@@ -80,7 +80,7 @@ export class StudentDashboardService {
       activeDrill: active[0] ?? null,
       features: {
         drill: true,
-        tryout: !!membership,
+        tryout: true,
         pretest: false,
         pvp: false,
         classLeaderboard: false,

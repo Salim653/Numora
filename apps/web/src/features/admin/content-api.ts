@@ -52,7 +52,18 @@ export async function loadAdminWorkbench(token: string, offset: number) {
     apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
     apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token),
   ]);
-  return { curriculum, versions, videos, reports, irt, irtBatches, audit, dashboard, packages, drillPackages };
+  return {
+    curriculum,
+    versions,
+    videos,
+    reports,
+    irt,
+    irtBatches,
+    audit,
+    dashboard,
+    packages,
+    drillPackages,
+  };
 }
 function mutation(token: string, path: string, body: object, method = 'POST') {
   return apiRequest<ContentMutationDto>(path, token, { method, body: JSON.stringify(body) });
